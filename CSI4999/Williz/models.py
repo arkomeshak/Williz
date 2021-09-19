@@ -40,3 +40,10 @@ class RequestReset(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     verification_str = models.fields.CharField(max_length=45, null=False, unique=True)
     expires = models.fields.DateTimeField(editable=False, null=False, default=(datetime.now() + timedelta(minutes=10)))
+
+
+class Validation(models.Model):
+    validation_id = models.fields.AutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    verification_str = models.fields.CharField(max_length=45, null=False, unique=True)
+    expires = models.fields.DateTimeField(editable=False, null=False, default=(datetime.now() + timedelta(minutes=10)))
