@@ -27,7 +27,7 @@ class Appraiser(models.Model):
 
 class Lender(models.Model):
     user_id = models.ForeignKey(User, primary_key=True, on_delete=models.CASCADE)
-    mortgage_co = models.CharField(max_length=50, nul=False, default="")
+    mortgage_co = models.CharField(max_length=50, null=False, default="")
 
 
 class Realtor(models.Model):
