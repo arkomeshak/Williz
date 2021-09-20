@@ -16,6 +16,7 @@ class User(models.Model):
     user_type = models.IntegerField()
     register_date = models.DateTimeField(null=False, default=datetime.now)
     verification_status = models.BooleanField(null=False, default=False)
+    email_validation = models.BooleanField(null=False, default=False)
 
 
 class Appraiser(models.Model):
