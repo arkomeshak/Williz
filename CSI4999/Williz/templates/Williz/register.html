@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title></title>
+    {% load static %}
+    <link id="pageStyle" href="{% static 'Williz/main.css' %}" type="text/css" rel="stylesheet" />
+      <div id="mySidenav" class="sidenav">
+      <a class="closebtn" onclick="closeNav()" style= "cursor: pointer">&times;</a>
+      <div id = "nav-ele">
+      <a href="#home" onclick="closeNav()">Home</a>
+      </div>
+      <div id = "nav-ele">
+      <a href="#Listings" onclick="closeNav()">Listings</a>
+      </div>
+      <div id = "nav-ele">
+      <a href="#Contact" onclick="closeNav()">Contact</a>
+      </div>
+      <div id = "nav-ele">
+      <a href="../register" onclick="closeNav()">Register</a>
+      </div>
+      <div id = "nav-ele">
+      <a href="../login" onclick="closeNav()">Login</a>
+      </div>
+    </div>
+    <span id="nav-btn" style="font-size:4em;cursor:pointer; float:left; positon:relative; color:white"  onclick="openNav()">&#9776;</span>
+  </head>
+      
+      
+      <script>
+
+
+function openNav() {
+
+    document.getElementById("mySidenav").style.width = "250px";
+    document.getElementById("main_body").style.marginLeft = "250px";
+
+    /*
+    document.getElementById("main_body").style.backgroundImage = "linear-gradient( rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://dm0qx8t0i9gc9.cloudfront.net/thumbnails/video/qmraJpx/videoblocks-portrait-of-smiling-family-standing-in-front-of-their-home_skmbaiws0m_thumbnail-1080_01.png')";
+    document.getElementById("loginCont").style.backgroundColor = "#3bb79090";
+    document.getElementById("loginCont").style.backgroundImage = "linear-gradient(315deg, #3bb79080 0%, #0bab6380 74%)";
+    */
+ document.getElementById("dimmer").style.opacity = "0.6"
+ document.getElementById("dimmer").style.zIndex = "100";
+}
+
+/* Set the width of the side navigation to 0 and the left margin of the page content to 0, and the background color of body to white */
+function closeNav() {
+     document.getElementById("mySidenav").style.width = "0";
+      document.getElementById("main_body").style.marginLeft = "0";
+
+        /*
+    document.getElementById("main_body").style.backgroundImage = "linear-gradient( rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('https://dm0qx8t0i9gc9.cloudfront.net/thumbnails/video/qmraJpx/videoblocks-portrait-of-smiling-family-standing-in-front-of-their-home_skmbaiws0m_thumbnail-1080_01.png')";
+      document.getElementById("loginCont").style.backgroundColor = "#3bb7909c";
+       document.getElementById("loginCont").style.backgroundImage = "linear-gradient(315deg, #3bb7909c 0%, #0bab639c 74%)";
+           */
+        document.getElementById("dimmer").style.opacity = "0"
+        document.getElementById("dimmer").style.zIndex = "-1";
+
+}  
+
+
+
+function RAshowHide() {
+    var x = document.getElementById("License");
+    var y = document.getElementById("state");
+    var z = document.getElementById("LabelCompany");
+    var a = document.getElementById("LabelState");
+    var b = document.getElementById("LabelLicense");
+    var c = document.getElementById("Company");
+    console.log(y);
+  if ((x.style.display == "none") || (y.style.display == "none")  ) {
+    console.log("Yes");
+    x.style.display = "block";
+    y.style.display = "block";
+    z.style.display = "none";
+    c.style.display = "none";
+    a.style.display = "block";
+    b.style.display = "block";
+    console.log("Yes1");
+  document.getElementById("License").required = true;
+  document.getElementById("state").required = true;
+  document.getElementById("Company").required = false;
+  } 
+
+  else if (((x.style.display = "block") || (y.style.display = "block")) && (document.getElementById("ML").checked == true)){
+    console.log("No");
+        x.style.display = "none";
+        y.style.display = "none";
+        z.style.display = "block";
+        c.style.display = "block";
+        a.style.display = "none";
+        b.style.display = "none";
+            console.log("No1");
+        document.getElementById("License").required = false;
+        document.getElementById("state").required = false;
+        document.getElementById("Company").required = true;
+  }
+}
+
+function MLshowHide() {
+    var x = document.getElementById("Company");
+
+  if (x.style.display === "none") {
+    x.style.display = "block";
+  document.getElementById("Company").required = true;
+  } else {
+        x.style.display = "none";
+        document.getElementById("Company").required = false;
+  }
+}
+</script>
+{% load static %}
+          <img id = "logo" src="{% static 'Williz/logoWhiteStroke.png' %}" style = "float:right" alt = "Logo">
+
+
+<div style = "clear:both"></div>
+
+
+  <body id="main_body">
+
+    <div class="dimmer" id = "dimmer"></div>
+
+    <div id="FormCont"> 
+    <h1 id="mainHeader">Create Account</h1>   
+
+
+
+
+
+    <form id="RegisterForm"> 
+<div id = "RadioContainor">
+<h3>Please indicate what Role you are registering for.</h3>
+<label class="Radio-btn">Realtor
+  <input type="radio" id = "Realtor" checked="checked" name="radio" onClick = "RAshowHide()">
+  <span class="cm"></span>
+</label></br>
+<label class="Radio-btn">Appraiser
+  <input type="radio" name="radio" id = "Apprasier" onClick = "RAshowHide()">
+  <span class="cm"></span>
+</label>
+</br>
+<label class="Radio-btn">Mortgage Lender
+  <input type="radio" id = "ML" name="radio" onClick = "RAshowHide()">
+  <span class="cm"></span>
+</label>
+</br>
+</div></br>
+
+    <label><b>First Name</b>    
+        </label>    
+        <input type="text" name="fname" id="fname" class = "FormInput" placeholder="First Name" required></br></br>
+    <label><b>Last Name</b>    
+        </label>    
+        <input type="text" name="lname" id="lname" class = "FormInput" placeholder="Last Name" required></br></br>
+
+
+        <label><b>User Name</b>    
+        </label>    
+        <input type="text" name="UserID" id="UserID" class = "FormInput" placeholder="Username" required>    
+        <br><br>    
+        <label><b>Password</b>    
+        </label>    
+        <input type="Password" name="Psw" id="Psw" class = "FormInput" placeholder="Password" required>    
+        <br><br>    
+
+        <label id="LabelLicense" ><b>License Number</b>    
+        </label>    
+        <input type="text" name="License" id="License" class = "FormInput" placeholder="License Number" required>    
+        <br><br> 
+
+        <label id="LabelState" ><b>State</b>    
+        </label>    
+        <select name="state" id = "state" class = "FormInput" required>
+<option value="" selected>Please Select</option>
+<option value="AK">Alaska</option>
+<option value="AL">Alabama</option>
+<option value="AR">Arkansas</option>
+<option value="AS">American Samoa</option>
+<option value="AZ">Arizona</option>
+<option value="CA">California</option>
+<option value="CO">Colorada</option>
+<option value="CT">Conneticut</option>
+<option value="DC">District of Colombia</option>
+<option value="DE">Delaware</option>
+<option value="FL">Florida</option>
+<option value="FM">Federated States</option>
+<option value="GA">Georgia</option>
+<option value="GU">Guam</option>
+<option value="HI">Hawaii</option>
+<option value="IA">Iowa</option>
+<option value="ID">Idaho</option>
+<option value="IL">Illinois</option>
+<option value="IN">Indiana</option>
+<option value="KS">Kansas</option>
+<option value="KY">Kentucky</option>
+<option value="LA">Louisiana</option>
+<option value="MA">Massachusetts</option>
+<option value="MD">Maryland</option>
+<option value="ME">Maine</option>
+<option value="MI">Michigan</option>
+<option value="MN">Minnesota</option>
+<option value="MO">Missouri</option>
+<option value="MS">Mississippi</option>
+<option value="MT">Montana</option>
+<option value="NC">North Carolina</option>
+<option value="ND">North Dakota</option>
+<option value="NE">Nebraska</option>
+<option value="NH">New Hampshire</option>
+<option value="NJ">New Jersey</option>
+<option value="NM">New Mexico</option>
+<option value="NV">Nevada</option>
+<option value="NY">New York</option>
+<option value="OH">Ohio</option>
+<option value="OK">Oklahoma</option>
+<option value="OR">Oregon</option>
+<option value="PA">Pennsylvania</option>
+<option value="PR">Puerto Rico</option>
+<option value="RI">Rhode Island</option>
+<option value="SC">South Carolina</option>
+<option value="SD">South Dakota</option>
+<option value="TN">Tennessee</option>
+<option value="TX">Texas</option>
+<option value="UT">Utah</option>
+<option value="VI">Virgin Islands</option>
+<option value="VT">Vermont</option>
+<option value="VA">Virginia</option>
+<option value="WA">Washington</option>
+<option value="WI">Wisconsin</option>
+<option value="WV">West Virginia</option>
+<option value="WY">Wyoming</option>    
+</select>
+        <br><br> 
+        <label id="LabelCompany"><b>Mortgage Company</b>    
+        </label>    
+        <input type="text" name="Company" id="Company" class = "FormInput" placeholder="Mortgage Company">    
+        <br><br> 
+
+         <button type = "Submit" id ="Submit" name ="Submit" value="Submit">Submit</button>      
+        <br><br>    
+    </form>     
+</div> 
+
+ <footer class="footer">
+        <nav class="navbar navbar-expand-sm navbar-dark">
+            <a href="#" class="navbar-brand">About Williz</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="#">About us</a></li>
+                </ul>
+            </div>
+        </nav>
+    </footer>
+
+  </body>
+</html>

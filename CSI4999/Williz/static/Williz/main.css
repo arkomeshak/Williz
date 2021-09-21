@@ -110,15 +110,23 @@ Nav CSS
 Login CSS
 *********************************/
 
-.login {
+.loginForm {
     width: 350px;
     overflow: hidden;
     border-radius: 15px;
     transition: 0.5s;
 }
 
-#loginCont {
-    width: 350px;
+.registerForm {
+    width: 450px;
+    overflow: hidden;
+    border-radius: 15px;
+    transition: 0.5s;
+}
+
+#FormCont {
+    text-align: center;
+    width: 450px;
     overflow: hidden;
     margin: auto;
     margin-top: 6%;
@@ -143,7 +151,7 @@ label {
     font-size: 17px;
 }
 
-#UserID {
+.FormInput {
     width: 80%;
     height: 30px;
     border-radius: 7px;
@@ -152,22 +160,7 @@ label {
     transition: .5s;
 }
 
-#UserID:focus {
-    border-radius: 10px;
-    background-color: #29e49c9c;
-    transition: .5s;
-}
-
-#Psw {
-    width: 80%;
-    height: 30px;
-    border: none;
-    border-radius: 7px;
-    padding-left: 8px;
-    z-index: 101;
-}
-
-#Psw:focus {
+.FormInput:focus {
     border-radius: 10px;
     background-color: #29e49c9c;
     transition: .5s;
@@ -219,4 +212,16 @@ label {
 
 footer {
     margin-top: 5%;
+}
+
+#Company,
+#LabelCompany {
+    display: none;
+}
+
+#License,
+#state,
+#LabelState,
+#LabelLicense {
+    display: block;
 }

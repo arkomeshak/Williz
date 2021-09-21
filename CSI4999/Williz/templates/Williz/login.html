@@ -20,13 +20,13 @@
       <a href="#Contact" onclick="closeNav()">Contact</a>
       </div>
       <div id = "nav-ele">
-      <a href="../Register" onclick="closeNav()">Create Account</a>
+      <a href="../register" onclick="closeNav()">Create Account</a>
       </div>
       <div id = "nav-ele">
       <a href="../login" onclick="closeNav()">Login</a>
       </div>
     </div>
-    <span id="nav-btn" style="font-size:30px;cursor:pointer; float:left; positon:relative" onclick="openNav()">&#9776;</span>
+    <span id="nav-btn" style="font-size:4em;cursor:pointer; float:left; positon:relative; color:white" onclick="openNav()">&#9776;</span>
   </head>
       
       
@@ -73,19 +73,19 @@ function closeNav() {
 
     <div class="dimmer" id = "dimmer"></div>
 
-    <div id="loginCont"> 
+    <div id="FormCont"> 
 
     <h1 id="mainHeader">Login</h1>   
-    <form id="login">    
+    <form id="loginForm">    
         <label><b>User Name</b>    
         </label>    
-        <input type="text" name="UserID" id="UserID" placeholder="Username" required>    
+        <input type="text" name="UserID" id="UserID" class = "FormInput" placeholder="Username" required>    
         <br><br>    
         <label><b>Password</b>    
         </label>    
-        <input type="Password" name="Psw" id="Psw" placeholder="Password" required>    
+        <input type="Password" name="Psw" id="Psw" class = "FormInput" placeholder="Password" required>    
         <br><br>    
-         <button type = "Submit" id ="Submit" name ="Submit" value="Login">Login</button>      
+        <button type = "Submit" id ="Submit" name ="Submit" value="Login">Login</button>      
         <br><br>    
         <input type="checkbox" id="check">    
         <span id = "Remember" style = "color:white; text-shadow: 5px 5px 5px #000;">Remember me</span>    
