@@ -19,21 +19,28 @@ class User(models.Model):
     email_validation = models.BooleanField(null=False, default=False)
 
 
+class MortgageCo(models.Model):
+    co_id = models.AutoField(primary_key=True)
+    co_name = models.CharField(max_length=50, null=False, default="")
+
+
 class Appraiser(models.Model):
     user_id = models.ForeignKey(User, primary_key=True, on_delete=models.CASCADE)
     lic_state = models.CharField(max_length=2, null=False, default="")
     lic_num = models.CharField(max_length=10, null=False, default="")
+    lic_exp_date = models.DateField(default=None)
 
 
 class Lender(models.Model):
     user_id = models.ForeignKey(User, primary_key=True, on_delete=models.CASCADE)
-    mortgage_co = models.CharField(max_length=50, null=False, default="")
+    mortgage_co = models.ForeignKey(MortgageCo, on_delete=models.CASCADE)
 
 
 class Realtor(models.Model):
     user_id = models.ForeignKey(User, primary_key=True, on_delete=models.CASCADE)
     lic_state = models.CharField(max_length=2, null=False, default="")
     lic_num = models.CharField(max_length=10, null=False, default="")
+    lic_exp_date = models.DateField(default=None)
 
 
 class RequestReset(models.Model):
