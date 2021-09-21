@@ -13,3 +13,7 @@ def login(request):
 def register(request):
     context = {}
     return render(request, "Williz/register.html", context)
+
+def profile(request):
+    context = {}
+    return render(request, "Williz/profile.html", context)
