@@ -3,6 +3,7 @@ from django.http import request, response, HttpResponse
 from django.core.mail import send_mail
 from django.db import transaction, IntegrityError
 from django.conf import settings
+from django.utils import timezone
 # Model Imports
 from .models import *
 # Other imports
@@ -102,7 +103,11 @@ def email_verification_page(request, verify_string=None):
         # Good case, still need to verify user tho
         try:
             val_entry = Validation.objects.get(verification_str=verify_string)
-            if val_entry.expires <= datetime.datetime.now():
+            now = timezone.now()
+            expires = val_entry.expires
+            print("now is ", now)
+            print("expires in ", expires)
+            if val_entry.expires <= timezone.now():
                 return render(request, context={"message": "Ooops, that link has expired. Try requesting another."},
                               template_name="Williz/stub_verify_email.html")
             user_id = val_entry.user_id
@@ -112,6 +117,8 @@ def email_verification_page(request, verify_string=None):
             context["name"] = user.f_name
             user.email_validation = True
             user.save()
+            val_entry.delete()
+            val_entry.save()
             return render(request, context=context, template_name="Williz/stub_verify_email.html")
         except Validation.DoesNotExist:
             print(f"Invalid verification string {verify_string}")
