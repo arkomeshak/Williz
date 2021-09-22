@@ -1,3 +1,5 @@
 .idea
 *.pyc
 /CSI4999/CSI4999/settings.py
+*.sqlite3
+CSI4999/CSI4999/settings.py
