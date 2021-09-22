@@ -35,9 +35,48 @@ def register(request):
     context = {}
     return render(request, "Williz/register.html", context)
 
-def profile(request):
-    context = {}
-    return render(request, "Williz/profile.html", context)
+def profile(request, email):
+    """
+        Author: Zak
+        Function which loads user data into html page to allow user to edit their information
+        :param email: user email associated with account
+        :return: render of profile.html with new information
+    """
+    user = User.objects.get(email=email)
+    if user.user_type == 1:
+        realtor = Realtor.objects.get(user_id=user.user_id)
+        context = {
+            'user_id': user.user_id,
+            'f_name': user.f_name,
+            'l_name': user.l_name,
+            'email': user.email,
+            'state': realtor.lic_state,
+            'license_num': realtor.lic_num,
+            'bank': 'N/A'
+        }
+    elif user.user_type == 2:
+        appraiser = Appraiser.objects.get(user_id=user.user_id)
+        context = {
+            'user_id': user.user_id,
+            'f_name': user.f_name,
+            'l_name': user.l_name,
+            'email': user.email,
+            'state': appraiser.lic_state,
+            'license_num': appraiser.lic_num,
+            'bank': 'N/A'
+        }
+    elif user.user_type == 3:
+        lender = Lender.objects.get(user_id=user.user_id)
+        context = {
+            'user_id': user.user_id,
+            'f_name': user.f_name,
+            'l_name': user.l_name,
+            'email': user.email,
+            'state': 'N/A',
+            'license_num': 'N/A',
+            'bank': lender.mortgage_co
+        }
+    return render(request, 'Williz/profile.html', context)
 
 # Adam's helper functions
 
@@ -92,7 +131,58 @@ def force_make_email_verification(request, email=None):
     create_email_verification(email)
     return HttpResponse(f"<h1>Made an email verification for {email}.</h1><p>Check email for link</p>")
 
-# Zak's helper functions
+# Zak's Views
+
+def edit_user_info(request):
+    """
+        Author: Zak
+        Function which loads user data from html page into database to allow user to edit their information
+        :param email: email associated with account
+        :return: render of login.html
+    """
+    user = User.objects.get(user_id=int(request.POST['user_id'].replace('/', '')))
+    if user.user_type == 1:
+        realtor = Realtor.objects.get(user_id=user.user_id)
+        if request.POST['fnameInput'] != "":
+            user.f_name = request.POST['fnameInput']
+        if request.POST['lnameInput'] != "":
+            user.l_name = request.POST['lnameInput']
+        if user.email != request.POST['emailInput'] and request.POST['emailInput'] != "":
+            user.email = request.POST['emailInput']
+            create_email_verification(user.email)
+        if request.POST['state'] != "" or request.POST['state'] == "Please Select":
+            realtor.lic_state = request.POST['state']
+        if request.POST['LicenseInput'] != "":
+            realtor.lic_number = request.POST['LicenseInput']
+        user.save()
+        realtor.save()
+    elif user.user_type == 2:
+        appraiser = Appraiser.objects.get(user_id=user.user_id)
+        if request.POST['fnameInput'] != "":
+            user.f_name = request.POST['fnameInput']
+        if request.POST['lnameInput'] != "":
+            user.l_name = request.POST['lnameInput']
+        if user.email != request.POST['emailInput'] and request.POST['emailInput'] != "":
+            user.email = request.POST['emailInput']
+        if request.POST['state'] != "" or request.POST['state'] == "Please Select":
+            appraiser.lic_state = request.POST['state']
+        if request.POST['LicenseInput'] != "":
+            appraiser.lic_number = request.POST['LicenseInput']
+        user.save()
+        appraiser.save()
+    elif user.user_type == 3:
+        lender = Lender.objects.get(user_id=user.user_id)
+        if request.POST['fnameInput'] != "":
+            user.f_name = request.POST['fnameInput']
+        if request.POST['lnameInput'] != "":
+            user.l_name = request.POST['lnameInput']
+        if user.email != request.POST['emailInput'] and request.POST['emailInput'] != "":
+            user.email = request.POST['emailInput']
+        if request.POST['CompanyInput'] != "":
+            lender.mortgage_co = request.POST['CompanyInput']
+        user.save()
+        lender.save()
+    return render(request, "Williz/login.html", context={})
 
 """
 ============================================= Helper Functions =========================================================
@@ -192,4 +282,3 @@ def generate_reset_request_veri_str():
     return veri_str
 
 # Zak's helper functions
-

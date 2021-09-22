@@ -82,25 +82,28 @@ function fnameEdit() {
     </div>
 
     <div id = "userInfoContainer" style = "text-align: left;">
-
+    <form action="../edit_user_info" method="POST">
+        {% csrf_token %}
     <label style = "white-space: pre;"><b>First Name:   </b></label> 
-    <label id ="fname" name = "fname"><i>Shaniqua (placeholder)</i></label></br>
-    <input class = "FormInput" name = "fnameInput" id = "fnameInput">
-    </br><a href="#" value = "1">Save</a></br></br>
+    <label id ="fname" name = "fname"><i>{{f_name}}</i></label></br>
+    <input class = "FormInput" name = "fnameInput" id = "fnameInput" placeholder={{f_name}}>
+    </br>
+
+
 
     <label style = "white-space: pre;"><b>Last Name:   </b></label>
-    <label id ="lname" name = "lname"><i>Lamant (placeholder)</i></label></br>
-    <input class = "FormInput" name = "lnameInput" id = "lnameInput">
-    </br><a href="#" value = "2">Save</a></br></br>
+    <label id ="lname" name = "lname"><i>{{l_name}}</i></label></br>
+    <input class = "FormInput" name = "lnameInput" id = "lnameInput" placeholder={{l_name}}>
+    </br>
 
     <label style = "white-space: pre;"><b>Email:   </b></label>
-    <label id ="email" name = "email"><i>ShaMont@yahoo.com (placeholder)</i></label></br>
-    <input class = "FormInput" name = "emailInput" class = "emailInput">
-    </br><a href="#" value = "3">Save</a></br></br>
+    <label id ="email" name = "email"><i>{{email}}</i></label></br>
+    <input class = "FormInput" name = "emailInput" class = "emailInput" placeholder={{email}}>
+    </br>
 
     <label style = "white-space: pre;"><b>State:   </b></label>
-    <label id ="State" name = "State"><i>MI (placeholder)</i></label></br>
-<select name="state" id = "state" class = "FormInput">
+    <label id ="State" name = "State"><i>{{state}}</i></label></br>
+<select name="state" id = "state" class = "FormInput" placeholder={{state}}>
 <option value="" selected>Please Select</option>
 <option value="AK">Alaska</option>
 <option value="AL">Alabama</option>
@@ -108,8 +111,8 @@ function fnameEdit() {
 <option value="AS">American Samoa</option>
 <option value="AZ">Arizona</option>
 <option value="CA">California</option>
-<option value="CO">Colorada</option>
-<option value="CT">Conneticut</option>
+<option value="CO">Colorado</option>
+<option value="CT">Connecticut</option>
 <option value="DC">District of Colombia</option>
 <option value="DE">Delaware</option>
 <option value="FL">Florida</option>
@@ -159,17 +162,21 @@ function fnameEdit() {
 <option value="WV">West Virginia</option>
 <option value="WY">Wyoming</option>    
 </select>
-<a href="#" value = "4">Save</a></br></br>
+
 
     <label style = "white-space: pre;"><b>License Number:   </b></label>
-    <label id ="licenseNumber" name = "licenseNumber"><i>1234-567-8910 (placeholder)</i></label></br>
-    <input class = "FormInput" name = "LicenseInput" id = "LicenseInput">
-    </br><a href="#" value = "5">Save</a></br></br>
+    <label id ="licenseNumber" name = "licenseNumber"><i>{{license_num}}</i></label></br>
+    <input class = "FormInput" name = "LicenseInput" id = "LicenseInput" placeholder={{license_num}}>
+    </br>
 
     <label style = "white-space: pre;"><b>Mortgage Company:   </b></label>
-    <label id ="MortgagCompany" name = "MortgagCompany"><i>Credit One Bank (placeholder)</i></label></br>
-    <input class = "FormInput" name = "ComapnyInput" id = "ComapnyInput">
-    </br><a href="#" value = "6">Save</a></br></br>
+    <label id ="MortgageCompany" name = "MortgageCompany"><i>{{bank}}</i></label></br>
+    <input class = "FormInput" name = "CompanyInput" id = "CompanyInput" placeholder={{bank}}>
+    </br>
+    </br>
+    <button type = "Submit" id ="Submit" name ="Save" value="Submit">Save</button>
+        <input style="visibility: hidden" class="FormInput" name="user_id" value={{user_id}}/>
+    </form>
     </div>
 </div>
 </div> 
