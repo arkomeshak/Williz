@@ -101,17 +101,6 @@ function RAshowHide() {
   }
 }
 
-function MLshowHide() {
-    var x = document.getElementById("Company");
-
-  if (x.style.display === "none") {
-    x.style.display = "block";
-  document.getElementById("Company").required = true;
-  } else {
-        x.style.display = "none";
-        document.getElementById("Company").required = false;
-  }
-}
 </script>
 {% load static %}
           <img id = "logo" src="{% static 'Williz/logoWhiteStroke.png' %}" style = "float:right" alt = "Logo">

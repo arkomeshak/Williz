@@ -31,6 +31,10 @@ html {
     bottom: 0;
 }
 
+#profileImg {
+    src: url("https://img-9gag-fun.9cache.com/photo/a09Gp0v_460s.jpg");
+}
+
 
 /*********************************
 Nav CSS 
@@ -224,4 +228,23 @@ footer {
 #LabelState,
 #LabelLicense {
     display: block;
+}
+
+
+/*******************************************************
+Profile CSS
+*******************************************************/
+
+#profileContainer {
+    text-align: center;
+    width: 750px;
+    overflow: hidden;
+    margin: auto;
+    position: relative;
+    padding: 3%;
+    background-color: #3bb7909c;
+    background-image: linear-gradient(315deg, #3bb7909c 0%, #0bab639c 74%);
+    border: 5px solid black;
+    border-radius: 15px;
+    transition: 0.5s;
 }
