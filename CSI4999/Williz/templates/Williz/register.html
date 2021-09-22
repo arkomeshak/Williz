@@ -120,20 +120,21 @@ function RAshowHide() {
 
 
 
-    <form id="RegisterForm"> 
+    <form id="RegisterForm" method="POST" action="../register_user_handler/">
+        {% csrf_token %}
 <div id = "RadioContainor">
 <h3>Please indicate what Role you are registering for.</h3>
 <label class="Radio-btn">Realtor
-  <input type="radio" id = "Realtor" checked="checked" name="radio" onClick = "RAshowHide()">
+  <input type="radio" id = "Realtor" checked="checked" name="radio" onClick = "RAshowHide()" value="1">
   <span class="cm"></span>
 </label></br>
 <label class="Radio-btn">Appraiser
-  <input type="radio" name="radio" id = "Apprasier" onClick = "RAshowHide()">
+  <input type="radio" name="radio" id = "Apprasier" onClick = "RAshowHide()" value="2">
   <span class="cm"></span>
 </label>
 </br>
 <label class="Radio-btn">Mortgage Lender
-  <input type="radio" id = "ML" name="radio" onClick = "RAshowHide()">
+  <input type="radio" id = "ML" name="radio" onClick = "RAshowHide()" value="3">
   <span class="cm"></span>
 </label>
 </br>

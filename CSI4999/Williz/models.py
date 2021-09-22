@@ -28,7 +28,7 @@ class Appraiser(models.Model):
     user_id = models.ForeignKey(User, primary_key=True, on_delete=models.CASCADE)
     lic_state = models.CharField(max_length=2, null=False, default="")
     lic_num = models.CharField(max_length=10, null=False, default="")
-    lic_exp_date = models.DateField(default=None)
+    lic_exp_date = models.DateField(null=True, default=None)
 
 
 class Lender(models.Model):
@@ -40,7 +40,7 @@ class Realtor(models.Model):
     user_id = models.ForeignKey(User, primary_key=True, on_delete=models.CASCADE)
     lic_state = models.CharField(max_length=2, null=False, default="")
     lic_num = models.CharField(max_length=10, null=False, default="")
-    lic_exp_date = models.DateField(default=None)
+    lic_exp_date = models.DateField(null=True, default=None)
 
 
 class RequestReset(models.Model):
@@ -55,3 +55,10 @@ class Validation(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     verification_str = models.fields.CharField(max_length=45, null=False, unique=True)
     expires = models.fields.DateTimeField(editable=False, null=False, default=(datetime.now() + timedelta(minutes=10)))
+
+
+class FailedLogins(models.Model):
+    src_ip = models.GenericIPAddressField(primary_key=True)
+    count = models.IntegerField(default=1)
+    last_attempt = models.DateTimeField(default=datetime.now())
+

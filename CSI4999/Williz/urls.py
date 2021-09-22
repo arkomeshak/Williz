@@ -11,4 +11,5 @@ urlpatterns = [
     # TODO: Delete this path once account creation is a thing. This path is just for testing email verif
     path("force/make/email/verification/<email>", views.force_make_email_verification, name="DELETE ME"),
     path("profile/edit_user_info", views.edit_user_info, name="update")
+    path("register_user_handler/", views.register_user_handler, name="register_user_handler"),
 ]
