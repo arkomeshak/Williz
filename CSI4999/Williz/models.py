@@ -55,3 +55,10 @@ class Validation(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     verification_str = models.fields.CharField(max_length=45, null=False, unique=True)
     expires = models.fields.DateTimeField(editable=False, null=False, default=(datetime.now() + timedelta(minutes=10)))
+
+
+class FailedLogins(models.Model):
+    src_ip = models.GenericIPAddressField(primary_key=True)
+    count = models.IntegerField(default=1)
+    last_attempt = models.DateTimeField(default=datetime.now())
+
