@@ -137,7 +137,6 @@ def edit_user_info(request):
     """
         Author: Zak
         Function which loads user data from html page into database to allow user to edit their information
-        :param email: email associated with account
         :return: render of login.html
     """
     user = User.objects.get(user_id=int(request.POST['user_id'].replace('/', '')))
@@ -150,7 +149,7 @@ def edit_user_info(request):
         if user.email != request.POST['emailInput'] and request.POST['emailInput'] != "":
             user.email = request.POST['emailInput']
             create_email_verification(user.email)
-        if request.POST['state'] != "" or request.POST['state'] == "Please Select":
+        if request.POST['state'] != "" and request.POST['state'] != "Please Select":
             realtor.lic_state = request.POST['state']
         if request.POST['LicenseInput'] != "":
             realtor.lic_number = request.POST['LicenseInput']
@@ -164,7 +163,7 @@ def edit_user_info(request):
             user.l_name = request.POST['lnameInput']
         if user.email != request.POST['emailInput'] and request.POST['emailInput'] != "":
             user.email = request.POST['emailInput']
-        if request.POST['state'] != "" or request.POST['state'] == "Please Select":
+        if request.POST['state'] != "" and request.POST['state'] != "Please Select":
             appraiser.lic_state = request.POST['state']
         if request.POST['LicenseInput'] != "":
             appraiser.lic_number = request.POST['LicenseInput']
