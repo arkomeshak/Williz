@@ -163,8 +163,8 @@ def login_handler(request):
                     query = User.objects.get(email=email)
                 except Exception:
                     raise ValueError("Email not found")
-                if not query.verificationstatus:
-                    return HttpResponseRedirect(f"/login?&status=Need_verification")
+                if not query.emailvalidation:
+                    return HttpResponseRedirect(f"/login?&status=Need_validation")
                 # The password from the user
                 # the salt from the database
                 salt = query.pw_salt
