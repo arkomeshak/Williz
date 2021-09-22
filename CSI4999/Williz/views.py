@@ -27,16 +27,18 @@ USER_TYPE_TO_CODE = {USER_TYPES[i]: i for i in range(len(USER_TYPES))}
 STATES = () # TODO: make a const list of 2-letter state codes
 
 
-
 ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 # Create your views here.
+
 
 def index(request):
     return HttpResponse("<h1>Hello Williz!</h1>")
 
+
 def login(request):
     context = {}
     return render(request, "Williz/login.html", context)
+
 
 def register(request):
     context = {}
@@ -91,6 +93,11 @@ def profile(request, email):
 # Carson's Views
 @transaction.atomic #Carson
 def register_user_handler(request):
+    """
+           Author: Carson
+           Function which creates a new user in the database based off info added in HTML form
+           :return: redirects to login page
+       """
     context = {}
 
     # checks if pws match, creates salt and hash
