@@ -76,7 +76,8 @@ function closeNav() {
     <div id="FormCont"> 
 
     <h1 id="mainHeader">Login</h1>   
-    <form id="loginForm">    
+    <form id="loginForm" method="POST" action="../login_handler/">
+        {% csrf_token %}
         <label><b>Email</b>
         </label></br>   
         <input type="email" name="email" id="email" class = "FormInput" placeholder="Email" required>    
