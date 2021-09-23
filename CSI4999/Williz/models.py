@@ -13,7 +13,7 @@ class User(models.Model):
     pw_salt = models.CharField(max_length=10, null=True)
     pw_hash = models.CharField(max_length=300, null=True)
     email = models.CharField(max_length=50, null=False, blank=False, default="", unique=True)
-    user_type = models.IntegerField()
+    user_type = models.IntegerField(null=False)
     register_date = models.DateTimeField(null=False, default=datetime.now)
     verification_status = models.BooleanField(null=False, default=False)
     email_validation = models.BooleanField(null=False, default=False)
@@ -28,7 +28,8 @@ class Appraiser(models.Model):
     user_id = models.ForeignKey(User, primary_key=True, on_delete=models.CASCADE)
     lic_state = models.CharField(max_length=2, null=False, default="")
     lic_num = models.CharField(max_length=10, null=False, default="")
-    lic_exp_date = models.DateField(default=None)
+    lic_exp_date = models.DateField(null=True, default=None)
+
 
 
 class Lender(models.Model):
@@ -40,7 +41,8 @@ class Realtor(models.Model):
     user_id = models.ForeignKey(User, primary_key=True, on_delete=models.CASCADE)
     lic_state = models.CharField(max_length=2, null=False, default="")
     lic_num = models.CharField(max_length=10, null=False, default="")
-    lic_exp_date = models.DateField(default=None)
+    lic_exp_date = models.DateField(null=True, default=None)
+
 
 
 class RequestReset(models.Model):

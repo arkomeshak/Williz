@@ -110,7 +110,7 @@ def resetPassword_Handler(request):
         ForgotPassword.save()
     RequestReset.objects.get(verification_str = verificationKey).verification_str
     
-    request.session["email"] = User.objects.get(email = email).email
+    request.session["email"] = email
     try:
         message = f"Greetings,\n\n" + \
                     f"The following code is to verify your email for a password reset valid for 10 minutes:\n\n" + \
@@ -135,11 +135,16 @@ def resetPasswordVerify(request):
     salt_chars = []
     verify = request.POST["verify"]
     NewPsw = request.POST["NewPassword"]
-    ConfPsw = request.POST["ConfPassword"]
+    print(NewPsw)
+    print(request.session.get("email", None))
+    ConfPsw = request.POST.get("ConfPassword")
+    print(ConfPsw)
     for i in range(10):
         salt_chars.append(random.choice(ALPHABET))
     salt = "".join(salt_chars)
     pw_hashed = hashlib.sha256(str(ConfPsw + salt).encode('utf8')).hexdigest()
+    print(salt)
+    print(pw_hashed)
 
     print(request.session.get("resetID", None))
     if (((request.session.get("resetID", None))) == verify):
@@ -147,9 +152,10 @@ def resetPasswordVerify(request):
         if (NewPsw == ConfPsw):
             print("Passed passwordConf")
             with transaction.atomic():
-                user = User(pw_salt=salt,
-                    pw_hash=pw_hashed)
-                user.save()
+                PswChange = User.objects.get(email=request.session.get("email", None))
+                PswChange.pw_salt = salt
+                PswChange.pw_hash = pw_hashed
+                PswChange.save()
                 return HttpResponseRedirect("../login/")
         return HttpResponseRedirect(f"../register/?&status=pws_didnt_match")
     return HttpResponseRedirect(f"../resetPasswordVerify/?&status=Code_Expired")
