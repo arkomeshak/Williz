@@ -29,6 +29,7 @@ SESSION_EXPIRATION = 1
 
 
 ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
 # Create your views here.
 
 
@@ -89,6 +90,69 @@ def profile(request, email):
         }
     return render(request, 'Williz/profile.html', context)
 
+def resetPassword(request):
+    context = {}
+    return render(request, "Williz/resetPassword.html", context)
+
+def resetPassword_Handler(request):
+    context = {}
+
+    email = request.POST["email"]
+    user = User.objects.get(email=email)
+    chars = []
+    for i in range(10):
+        chars.append(random.choice(ALPHABET))
+    verificationKey = "".join(chars)
+    request.session["resetID"] = verificationKey
+    with transaction.atomic():
+        ForgotPassword = RequestReset(verification_str = verificationKey,
+                                      user = user)
+        ForgotPassword.save()
+    RequestReset.objects.get(verification_str = verificationKey).verification_str
+    
+    request.session["email"] = User.objects.get(email = email).email
+    try:
+        message = f"Greetings,\n\n" + \
+                    f"The following code is to verify your email for a password reset valid for 10 minutes:\n\n" + \
+                    f"{verificationKey}\n" +\
+                    f"\nIf you find this link has expired please submit another verification request from the login page."\
+                    + f"\n\nRegards,\nThe Williz team"
+        send_mail(
+            "Williz Email Verification",
+            message,
+            "williznotifmail@gmail.com",
+            [email],
+            fail_silently=False
+        )
+    except Exception as e:
+        print("Error:", e)
+        raise RuntimeError(f"Failed to send verification email to {email}")
+    validation_entry = Validation(user=user, verification_str=verificationKey)
+    return render(request, "Williz/resetPasswordVerify.html", context)
+
+def resetPasswordVerify(request):
+    context = {}
+    salt_chars = []
+    verify = request.POST["verify"]
+    NewPsw = request.POST["NewPassword"]
+    ConfPsw = request.POST["ConfPassword"]
+    for i in range(10):
+        salt_chars.append(random.choice(ALPHABET))
+    salt = "".join(salt_chars)
+    pw_hashed = hashlib.sha256(str(ConfPsw + salt).encode('utf8')).hexdigest()
+
+    print(request.session.get("resetID", None))
+    if (((request.session.get("resetID", None))) == verify):
+        print("Passed session")
+        if (NewPsw == ConfPsw):
+            print("Passed passwordConf")
+            with transaction.atomic():
+                user = User(pw_salt=salt,
+                    pw_hash=pw_hashed)
+                user.save()
+                return HttpResponseRedirect("../login/")
+        return HttpResponseRedirect(f"../register/?&status=pws_didnt_match")
+    return HttpResponseRedirect(f"../resetPasswordVerify/?&status=Code_Expired")
 # Adam's helper functions
 
 # Carson's Views
