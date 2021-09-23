@@ -31,6 +31,7 @@ class Appraiser(models.Model):
     lic_exp_date = models.DateField(null=True, default=None)
 
 
+
 class Lender(models.Model):
     user_id = models.ForeignKey(User, primary_key=True, on_delete=models.CASCADE)
     mortgage_co = models.ForeignKey(MortgageCo, on_delete=models.CASCADE)
@@ -41,6 +42,7 @@ class Realtor(models.Model):
     lic_state = models.CharField(max_length=2, null=False, default="")
     lic_num = models.CharField(max_length=10, null=False, default="")
     lic_exp_date = models.DateField(null=True, default=None)
+
 
 
 class RequestReset(models.Model):
