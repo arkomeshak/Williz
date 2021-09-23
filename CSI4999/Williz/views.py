@@ -225,7 +225,7 @@ def register_user_handler(request):
             lender = Lender(user_id=u_id,
                             mortgage_co=co_id)
             lender.save()  # save additional info to lender table
-
+    create_email_verification(email_given)
     return HttpResponseRedirect("../login/")
 
 # Dan's Views
@@ -240,7 +240,7 @@ def login_handler(request):
                     query = User.objects.get(email=email)
                 except Exception:
                     raise ValueError("Email not found")
-                if not query.emailvalidation:
+                if not query.email_validation:
                     return HttpResponseRedirect(f"/login?&status=Need_validation")
                 # The password from the user
                 # the salt from the database
@@ -314,7 +314,6 @@ def email_verification_page(request, verify_string=None):
             user.email_validation = True
             user.save()
             val_entry.delete()
-            val_entry.save()
             return render(request, context=context, template_name="Williz/stub_verify_email.html")
         except Validation.DoesNotExist:
             print(f"Invalid verification string {verify_string}")
@@ -384,7 +383,7 @@ def edit_user_info(request):
             lender.mortgage_co = request.POST['CompanyInput']
         user.save()
         lender.save()
-    return render(request, "Williz/login.html", context={})
+    return HttpResponseRedirect("Williz/login")
 
 """
 ============================================= Helper Functions =========================================================
