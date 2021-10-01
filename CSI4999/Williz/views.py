@@ -25,9 +25,11 @@ USER_TYPES = ("admin", "realtor", "appraiser", "lender")
 CODE_TO_USER_TYPE = {user_code: user_type for user_code, user_type in enumerate(USER_TYPES)}
 USER_TYPE_TO_CODE = {USER_TYPES[i]: i for i in range(len(USER_TYPES))}
 STATES = () # TODO: make a const list of 2-letter state codes
+SESSION_EXPIRATION = 1
 
 
 ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
 # Create your views here.
 
 
@@ -88,6 +90,75 @@ def profile(request, email):
         }
     return render(request, 'Williz/profile.html', context)
 
+def resetPassword(request):
+    context = {}
+    return render(request, "Williz/resetPassword.html", context)
+
+def resetPassword_Handler(request):
+    context = {}
+
+    email = request.POST["email"]
+    user = User.objects.get(email=email)
+    chars = []
+    for i in range(10):
+        chars.append(random.choice(ALPHABET))
+    verificationKey = "".join(chars)
+    request.session["resetID"] = verificationKey
+    with transaction.atomic():
+        ForgotPassword = RequestReset(verification_str = verificationKey,
+                                      user = user)
+        ForgotPassword.save()
+    RequestReset.objects.get(verification_str = verificationKey).verification_str
+    
+    request.session["email"] = email
+    try:
+        message = f"Greetings,\n\n" + \
+                    f"The following code is to verify your email for a password reset valid for 10 minutes:\n\n" + \
+                    f"{verificationKey}\n" +\
+                    f"\nIf you find this link has expired please submit another verification request from the login page."\
+                    + f"\n\nRegards,\nThe Williz team"
+        send_mail(
+            "Williz Email Verification",
+            message,
+            "williznotifmail@gmail.com",
+            [email],
+            fail_silently=False
+        )
+    except Exception as e:
+        print("Error:", e)
+        raise RuntimeError(f"Failed to send verification email to {email}")
+    validation_entry = Validation(user=user, verification_str=verificationKey)
+    return render(request, "Williz/resetPasswordVerify.html", context)
+
+def resetPasswordVerify(request):
+    context = {}
+    salt_chars = []
+    verify = request.POST["verify"]
+    NewPsw = request.POST["NewPassword"]
+    print(NewPsw)
+    print(request.session.get("email", None))
+    ConfPsw = request.POST.get("ConfPassword")
+    print(ConfPsw)
+    for i in range(10):
+        salt_chars.append(random.choice(ALPHABET))
+    salt = "".join(salt_chars)
+    pw_hashed = hashlib.sha256(str(ConfPsw + salt).encode('utf8')).hexdigest()
+    print(salt)
+    print(pw_hashed)
+
+    print(request.session.get("resetID", None))
+    if (((request.session.get("resetID", None))) == verify):
+        print("Passed session")
+        if (NewPsw == ConfPsw):
+            print("Passed passwordConf")
+            with transaction.atomic():
+                PswChange = User.objects.get(email=request.session.get("email", None))
+                PswChange.pw_salt = salt
+                PswChange.pw_hash = pw_hashed
+                PswChange.save()
+                return HttpResponseRedirect("../login/")
+        return HttpResponseRedirect(f"../register/?&status=pws_didnt_match")
+    return HttpResponseRedirect(f"../resetPasswordVerify/?&status=Code_Expired")
 # Adam's helper functions
 
 # Carson's Views
@@ -154,10 +225,61 @@ def register_user_handler(request):
             lender = Lender(user_id=u_id,
                             mortgage_co=co_id)
             lender.save()  # save additional info to lender table
-
+    create_email_verification(email_given)
     return HttpResponseRedirect("../login/")
 
-# Dan's helper functions
+# Dan's Views
+def login_handler(request):
+    try:
+        if request.method == 'POST':
+            post = request.POST
+            if "email" in post and "Psw" in post:
+                email = post["email"]
+                passwordAttempt = post["Psw"]
+                try:
+                    query = User.objects.get(email=email)
+                except Exception:
+                    raise ValueError("Email not found")
+                if not query.email_validation:
+                    return HttpResponseRedirect(f"/login?&status=Need_validation")
+                # The password from the user
+                # the salt from the database
+                salt = query.pw_salt
+                print("salt", salt)
+                passwordGuess = hashlib.sha256(str(passwordAttempt + salt).encode('utf-8')).hexdigest()
+                # the salted and hashed password from the database
+                correctPwHash = (query.pw_hash)
+                print("correct:", correctPwHash)
+                print("correct:", correctPwHash, "   GUESS: ", passwordGuess)
+                if (passwordGuess == correctPwHash):
+                    # login success
+                    # Set the uname session value to username the user logged in with
+                    if (request.POST.get('remember') == 'on'):
+                        print(request.POST.get('remember'))
+
+                        request.session["email"] = email
+                        request.session.set_expiry(
+                            SESSION_EXPIRATION * 60)  # expires in SESSION_EXPIRATION * 60s seconds (Final Suggestion: if remember me is checked we can set session to last mabye 7 days)
+
+                    else:
+                        print(request.POST.get('remember'))
+                        request.session["email"] = email
+                        request.session.set_expiry(
+                            SESSION_EXPIRATION * 30)  # expires in SESSION_EXPIRATION * 30s seconds (Final Suggestion: if remember me is unchecked we can set session to last 1 day)
+                    response = HttpResponseRedirect(f"/profile/email/{email}/&status=Login_success")
+                    return response
+                else:
+                    messages.error(request, 'Email or password not correct')
+                    return HttpResponseRedirect(f"/login?&status=Login_Failed")
+            else:
+                return HttpResponseRedirect(f"/login?&status=not_valid")
+        else:
+            return HttpResponseRedirect(f"/login?&status=rediect_not_post")
+    except ValueError:
+        return HttpResponseRedirect(f"/login?&status=Account_Not_Found")
+    except Exception as e:
+        print(e)
+        return HttpResponseRedirect(f"/login?&status=server_error")
 
 # Mike's Views
 def email_verification_page(request, verify_string=None):
@@ -192,7 +314,6 @@ def email_verification_page(request, verify_string=None):
             user.email_validation = True
             user.save()
             val_entry.delete()
-            val_entry.save()
             return render(request, context=context, template_name="Williz/stub_verify_email.html")
         except Validation.DoesNotExist:
             print(f"Invalid verification string {verify_string}")
@@ -262,7 +383,7 @@ def edit_user_info(request):
             lender.mortgage_co = request.POST['CompanyInput']
         user.save()
         lender.save()
-    return render(request, "Williz/login.html", context={})
+    return HttpResponseRedirect("Williz/login")
 
 """
 ============================================= Helper Functions =========================================================

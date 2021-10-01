@@ -31,6 +31,18 @@ html {
     bottom: 0;
 }
 
+#PwdHeader {
+    position: relative;
+    color: white;
+    font-size: 5em;
+    text-align: center;
+    text-shadow: 5px 5px 5px #000;
+    margin-top: 1%;
+    padding-top: 1%;
+    top: 0;
+    bottom: 0;
+}
+
 #profileImg {
     src: url("https://img-9gag-fun.9cache.com/photo/a09Gp0v_460s.jpg");
 }
