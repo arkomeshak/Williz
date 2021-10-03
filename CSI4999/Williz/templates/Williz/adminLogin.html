@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title></title>
+    {% load static %}
+    <link id="pageStyle" href="{% static 'Williz/main.css' %}" type="text/css" rel="stylesheet" />
+      <div id="mySidenav" class="sidenav">
+      <a class="closebtn" onclick="closeNav()" style= "cursor: pointer">&times;</a>
+      <div id = "nav-ele">
+      <a href="#home" onclick="closeNav()">Home</a>
+      </div>
+      <div id = "nav-ele">
+      <a href="#Listings" onclick="closeNav()">Listings</a>
+      </div>
+      <div id = "nav-ele">
+      <a href="#Contact" onclick="closeNav()">Contact</a>
+      </div>
+      <div id = "nav-ele">
+      <a href="../register" onclick="closeNav()">Create Account</a>
+      </div>
+      <div id = "nav-ele">
+      <a href="../login" onclick="closeNav()">Login</a>
+      </div>
+    </div>
+    <span id="nav-btn" style="font-size:4em;cursor:pointer; float:left; positon:relative; color:white" onclick="openNav()">&#9776;</span>
+  </head>
+      
+      
+      <script>
+
+
+function openNav() {
+
+    document.getElementById("mySidenav").style.width = "250px";
+    document.getElementById("main_body").style.marginLeft = "250px";
+
+    /*
+    document.getElementById("main_body").style.backgroundImage = "linear-gradient( rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://dm0qx8t0i9gc9.cloudfront.net/thumbnails/video/qmraJpx/videoblocks-portrait-of-smiling-family-standing-in-front-of-their-home_skmbaiws0m_thumbnail-1080_01.png')";
+    document.getElementById("loginCont").style.backgroundColor = "#3bb79090";
+    document.getElementById("loginCont").style.backgroundImage = "linear-gradient(315deg, #3bb79080 0%, #0bab6380 74%)";
+    */
+ document.getElementById("dimmer").style.opacity = "0.6"
+ document.getElementById("dimmer").style.zIndex = "100";
+}
+
+/* Set the width of the side navigation to 0 and the left margin of the page content to 0, and the background color of body to white */
+function closeNav() {
+     document.getElementById("mySidenav").style.width = "0";
+      document.getElementById("main_body").style.marginLeft = "0";
+
+        /*
+    document.getElementById("main_body").style.backgroundImage = "linear-gradient( rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('https://dm0qx8t0i9gc9.cloudfront.net/thumbnails/video/qmraJpx/videoblocks-portrait-of-smiling-family-standing-in-front-of-their-home_skmbaiws0m_thumbnail-1080_01.png')";
+      document.getElementById("loginCont").style.backgroundColor = "#3bb7909c";
+       document.getElementById("loginCont").style.backgroundImage = "linear-gradient(315deg, #3bb7909c 0%, #0bab639c 74%)";
+           */
+        document.getElementById("dimmer").style.opacity = "0"
+        document.getElementById("dimmer").style.zIndex = "-1";
+
+}  
+</script>
+{% load static %}
+          <img id = "logo" src="{% static 'Williz/logoWhiteStroke.png' %}" style = "float:right" alt = "Logo">
+
+
+<div style = "clear:both"></div>
+
+
+  <body id="main_body">
+
+    <div class="dimmer" id = "dimmer"></div>
+
+    <div id="FormCont"> 
+
+    <h1 id="mainHeader">Admin Login</h1>   
+    <form id="loginForm" method="POST" action="../adminLogin_handler/">
+        {% csrf_token %}
+        <label><b>Email</b>
+        </label></br>   
+        <input type="email" name="email" id="email" class = "FormInput" placeholder="Email" required>    
+        <br><br>    
+        <label><b>Password</b>    
+        </label>    
+        <input type="Password" name="Psw" id="Psw" class = "FormInput" placeholder="Password" required>    
+        <br><br>    
+        <button type = "Submit" id ="Submit" name ="Submit" value="Login">Login</button>      
+        <br><br>    
+        <input type="checkbox" id="check">    
+        <span id = "Remember" style = "color:white; text-shadow: 5px 5px 5px #000;">Remember me</span>    
+        <br><br>    
+       <a style = "color:white; text-shadow: 5px 5px 5px #000;"> Forgot</a> <a id = "pass" href="../resetPassword/">Password</a>    
+    </form>     
+</div> 
+
+ <footer class="footer">
+        <nav class="navbar navbar-expand-sm navbar-dark">
+            <a href="#" class="navbar-brand">About Williz</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="#">About us</a></li>
+                </ul>
+            </div>
+        </nav>
+    </footer>
+
+  </body>
+</html>
