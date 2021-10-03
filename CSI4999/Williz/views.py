@@ -10,7 +10,9 @@ from django.conf import settings
 from django.utils import timezone
 # Model Imports
 from .models import *
-# Other imports
+# HMAC imports
+import hmac
+# Time and random imports
 from random import choices, seed
 import datetime
 from time import time
@@ -18,6 +20,7 @@ from time import time
 """
 ============================================= Constants & Globals ======================================================
 """
+ASCII_PRINTABLE = "0123456789abcdefghIjklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()-=_+[]{},./<>?\\|'\"`~ "
 URL_SAFE_CHARS = "0123456789abcdefghIjklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ–_"
 BASE_URL = settings.BASE_URL # Get the base URL from settings.py for use in email links
 # If we needed to add a new user, and give it a code in the DB, we simply need to add to the below constant list
@@ -26,6 +29,10 @@ CODE_TO_USER_TYPE = {user_code: user_type for user_code, user_type in enumerate(
 USER_TYPE_TO_CODE = {USER_TYPES[i]: i for i in range(len(USER_TYPES))}
 STATES = () # TODO: make a const list of 2-letter state codes
 SESSION_EXPIRATION = 1
+
+FAILED_LOGINS_THRESHOLD = 5
+LOCKOUT_DURATION_THRESHOLD = 60
+
 
 
 ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -493,12 +500,12 @@ def verify_session(request):
     return "sessionid" in request.COOKIES and request.session.get_expiry_age() != 0
 
 
-def user_is_user_type(usr_type, usr_id=None, email=None):
+def user_is_expected_type(expected_type, usr_id=None, email=None):
     """
     Author: Mike
-    Returns whether the user is registered in the database as the type passed in.
+    Returns whether the user is registered in the database as the type passed in as the expected_type string.
     Works with at least one of user_id or email.
-    :param usr_type: string
+    :param expected_type_type: string
     :param usr_id: int
     :param email: string
     :return: boolean
@@ -507,8 +514,8 @@ def user_is_user_type(usr_type, usr_id=None, email=None):
     # Check for and raise some easy exceptions b4 costly DB lookup
     if usr_id is None and email is None:
         raise ValueError("At least one of usr_id or email parameters must be provided.")
-    elif usr_type not in USER_TYPES:
-        raise ValueError(f"{usr_type} is not a known user type.")
+    elif expected_type not in USER_TYPES:
+        raise ValueError(f"{expected_type} is not a known user type.")
     try:
         if usr_id is not None:
             user = User.objects.get(pk=usr_id)
@@ -517,16 +524,7 @@ def user_is_user_type(usr_type, usr_id=None, email=None):
     except User.DoesNotExist as e:
         print(f"Couldn't find a user with email or id: {usr_id if usr_id is not None else email}.")
         raise RuntimeError(e)
-    return USER_TYPE_TO_CODE[usr_type] == user.user_type
-
-
-
-def verify_session_and_user_type(session, ):
-    """
-    Author: Mike
-    Helper funciton which returns true if the user session is valid, and the user
-    :return:
-    """
+    return USER_TYPE_TO_CODE[expected_type] == user.user_type
 
 
 # Zak's helper functions
