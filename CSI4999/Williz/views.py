@@ -10,7 +10,9 @@ from django.conf import settings
 from django.utils import timezone
 # Model Imports
 from .models import *
-# Other imports
+# HMAC imports
+import hmac
+# Time and random imports
 from random import choices, seed
 import datetime
 from time import time
@@ -18,6 +20,7 @@ from time import time
 """
 ============================================= Constants & Globals ======================================================
 """
+ASCII_PRINTABLE = "0123456789abcdefghIjklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()-=_+[]{},./<>?\\|'\"`~ "
 URL_SAFE_CHARS = "0123456789abcdefghIjklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ–_"
 BASE_URL = settings.BASE_URL # Get the base URL from settings.py for use in email links
 # If we needed to add a new user, and give it a code in the DB, we simply need to add to the below constant list
@@ -26,6 +29,10 @@ CODE_TO_USER_TYPE = {user_code: user_type for user_code, user_type in enumerate(
 USER_TYPE_TO_CODE = {USER_TYPES[i]: i for i in range(len(USER_TYPES))}
 STATES = () # TODO: make a const list of 2-letter state codes
 SESSION_EXPIRATION = 1
+
+FAILED_LOGINS_THRESHOLD = 5
+LOCKOUT_DURATION_THRESHOLD = 60
+
 
 
 ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -283,7 +290,6 @@ def login_handler(request):
 
 # Mike's Views
 def email_verification_page(request, verify_string=None):
-    # TODO: Test this function and verification email by making a dummy verification page and dummy verif entries
     """
     Author: Mike
     View to present the user with either:
@@ -297,41 +303,41 @@ def email_verification_page(request, verify_string=None):
     context = {"message": "Ooops! We failed to verify your email."}
     if verify_string is not None:
         # Good case, still need to verify user tho
-        try:
-            val_entry = Validation.objects.get(verification_str=verify_string)
-            now = timezone.now()
-            expires = val_entry.expires
-            print("now is ", now)
-            print("expires in ", expires)
-            if val_entry.expires <= timezone.now():
-                return render(request, context={"message": "Ooops, that link has expired. Try requesting another."},
-                              template_name="Williz/stub_verify_email.html")
-            user_id = val_entry.user_id
-            user = User.objects.get(pk=user_id)
-            email = user.email
-            context["message"] = f"Your email: {email} has been verified."
-            context["name"] = user.f_name
-            user.email_validation = True
-            user.save()
-            val_entry.delete()
-            return render(request, context=context, template_name="Williz/stub_verify_email.html")
-        except Validation.DoesNotExist:
-            print(f"Invalid verification string {verify_string}")
-            return render(request, context=context, template_name="Williz/stub_verify_email.html")
-    # No verification string found, render with the message of failure
-    else:
-        return render(request, context=context, template_name="Williz/stub_verify_email.html")
+        with transaction.atomic():
+            try:
+                val_entry = Validation.objects.get(verification_str=verify_string)
+                now = timezone.now()
+                expires = val_entry.expires
+                print("now is ", now)
+                print("expires in ", expires)
+                if val_entry.expires <= timezone.now():
+                    return render(request, context={"message": "Ooops, that link has expired. Try requesting another."},
+                                  template_name="Williz/stub_verify_email.html")
+                user_id = val_entry.user_id
+                user = User.objects.get(pk=user_id)
+                email = user.email
+                context["message"] = f"Your email: {email} has been verified."
+                context["name"] = user.f_name
+                user.email_validation = True
+                user.save()
+                val_entry.delete()
+                return render(request, context=context, template_name="Williz/stub_verify_email.html")
+            except Validation.DoesNotExist:
+                print(f"Invalid verification string {verify_string}")
+                return render(request, context=context, template_name="Williz/stub_verify_email.html")
+            # No verification string found, render with the message of failure
+
+    return render(request, contex=context, template_name="Williz/stub_verify_email.html")
 
 
-def force_make_email_verification(request, email=None):
+def handler404(request, *args, **argv):
     """
-    My somewhat hacky solution to generating email verifications while there is no
-    account creation/verification request implemented.
-    :param email:
+    A 404 handler which directs to the 404 page.
+    :param request: http request
     :return: None
     """
-    create_email_verification(email)
-    return HttpResponse(f"<h1>Made an email verification for {email}.</h1><p>Check email for link</p>")
+    return render("<div><h1>That resource was not found</h1></div>")
+
 
 # Zak's Views
 
@@ -409,16 +415,17 @@ def create_email_verification(email):
         seed(time())
         veri_str = "".join(choices(URL_SAFE_CHARS, k=45))
         veri_link = f"{BASE_URL}/verify/email/{veri_str}"
-        # Get the user's data from DB
-        user = User.objects.get(email=email)
-        first = user.f_name
-        last = user.l_name
-        user_type = CODE_TO_USER_TYPE[user.user_type]
-        # Set the verification entry (atomic ensure only happens if email succeeds)
-        validation_entry = Validation(user=user, verification_str=veri_str)
-        # Send the verificaiton email
-        send_verification_email(email, veri_link, user_type, first, last)
-        validation_entry.save()
+        with transaction.atomic():
+            # Get the user's data from DB
+            user = User.objects.get(email=email)
+            first = user.f_name
+            last = user.l_name
+            user_type = CODE_TO_USER_TYPE[user.user_type]
+            # Set the verification entry (atomic ensure only happens if email succeeds)
+            validation_entry = Validation(user=user, verification_str=veri_str)
+            # Send the verificaiton email
+            send_verification_email(email, veri_link, user_type, first, last)
+            validation_entry.save()
     except Exception as e:
         print(f"Exception while attempting to send a verificaiton email to {email}.")
         raise e
@@ -481,6 +488,44 @@ def generate_reset_request_veri_str():
     if len(colliding_entries) > 0:
         return generate_email_veri_str()
     return veri_str
+
+
+def verify_session(request):
+    """
+    Author: Mike
+    Verifies the user session is still valid.
+    :param request: http request
+    :return: boolean
+    """
+    return "sessionid" in request.COOKIES and request.session.get_expiry_age() != 0
+
+
+def user_is_expected_type(expected_type, usr_id=None, email=None):
+    """
+    Author: Mike
+    Returns whether the user is registered in the database as the type passed in as the expected_type string.
+    Works with at least one of user_id or email.
+    :param expected_type_type: string
+    :param usr_id: int
+    :param email: string
+    :return: boolean
+    """
+    global USER_TYPES, USER_TYPE_TO_CODE
+    # Check for and raise some easy exceptions b4 costly DB lookup
+    if usr_id is None and email is None:
+        raise ValueError("At least one of usr_id or email parameters must be provided.")
+    elif expected_type not in USER_TYPES:
+        raise ValueError(f"{expected_type} is not a known user type.")
+    try:
+        if usr_id is not None:
+            user = User.objects.get(pk=usr_id)
+        else:
+            user = User.objects.get(email=email)
+    except User.DoesNotExist as e:
+        print(f"Couldn't find a user with email or id: {usr_id if usr_id is not None else email}.")
+        raise RuntimeError(e)
+    return USER_TYPE_TO_CODE[expected_type] == user.user_type
+
 
 # Zak's helper functions
 
