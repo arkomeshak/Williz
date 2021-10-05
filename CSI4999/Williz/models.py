@@ -31,7 +31,6 @@ class Appraiser(models.Model):
     lic_exp_date = models.DateField(null=True, default=None)
 
 
-
 class Lender(models.Model):
     user_id = models.ForeignKey(User, primary_key=True, on_delete=models.CASCADE)
     mortgage_co = models.ForeignKey(MortgageCo, on_delete=models.CASCADE)
@@ -42,7 +41,6 @@ class Realtor(models.Model):
     lic_state = models.CharField(max_length=2, null=False, default="")
     lic_num = models.CharField(max_length=10, null=False, default="")
     lic_exp_date = models.DateField(null=True, default=None)
-
 
 
 class RequestReset(models.Model):
@@ -63,3 +61,28 @@ class FailedLogins(models.Model):
     src_ip = models.GenericIPAddressField(primary_key=True)
     count = models.IntegerField(default=1)
     last_attempt = models.DateTimeField(default=datetime.now())
+
+
+class DeviceCookie(models.Model):
+    dev_cookie_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    nonce = models.fields.CharField(max_length=128, null=False)
+    signature = models.fields.CharField(max_length=64, null=False)
+
+
+class UntrustedLockout(models.Model):
+    user_id = models.ForeignKey(User, primary_key=True, on_delete=models.CASCADE)
+    lock_exp = models.fields.DateTimeField(default=None)
+
+
+class LoginAttempt(models.Model):
+    attempt_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    when = models.fields.DateTimeField(default=datetime.now())
+    device_cookie = models.ForeignKey(DeviceCookie, on_delete=models.CASCADE)
+
+
+class DeviceLockout(models.Model):
+    dev_lockout_id = models.AutoField(primary_key=True)
+    lock_exp = models.fields.DateTimeField(default=None)
+    device_cookie = models.ForeignKey(DeviceCookie, on_delete=models.CASCADE)
