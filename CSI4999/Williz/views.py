@@ -10,7 +10,9 @@ from django.conf import settings
 from django.utils import timezone
 # Model Imports
 from .models import *
-# Other imports
+# HMAC imports
+import hmac
+# Time and random imports
 from random import choices, seed
 import datetime
 from time import time
@@ -18,6 +20,7 @@ from time import time
 """
 ============================================= Constants & Globals ======================================================
 """
+ASCII_PRINTABLE = "0123456789abcdefghIjklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()-=_+[]{},./<>?\\|'\"`~ "
 URL_SAFE_CHARS = "0123456789abcdefghIjklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ–_"
 BASE_URL = settings.BASE_URL # Get the base URL from settings.py for use in email links
 # If we needed to add a new user, and give it a code in the DB, we simply need to add to the below constant list
@@ -26,6 +29,10 @@ CODE_TO_USER_TYPE = {user_code: user_type for user_code, user_type in enumerate(
 USER_TYPE_TO_CODE = {USER_TYPES[i]: i for i in range(len(USER_TYPES))}
 STATES = () # TODO: make a const list of 2-letter state codes
 SESSION_EXPIRATION = 1
+
+FAILED_LOGINS_THRESHOLD = 5
+LOCKOUT_DURATION_THRESHOLD = 60
+
 
 
 ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -102,6 +109,162 @@ def profile(request, email):
             'bank': lender.mortgage_co
         }
     return render(request, 'Williz/profile.html', context)
+    
+# Adam's Views
+def accountRequests(request):
+    """
+    UserRequests = User.objects.filter(verification_status=False)
+    context["UserData"] = generate_user_requests(UserRequests)
+    context["error"] = False
+    """
+    context = {}
+    UserReqeustTable = User.objects.all()
+    return render(request, 'Williz/accountRequests.html',{'UserRequests':UserReqeustTable})
+
+
+def adminLogin(request):
+    context = {}
+    return render(request, "Williz/adminLogin.html", context)
+
+
+def adminLogin_handler(request):
+    try:
+        if request.method == 'POST':
+            post = request.POST
+            if "email" in post and "Psw" in post:
+                email = post["email"]
+                passwordAttempt = post["Psw"]
+                try:
+                    query = User.objects.get(email=email)
+                except Exception:
+                    raise ValueError("Email not found")
+                if not query.email_validation:
+                    return HttpResponseRedirect(f"/adminLogin?&status=Need_validation")
+                # The password from the user
+                # the salt from the database
+                salt = query.pw_salt
+                print("salt", salt)
+                #passwordGuess = hashlib.sha256(str(passwordAttempt + salt).encode('utf-8')).hexdigest()
+                #uncomment this line below to test request stuff
+                passwordGuess = passwordAttempt
+                # the salted and hashed password from the database
+                correctPwHash = (query.pw_hash)
+                isAdmin = query.user_type
+                print("isAdmin: ", isAdmin)
+                print("correct:", correctPwHash)
+                print("correct:", correctPwHash, "   GUESS: ", passwordGuess)
+                if(isAdmin == 0):
+                    print("passed isAdmin")
+                    if (passwordGuess == correctPwHash):
+                        print("passed pword")
+                        # login success
+                        # Set the uname session value to username the user logged in with
+                        if (request.POST.get('remember') == 'on'):
+                            print(request.POST.get('remember'))
+
+                            request.session["email"] = email
+                            request.session.set_expiry(
+                                SESSION_EXPIRATION * 60)  # expires in SESSION_EXPIRATION * 60s seconds (Final Suggestion: if remember me is checked we can set session to last mabye 7 days)
+
+                        else:
+                            print(request.POST.get('remember'))
+                            request.session["email"] = email
+                            request.session.set_expiry(
+                                SESSION_EXPIRATION * 30)  # expires in SESSION_EXPIRATION * 30s seconds (Final Suggestion: if remember me is unchecked we can set session to last 1 day)
+                        response = HttpResponseRedirect(f"/accountRequests?&status=Login_success")
+                        return response
+                    else:
+                        messages.error(request, 'Email or password not correct')
+                        return HttpResponseRedirect(f"/adminLogin?&status=Login_Failed")
+                else:
+                    return HttpResponseRedirect(f"/adminLogin?&status=Not_An_Admin")
+            else:
+                return HttpResponseRedirect(f"/adminLogin?&status=not_valid")
+        else:
+            return HttpResponseRedirect(f"/adminLogin?&status=rediect_not_post")
+    except ValueError:
+        return HttpResponseRedirect(f"/adminLogin?&status=Account_Not_Found")
+    except Exception as e:
+        print(e)
+        return HttpResponseRedirect(f"/adminLogin?&status=server_error")
+
+# Adam's Views
+def accountRequests(request):
+    """
+    UserRequests = User.objects.filter(verification_status=False)
+    context["UserData"] = generate_user_requests(UserRequests)
+    context["error"] = False
+    """
+    context = {}
+    UserReqeustTable = User.objects.all().filter(verification_status=False)
+    return render(request, 'Williz/accountRequests.html',{'UserRequests':UserReqeustTable})
+
+
+def adminLogin(request):
+    context = {}
+    return render(request, "Williz/adminLogin.html", context)
+
+
+def adminLogin_handler(request):
+    try:
+        if request.method == 'POST':
+            post = request.POST
+            if "email" in post and "Psw" in post:
+                email = post["email"]
+                passwordAttempt = post["Psw"]
+                try:
+                    query = User.objects.get(email=email)
+                except Exception:
+                    raise ValueError("Email not found")
+                if not query.email_validation:
+                    return HttpResponseRedirect(f"/adminLogin?&status=Need_validation")
+                # The password from the user
+                # the salt from the database
+                salt = query.pw_salt
+                print("salt", salt)
+                #passwordGuess = hashlib.sha256(str(passwordAttempt + salt).encode('utf-8')).hexdigest()
+                #uncomment this line below to test request stuff
+                passwordGuess = passwordAttempt
+                # the salted and hashed password from the database
+                correctPwHash = (query.pw_hash)
+                isAdmin = query.user_type
+                print("isAdmin: ", isAdmin)
+                print("correct:", correctPwHash)
+                print("correct:", correctPwHash, "   GUESS: ", passwordGuess)
+                if(isAdmin == 0):
+                    print("passed isAdmin")
+                    if (passwordGuess == correctPwHash):
+                        print("passed pword")
+                        # login success
+                        # Set the uname session value to username the user logged in with
+                        if (request.POST.get('remember') == 'on'):
+                            print(request.POST.get('remember'))
+
+                            request.session["email"] = email
+                            request.session.set_expiry(
+                                SESSION_EXPIRATION * 60)  # expires in SESSION_EXPIRATION * 60s seconds (Final Suggestion: if remember me is checked we can set session to last mabye 7 days)
+
+                        else:
+                            print(request.POST.get('remember'))
+                            request.session["email"] = email
+                            request.session.set_expiry(
+                                SESSION_EXPIRATION * 30)  # expires in SESSION_EXPIRATION * 30s seconds (Final Suggestion: if remember me is unchecked we can set session to last 1 day)
+                        response = HttpResponseRedirect(f"/accountRequests?&status=Login_success")
+                        return response
+                    else:
+                        messages.error(request, 'Email or password not correct')
+                        return HttpResponseRedirect(f"/adminLogin?&status=Login_Failed")
+                else:
+                    return HttpResponseRedirect(f"/adminLogin?&status=Not_An_Admin")
+            else:
+                return HttpResponseRedirect(f"/adminLogin?&status=not_valid")
+        else:
+            return HttpResponseRedirect(f"/adminLogin?&status=rediect_not_post")
+    except ValueError:
+        return HttpResponseRedirect(f"/adminLogin?&status=Account_Not_Found")
+    except Exception as e:
+        print(e)
+        return HttpResponseRedirect(f"/adminLogin?&status=server_error")
 
 def resetPassword(request):
     context = {}
@@ -109,7 +272,6 @@ def resetPassword(request):
 
 def resetPassword_Handler(request):
     context = {}
-
     email = request.POST["email"]
     user = User.objects.get(email=email)
     chars = []
@@ -122,7 +284,7 @@ def resetPassword_Handler(request):
                                       user = user)
         ForgotPassword.save()
     RequestReset.objects.get(verification_str = verificationKey).verification_str
-    
+
     request.session["email"] = email
     try:
         message = f"Greetings,\n\n" + \
@@ -172,7 +334,7 @@ def resetPasswordVerify(request):
                 return HttpResponseRedirect("../login/")
         return HttpResponseRedirect(f"../register/?&status=pws_didnt_match")
     return HttpResponseRedirect(f"../resetPasswordVerify/?&status=Code_Expired")
-# Adam's helper functions
+
 
 
 # Carson's Views
@@ -300,6 +462,10 @@ def create_listing_handler(request):
 
 
 # Dan's Views
+    """
+           Author: Dan
+           Function that handles login requests
+       """
 def login_handler(request):
     try:
         if request.method == 'POST':
@@ -352,9 +518,23 @@ def login_handler(request):
         print(e)
         return HttpResponseRedirect(f"/login?&status=server_error")
 
+    """
+           Author: Dan
+           Function that gets called on the accountRequests page when user clicks the Delete button
+           
+           Deletes user account from the database
+       """
+def delete_user_account(request, user_id):
+    try:
+        user = User.objects.get(user_id=user_id)
+        user.delete()
+        messages.success(request, "The user has been deleted.")
+    except Exception as e:
+        print(e)
+    return render(request, template_name="Williz/accountRequests.html")
+
 # Mike's Views
 def email_verification_page(request, verify_string=None):
-    # TODO: Test this function and verification email by making a dummy verification page and dummy verif entries
     """
     Author: Mike
     View to present the user with either:
@@ -368,41 +548,41 @@ def email_verification_page(request, verify_string=None):
     context = {"message": "Ooops! We failed to verify your email."}
     if verify_string is not None:
         # Good case, still need to verify user tho
-        try:
-            val_entry = Validation.objects.get(verification_str=verify_string)
-            now = timezone.now()
-            expires = val_entry.expires
-            print("now is ", now)
-            print("expires in ", expires)
-            if val_entry.expires <= timezone.now():
-                return render(request, context={"message": "Ooops, that link has expired. Try requesting another."},
-                              template_name="Williz/stub_verify_email.html")
-            user_id = val_entry.user_id
-            user = User.objects.get(pk=user_id)
-            email = user.email
-            context["message"] = f"Your email: {email} has been verified."
-            context["name"] = user.f_name
-            user.email_validation = True
-            user.save()
-            val_entry.delete()
-            return render(request, context=context, template_name="Williz/stub_verify_email.html")
-        except Validation.DoesNotExist:
-            print(f"Invalid verification string {verify_string}")
-            return render(request, context=context, template_name="Williz/stub_verify_email.html")
-    # No verification string found, render with the message of failure
-    else:
-        return render(request, context=context, template_name="Williz/stub_verify_email.html")
+        with transaction.atomic():
+            try:
+                val_entry = Validation.objects.get(verification_str=verify_string)
+                now = timezone.now()
+                expires = val_entry.expires
+                print("now is ", now)
+                print("expires in ", expires)
+                if val_entry.expires <= timezone.now():
+                    return render(request, context={"message": "Ooops, that link has expired. Try requesting another."},
+                                  template_name="Williz/stub_verify_email.html")
+                user_id = val_entry.user_id
+                user = User.objects.get(pk=user_id)
+                email = user.email
+                context["message"] = f"Your email: {email} has been verified."
+                context["name"] = user.f_name
+                user.email_validation = True
+                user.save()
+                val_entry.delete()
+                return render(request, context=context, template_name="Williz/stub_verify_email.html")
+            except Validation.DoesNotExist:
+                print(f"Invalid verification string {verify_string}")
+                return render(request, context=context, template_name="Williz/stub_verify_email.html")
+            # No verification string found, render with the message of failure
+
+    return render(request, contex=context, template_name="Williz/stub_verify_email.html")
 
 
-def force_make_email_verification(request, email=None):
+def handler404(request, *args, **argv):
     """
-    My somewhat hacky solution to generating email verifications while there is no
-    account creation/verification request implemented.
-    :param email:
+    A 404 handler which directs to the 404 page.
+    :param request: http request
     :return: None
     """
-    create_email_verification(email)
-    return HttpResponse(f"<h1>Made an email verification for {email}.</h1><p>Check email for link</p>")
+    return render("<div><h1>That resource was not found</h1></div>")
+
 
 # Zak's Views
 
@@ -456,6 +636,19 @@ def edit_user_info(request):
         lender.save()
     return HttpResponseRedirect("Williz/login")
 
+def change_verification(request, email):
+    """
+        Author: Zak
+        Function which allows admin to change status of license validation for all user types
+        :return: redirect to current page with updated info
+    """
+    user = User.objects.get(email=email)
+    user.verification_status = not user.verification_status
+    user.save()
+    response = HttpResponseRedirect(f"/accountRequests")
+    return response
+
+
 """
 ============================================= Helper Functions =========================================================
 """
@@ -480,16 +673,17 @@ def create_email_verification(email):
         seed(time())
         veri_str = "".join(choices(URL_SAFE_CHARS, k=45))
         veri_link = f"{BASE_URL}/verify/email/{veri_str}"
-        # Get the user's data from DB
-        user = User.objects.get(email=email)
-        first = user.f_name
-        last = user.l_name
-        user_type = CODE_TO_USER_TYPE[user.user_type]
-        # Set the verification entry (atomic ensure only happens if email succeeds)
-        validation_entry = Validation(user=user, verification_str=veri_str)
-        # Send the verificaiton email
-        send_verification_email(email, veri_link, user_type, first, last)
-        validation_entry.save()
+        with transaction.atomic():
+            # Get the user's data from DB
+            user = User.objects.get(email=email)
+            first = user.f_name
+            last = user.l_name
+            user_type = CODE_TO_USER_TYPE[user.user_type]
+            # Set the verification entry (atomic ensure only happens if email succeeds)
+            validation_entry = Validation(user=user, verification_str=veri_str)
+            # Send the verificaiton email
+            send_verification_email(email, veri_link, user_type, first, last)
+            validation_entry.save()
     except Exception as e:
         print(f"Exception while attempting to send a verificaiton email to {email}.")
         raise e
@@ -552,6 +746,44 @@ def generate_reset_request_veri_str():
     if len(colliding_entries) > 0:
         return generate_email_veri_str()
     return veri_str
+
+
+def verify_session(request):
+    """
+    Author: Mike
+    Verifies the user session is still valid.
+    :param request: http request
+    :return: boolean
+    """
+    return "sessionid" in request.COOKIES and request.session.get_expiry_age() != 0
+
+
+def user_is_expected_type(expected_type, usr_id=None, email=None):
+    """
+    Author: Mike
+    Returns whether the user is registered in the database as the type passed in as the expected_type string.
+    Works with at least one of user_id or email.
+    :param expected_type_type: string
+    :param usr_id: int
+    :param email: string
+    :return: boolean
+    """
+    global USER_TYPES, USER_TYPE_TO_CODE
+    # Check for and raise some easy exceptions b4 costly DB lookup
+    if usr_id is None and email is None:
+        raise ValueError("At least one of usr_id or email parameters must be provided.")
+    elif expected_type not in USER_TYPES:
+        raise ValueError(f"{expected_type} is not a known user type.")
+    try:
+        if usr_id is not None:
+            user = User.objects.get(pk=usr_id)
+        else:
+            user = User.objects.get(email=email)
+    except User.DoesNotExist as e:
+        print(f"Couldn't find a user with email or id: {usr_id if usr_id is not None else email}.")
+        raise RuntimeError(e)
+    return USER_TYPE_TO_CODE[expected_type] == user.user_type
+
 
 # Zak's helper functions
 
