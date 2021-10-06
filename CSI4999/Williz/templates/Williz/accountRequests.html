@@ -77,6 +77,9 @@ function showRealtorTable() {
      }
 }
 */
+
+
+
 </script>
 {% load static %}
           <img id = "logo" src="{% static 'Williz/logoWhiteStroke.png' %}" style = "float:right" alt = "Logo">
@@ -103,16 +106,38 @@ function showRealtorTable() {
   <div class="grid-item"><b><i>Last Name</b></i></div>
   <div class="grid-item"><b><i>Email</b></i></div>  
   <div class="grid-item"><b><i>User Type</b></i></div>
-  <div class="grid-item"><b><i>Verification Status</b></i></div>
+  <div class="grid-item"><b><i>License #</b></i></div>
   <div class="grid-item"><b><i>View Details</b></i></div>
         {% for Requests in UserRequests %}
   <div class="grid-item">{{ Requests.f_name }}</div>
   <div class="grid-item">{{ Requests.l_name }}</div>
   <div class="grid-item">{{ Requests.email }}</div>  
   <div class="grid-item">{{ Requests.user_type }}</div>
-  <div class="grid-item">{{ Requests.verification_status }}</div>
+
+
+  <div class="grid-item">{{Requests.Lic_num}} </div>
+
   <div class="grid-item"><button>Details</button></div>
-         {% endfor %}
+  {% endfor %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 </div>
                 
 </div> 
