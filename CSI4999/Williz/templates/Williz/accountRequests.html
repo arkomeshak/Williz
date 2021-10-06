@@ -78,6 +78,7 @@ function showRealtorTable() {
 }
 */
 </script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script>
     function deleteUserAccount(user_id){
@@ -97,6 +98,8 @@ function showRealtorTable() {
     }
 
 </script>
+
+
 {% load static %}
           <img id = "logo" src="{% static 'Williz/logoWhiteStroke.png' %}" style = "float:right" alt = "Logo">
 
@@ -105,6 +108,25 @@ function showRealtorTable() {
 
 
   <body id="main_body" style = "background-image: linear-gradient( rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('https://shinglehutroofing.com/wp-content/uploads/2020/11/HANDSHAKE.png');">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script>
+      function changeVerification(email){
+          if(confirm("Do you want to change the verification status of the account associated with " + email + "?")){
+              $.ajax({
+                  type: 'GET',
+                  url: "../change_verification/email/" + email,
+                  data: {"email": email},
+                  success: function (response) {
+                      window.location.replace("/accountRequests")
+                  },
+                  error: function (response) {
+                      window.alert("Something went wrong, please reload the page.")
+                  }
+              })
+          }
+      }
+  </script>
     <div class="dimmer" id = "dimmer"></div>
 
 
@@ -118,7 +140,7 @@ function showRealtorTable() {
 
 <button>Mortgage Lendors</button>
 -->
-        <div class="grid-container" id = "appraisersTable">
+  <div class="grid-container" id = "realtorsTable">
   <div class="grid-item"><strong><em>First Name</strong></em></div>
   <div class="grid-item"><b><i>Last Name</b></i></div>
   <div class="grid-item"><b><i>Email</b></i></div>
@@ -132,13 +154,11 @@ function showRealtorTable() {
   <div class="grid-item">{{ Requests.user_type }}</div>
   <div class="grid-item">{{ Requests.verification_status }}</div>
   <div class="grid-item"><button>Details</button><button onclick="deleteUserAccount('{{Requests.user_id}}')">Delete</button></div>
-
-{% endfor %}
-            </div>
-
-
+  <div class="grid-item"><button onclick="changeVerification('{{Requests.email}}')">Change Verification Status</button></div>
+         {% endfor %}
+</div>
                 
-
+</div> 
 
  <footer class="footer">
         <nav class="navbar navbar-expand-sm navbar-dark">
