@@ -54,6 +54,19 @@ def register(request):
     return render(request, "Williz/register.html", context)
 
 
+def create_listing(request, email):
+    user = User.objects.get(email=email)
+
+    if user.user_type != 1:
+        return HttpResponseRedirect(f"/profile/email/{email}/&status=access_denied")
+
+    context = {
+        'u_id': user.user_id
+    }
+
+    return render(request, "Williz/createListing.html", context)
+
+
 def profile(request, email):
     """
         Author: Zak
@@ -323,6 +336,7 @@ def resetPasswordVerify(request):
     return HttpResponseRedirect(f"../resetPasswordVerify/?&status=Code_Expired")
 
 
+
 # Carson's Views
 @transaction.atomic #Carson
 def register_user_handler(request):
@@ -348,7 +362,6 @@ def register_user_handler(request):
     # gathers data
     utype = request.POST["radio"]
     utype = int(utype)
-    print(utype)
     name1 = request.POST["fname"]
     name2 = request.POST["lname"]
     email_given = request.POST["email"]
@@ -389,6 +402,64 @@ def register_user_handler(request):
             lender.save()  # save additional info to lender table
     create_email_verification(email_given)
     return HttpResponseRedirect("../login/")
+
+
+@transaction.atomic  # Carson
+def create_listing_handler(request):
+    """
+              Author: Carson
+              Function which creates a new listing in the database based off info added in HTML form
+              :return: redirects to login page
+          """
+    context = {}
+
+    user = User.objects.get(user_id=int(request.POST['user_id'].replace('/', '')))
+
+    if user.user_type != 1:
+        return HttpResponseRedirect(f"/profile/email/{user.email}?&status=access_denied")
+
+    h_num = request.POST["house_num"]
+    street_given = request.POST["street"]
+    city_given = request.POST["city"]
+    state_given = request.POST["state"]
+    zip_given = request.POST["zip"]
+    h_size = request.POST["house_size"]
+    p_size = request.POST["prop_size"]
+    bed_num = request.POST["bed_num"]
+    bath_num = request.POST["bath_num"]
+    asking = request.POST["ask_price"]
+
+    if request.POST['desc'] != "":
+        desc = request.POST['desc']
+
+        listing = Listing(house_num=h_num,
+                          street_name=street_given,
+                          city=city_given,
+                          state=state_given,
+                          zip_code=zip_given,
+                          house_size=h_size,
+                          property_size=p_size,
+                          num_beds=bed_num,
+                          num_baths=bath_num,
+                          asking_price=asking,
+                          realtor=user,
+                          description=desc)
+    else:
+        listing = Listing(house_num=h_num,
+                          street_name=street_given,
+                          city=city_given,
+                          state=state_given,
+                          zip_code=zip_given,
+                          house_size=h_size,
+                          property_size=p_size,
+                          num_beds=bed_num,
+                          num_baths=bath_num,
+                          asking_price=asking,
+                          realtor=user)
+
+    listing.save()
+    return HttpResponseRedirect(f"/profile/email/{user.email}?&status=creation_success")
+
 
 # Dan's Views
     """
@@ -432,7 +503,7 @@ def login_handler(request):
                         request.session["email"] = email
                         request.session.set_expiry(
                             SESSION_EXPIRATION * 30)  # expires in SESSION_EXPIRATION * 30s seconds (Final Suggestion: if remember me is unchecked we can set session to last 1 day)
-                    response = HttpResponseRedirect(f"/profile/email/{email}/&status=Login_success")
+                    response = HttpResponseRedirect(f"/profile/email/{email}?&status=Login_success")
                     return response
                 else:
                     messages.error(request, 'Email or password not correct')
