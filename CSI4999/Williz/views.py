@@ -58,7 +58,7 @@ def create_listing(request, email):
     user = User.objects.get(email=email)
 
     if user.user_type != 1:
-        return HttpResponseRedirect(f"/profile/email/{email}/&status=access_denied")
+        return HttpResponseRedirect(f"/profile/email/{email}?&status=access_denied")
 
     context = {
         'u_id': user.user_id
