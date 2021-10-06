@@ -66,8 +66,8 @@ class FailedLogins(models.Model):
 class DeviceCookie(models.Model):
     dev_cookie_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    nonce = models.fields.CharField(max_length=128, null=False)
-    signature = models.fields.CharField(max_length=64, null=False)
+    nonce = models.BinaryField()
+    signature = models.BinaryField()
 
 
 class UntrustedLockout(models.Model):
