@@ -463,6 +463,11 @@ def edit_user_info(request):
     return HttpResponseRedirect("Williz/login")
 
 def change_verification(request, email):
+    """
+        Author: Zak
+        Function which allows admin to change status of license validation for all user types
+        :return: redirect to current page with updated info
+    """
     user = User.objects.get(email=email)
     user.verification_status = not user.verification_status
     user.save()
