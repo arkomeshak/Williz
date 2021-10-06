@@ -96,7 +96,7 @@ def profile(request, email):
             'bank': lender.mortgage_co
         }
     return render(request, 'Williz/profile.html', context)
-    
+
 # Adam's Views
 def accountRequests(request):
     """
@@ -193,7 +193,7 @@ def resetPassword_Handler(request):
                                       user = user)
         ForgotPassword.save()
     RequestReset.objects.get(verification_str = verificationKey).verification_str
-    
+
     request.session["email"] = email
     try:
         message = f"Greetings,\n\n" + \
@@ -313,6 +313,10 @@ def register_user_handler(request):
     return HttpResponseRedirect("../login/")
 
 # Dan's Views
+    """
+           Author: Dan
+           Function that handles login requests
+       """
 def login_handler(request):
     try:
         if request.method == 'POST':
@@ -364,6 +368,21 @@ def login_handler(request):
     except Exception as e:
         print(e)
         return HttpResponseRedirect(f"/login?&status=server_error")
+
+    """
+           Author: Dan
+           Function that gets called on the accountRequests page when user clicks the Delete button
+           
+           Deletes user account from the database
+       """
+def delete_user_account(request, user_id):
+    try:
+        user = User.objects.get(user_id=user_id)
+        user.delete()
+        messages.success(request, "The user has been deleted.")
+    except Exception as e:
+        print(e)
+    return render(request, template_name="Williz/accountRequests.html")
 
 # Mike's Views
 def email_verification_page(request, verify_string=None):
