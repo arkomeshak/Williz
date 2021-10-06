@@ -98,7 +98,7 @@ def accountRequests(request):
     context["error"] = False
     """
     context = {}
-    UserReqeustTable = User.objects.all().filter(verification_status=False)
+    UserReqeustTable = User.objects.all()
     return render(request, 'Williz/accountRequests.html',{'UserRequests':UserReqeustTable})
 
 
@@ -461,6 +461,14 @@ def edit_user_info(request):
         user.save()
         lender.save()
     return HttpResponseRedirect("Williz/login")
+
+def change_verification(request, email):
+    user = User.objects.get(email=email)
+    user.verification_status = not user.verification_status
+    user.save()
+    response = HttpResponseRedirect(f"/accountRequests")
+    return response
+
 
 """
 ============================================= Helper Functions =========================================================

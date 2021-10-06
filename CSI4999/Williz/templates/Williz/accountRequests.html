@@ -86,6 +86,24 @@ function showRealtorTable() {
 
 
   <body id="main_body" style = "background-image: linear-gradient( rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('https://shinglehutroofing.com/wp-content/uploads/2020/11/HANDSHAKE.png');">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script>
+      function changeVerification(email){
+          if(confirm("Do you want to change the verification status of the account associated with " + email + "?")){
+              $.ajax({
+                  type: 'GET',
+                  url: "../change_verification/email/" + email,
+                  data: {"email": email},
+                  success: function (response) {
+                      window.location.replace("/accountRequests")
+                  },
+                  error: function (response) {
+                      window.alert("Something went wrong, please reload the page.")
+                  }
+              })
+          }
+      }
+  </script>
     <div class="dimmer" id = "dimmer"></div>
 
 
@@ -96,7 +114,7 @@ function showRealtorTable() {
     
 <button onClick = "showRealtorTable()">Realtors</button>
 <button>Appraisers</button>
-<button>Mortgage Lendors</button>
+<button>Mortgage Lenders</button>
 -->
 <div class="grid-container" id = "realtorsTable">
   <div class="grid-item"><strong><em>First Name</strong></em></div>
@@ -111,7 +129,7 @@ function showRealtorTable() {
   <div class="grid-item">{{ Requests.email }}</div>  
   <div class="grid-item">{{ Requests.user_type }}</div>
   <div class="grid-item">{{ Requests.verification_status }}</div>
-  <div class="grid-item"><button>Details</button></div>
+  <div class="grid-item"><button onclick="changeVerification('{{Requests.email}}')">Change Verification Status</button></div>
          {% endfor %}
 </div>
                 
