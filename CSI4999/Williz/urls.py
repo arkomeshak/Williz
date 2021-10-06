@@ -17,6 +17,7 @@ urlpatterns = [
     path("login_handler/", views.login_handler, name="login_handler"),
     path("adminLogin_handler/", views.adminLogin_handler, name="adminLogin_handler"),
     path("accountRequests/", views.accountRequests, name="accountRequests"),
+    path("delete_user_account/<user_id>", views.delete_user_account, name="delete_user_account"),
     path("change_verification/email/<email>", views.change_verification, name="changeVerification")
     
 ]

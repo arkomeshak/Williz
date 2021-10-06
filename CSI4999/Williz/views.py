@@ -175,6 +175,84 @@ def adminLogin_handler(request):
         print(e)
         return HttpResponseRedirect(f"/adminLogin?&status=server_error")
 
+# Adam's Views
+def accountRequests(request):
+    """
+    UserRequests = User.objects.filter(verification_status=False)
+    context["UserData"] = generate_user_requests(UserRequests)
+    context["error"] = False
+    """
+    context = {}
+    UserReqeustTable = User.objects.all().filter(verification_status=False)
+    return render(request, 'Williz/accountRequests.html',{'UserRequests':UserReqeustTable})
+
+
+def adminLogin(request):
+    context = {}
+    return render(request, "Williz/adminLogin.html", context)
+
+
+def adminLogin_handler(request):
+    try:
+        if request.method == 'POST':
+            post = request.POST
+            if "email" in post and "Psw" in post:
+                email = post["email"]
+                passwordAttempt = post["Psw"]
+                try:
+                    query = User.objects.get(email=email)
+                except Exception:
+                    raise ValueError("Email not found")
+                if not query.email_validation:
+                    return HttpResponseRedirect(f"/adminLogin?&status=Need_validation")
+                # The password from the user
+                # the salt from the database
+                salt = query.pw_salt
+                print("salt", salt)
+                #passwordGuess = hashlib.sha256(str(passwordAttempt + salt).encode('utf-8')).hexdigest()
+                #uncomment this line below to test request stuff
+                passwordGuess = passwordAttempt
+                # the salted and hashed password from the database
+                correctPwHash = (query.pw_hash)
+                isAdmin = query.user_type
+                print("isAdmin: ", isAdmin)
+                print("correct:", correctPwHash)
+                print("correct:", correctPwHash, "   GUESS: ", passwordGuess)
+                if(isAdmin == 0):
+                    print("passed isAdmin")
+                    if (passwordGuess == correctPwHash):
+                        print("passed pword")
+                        # login success
+                        # Set the uname session value to username the user logged in with
+                        if (request.POST.get('remember') == 'on'):
+                            print(request.POST.get('remember'))
+
+                            request.session["email"] = email
+                            request.session.set_expiry(
+                                SESSION_EXPIRATION * 60)  # expires in SESSION_EXPIRATION * 60s seconds (Final Suggestion: if remember me is checked we can set session to last mabye 7 days)
+
+                        else:
+                            print(request.POST.get('remember'))
+                            request.session["email"] = email
+                            request.session.set_expiry(
+                                SESSION_EXPIRATION * 30)  # expires in SESSION_EXPIRATION * 30s seconds (Final Suggestion: if remember me is unchecked we can set session to last 1 day)
+                        response = HttpResponseRedirect(f"/accountRequests?&status=Login_success")
+                        return response
+                    else:
+                        messages.error(request, 'Email or password not correct')
+                        return HttpResponseRedirect(f"/adminLogin?&status=Login_Failed")
+                else:
+                    return HttpResponseRedirect(f"/adminLogin?&status=Not_An_Admin")
+            else:
+                return HttpResponseRedirect(f"/adminLogin?&status=not_valid")
+        else:
+            return HttpResponseRedirect(f"/adminLogin?&status=rediect_not_post")
+    except ValueError:
+        return HttpResponseRedirect(f"/adminLogin?&status=Account_Not_Found")
+    except Exception as e:
+        print(e)
+        return HttpResponseRedirect(f"/adminLogin?&status=server_error")
+
 def resetPassword(request):
     context = {}
     return render(request, "Williz/resetPassword.html", context)
@@ -193,7 +271,7 @@ def resetPassword_Handler(request):
                                       user = user)
         ForgotPassword.save()
     RequestReset.objects.get(verification_str = verificationKey).verification_str
-    
+
     request.session["email"] = email
     try:
         message = f"Greetings,\n\n" + \
@@ -313,6 +391,10 @@ def register_user_handler(request):
     return HttpResponseRedirect("../login/")
 
 # Dan's Views
+    """
+           Author: Dan
+           Function that handles login requests
+       """
 def login_handler(request):
     try:
         if request.method == 'POST':
@@ -364,6 +446,21 @@ def login_handler(request):
     except Exception as e:
         print(e)
         return HttpResponseRedirect(f"/login?&status=server_error")
+
+    """
+           Author: Dan
+           Function that gets called on the accountRequests page when user clicks the Delete button
+           
+           Deletes user account from the database
+       """
+def delete_user_account(request, user_id):
+    try:
+        user = User.objects.get(user_id=user_id)
+        user.delete()
+        messages.success(request, "The user has been deleted.")
+    except Exception as e:
+        print(e)
+    return render(request, template_name="Williz/accountRequests.html")
 
 # Mike's Views
 def email_verification_page(request, verify_string=None):
