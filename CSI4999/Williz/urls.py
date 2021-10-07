@@ -22,3 +22,4 @@ urlpatterns = [
     path("delete_user_account/<user_id>", views.delete_user_account, name="delete_user_account"),
     path("change_verification/email/<email>", views.change_verification, name="changeVerification")
 ]
+
