@@ -177,6 +177,10 @@ function fnameEdit() {
     <button type = "Submit" id ="Submit" name ="Save" value="Submit">Save</button>
         <input style="visibility: hidden" class="FormInput" name="user_id" value={{user_id}}/>
     </form>
+        <form method="POST" action="../../createListing/email/{{email}}">
+            {% csrf_token %}
+            <button type = "Submit" id ="Submit" value="Submit">Create Listing</button>
+        </form>
     </div>
 </div>
 </div> 
