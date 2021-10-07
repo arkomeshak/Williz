@@ -123,11 +123,11 @@ def accountRequests(request):
     NewRARTable = []
     for i, user in enumerate(UserReqeustTable):
         if user.user_type == USER_TYPE_TO_CODE["realtor"]:
-            entry = {"num": i + 1,"user_type": "realtor", "email": user.email, "f_name": user.f_name, "l_name": user.l_name, "Lic_num": RATable[i]}
+            entry = {"num": i + 1,"user_type": "realtor", "email": user.email, "f_name": user.f_name, "l_name": user.l_name, "Lic_num": RATable[i], "user_id": user.user_id}
         if user.user_type == USER_TYPE_TO_CODE["appraiser"]:
-            entry = {"num": i + 1,"user_type": "Appraiser", "email": user.email, "f_name": user.f_name, "l_name": user.l_name, "Lic_num": RATable[i]}
+            entry = {"num": i + 1,"user_type": "Appraiser", "email": user.email, "f_name": user.f_name, "l_name": user.l_name, "Lic_num": RATable[i], "user_id": user.user_id}
         if user.user_type == USER_TYPE_TO_CODE["lender"]:
-            entry = {"num": i + 1,"user_type": "Lender", "email": user.email, "f_name": user.f_name, "l_name": user.l_name, "Lic_num": RATable[i]}
+            entry = {"num": i + 1,"user_type": "Lender", "email": user.email, "f_name": user.f_name, "l_name": user.l_name, "Lic_num": RATable[i], "user_id": user.user_id}
         NewRARTable.append(entry)
 
     print(RATable)
