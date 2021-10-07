@@ -125,9 +125,8 @@ def accountRequests(request):
     """
     context = {}
 
-    iduser = User.objects.values_list('user_id', flat=True).filter(verification_status=False)
     UserReqeustTable = User.objects.all().exclude(user_type=0)
-    #RATable = Realtor.objects.all().filter(user_id = iduser)
+
     print(UserReqeustTable)
     #print(RATable)
     RATable = []
