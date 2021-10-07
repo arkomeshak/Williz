@@ -66,8 +66,8 @@ class FailedLogins(models.Model):
 class DeviceCookie(models.Model):
     dev_cookie_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    nonce = models.fields.CharField(max_length=128, null=False)
-    signature = models.fields.CharField(max_length=64, null=False)
+    nonce = models.BinaryField()
+    signature = models.BinaryField()
 
 
 class UntrustedLockout(models.Model):
@@ -79,10 +79,29 @@ class LoginAttempt(models.Model):
     attempt_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     when = models.fields.DateTimeField(default=datetime.now())
-    device_cookie = models.ForeignKey(DeviceCookie, on_delete=models.CASCADE)
+    device_cookie = models.ForeignKey(DeviceCookie, on_delete=models.CASCADE, null=True)
 
 
 class DeviceLockout(models.Model):
     dev_lockout_id = models.AutoField(primary_key=True)
     lock_exp = models.fields.DateTimeField(default=None)
     device_cookie = models.ForeignKey(DeviceCookie, on_delete=models.CASCADE)
+
+
+class Listing(models.Model):
+    listing_id = models.AutoField(primary_key=True)
+    house_num = models.IntegerField(null=False)
+    street_name = models.CharField(max_length=25, null=False)
+    city = models.CharField(max_length=30, null=False)
+    state = models.CharField(max_length=2, null=False, default="")
+    zip_code = models.SmallIntegerField(null=False)
+    house_size = models.IntegerField(null=False)
+    property_size = models.IntegerField(null=False)
+    num_beds = models.SmallIntegerField(null=False)
+    num_baths = models.DecimalField(max_digits=3, null=False, decimal_places=1)
+    list_date = models.DateField(null=False, default=datetime.now)
+    asking_price = models.IntegerField(null=False)
+    realtor = models.ForeignKey(User, on_delete=models.CASCADE)
+    lender = models.ForeignKey(MortgageCo, on_delete=models.CASCADE, null=True)
+    appraiser = models.ForeignKey(Appraiser, on_delete=models.CASCADE, null=True)
+    description = models.CharField(max_length=1000, null=True)
