@@ -57,12 +57,6 @@ class Validation(models.Model):
     expires = models.fields.DateTimeField(editable=False, null=False, default=(datetime.now() + timedelta(minutes=10)))
 
 
-class FailedLogins(models.Model):
-    src_ip = models.GenericIPAddressField(primary_key=True)
-    count = models.IntegerField(default=1)
-    last_attempt = models.DateTimeField(default=datetime.now())
-
-
 class DeviceCookie(models.Model):
     dev_cookie_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -75,7 +69,7 @@ class UntrustedLockout(models.Model):
     lock_exp = models.fields.DateTimeField(default=None)
 
 
-class LoginAttempt(models.Model):
+class FailedLoginAttempt(models.Model):
     attempt_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     when = models.fields.DateTimeField(default=datetime.now())
