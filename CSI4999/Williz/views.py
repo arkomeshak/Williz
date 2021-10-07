@@ -22,6 +22,7 @@ from time import time
 """
 ============================================= Constants & Globals ======================================================
 """
+
 ASCII_PRINTABLE = "0123456789abcdefghIjklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()-=_+[]{}./<>?|`~ "
 URL_SAFE_CHARS = "0123456789abcdefghIjklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ–_"
 BASE_URL = settings.BASE_URL  # Get the base URL from settings.py for use in email links
@@ -31,10 +32,10 @@ CODE_TO_USER_TYPE = {user_code: user_type for user_code, user_type in enumerate(
 USER_TYPE_TO_CODE = {USER_TYPES[i]: i for i in range(len(USER_TYPES))}
 STATES = ()  # TODO: make a const list of 2-letter state codes
 SESSION_EXPIRATION = 1
+
 # Brute force lockout values
 FAILED_LOGINS_THRESHOLD = 5
 LOCKOUT_DURATION_THRESHOLD = 60
-
 ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 
@@ -53,6 +54,19 @@ def login(request):
 def register(request):
     context = {}
     return render(request, "Williz/register.html", context)
+
+
+def create_listing(request, email):
+    user = User.objects.get(email=email)
+
+    if user.user_type != 1:
+        return HttpResponseRedirect(f"/profile/email/{email}?&status=access_denied")
+
+    context = {
+        'u_id': user.user_id
+    }
+
+    return render(request, "Williz/createListing.html", context)
 
 
 def profile(request, email):
@@ -99,6 +113,114 @@ def profile(request, email):
     return render(request, 'Williz/profile.html', context)
 
 
+####################################################################
+########################### Adam's Views ###########################
+####################################################################
+
+def accountRequests(request):
+    """
+    UserRequests = User.objects.filter(verification_status=False)
+    context["UserData"] = generate_user_requests(UserRequests)
+    context["error"] = False
+    """
+    context = {}
+
+    iduser = User.objects.values_list('user_id', flat=True).filter(verification_status=False)
+    UserReqeustTable = User.objects.all().filter(verification_status=False)
+    #RATable = Realtor.objects.all().filter(user_id = iduser)
+    print(UserReqeustTable.count())
+    #print(RATable)
+    RATable = []
+    for us in UserReqeustTable.iterator():
+        print(us.user_id)
+        if (User.objects.get(user_id=us.user_id).user_type == 1):
+            RATable.append(Realtor.objects.get(user_id = us.user_id).lic_num)
+        elif  (User.objects.get(user_id=us.user_id).user_type == 2):
+            RATable.append(Appraiser.objects.get(user_id = us.user_id).lic_num)
+        elif  (User.objects.get(user_id=us.user_id).user_type == 3):
+            RATable.append("N/A")
+    NewRARTable = []
+    for i, user in enumerate(UserReqeustTable):
+        if user.user_type == USER_TYPE_TO_CODE["realtor"]:
+            entry = {"num": i + 1,"user_type": "realtor", "email": user.email, "f_name": user.f_name, "l_name": user.l_name, "Lic_num": RATable[i], "user_id": user.user_id, "verification_status": user.verification_status}
+        if user.user_type == USER_TYPE_TO_CODE["appraiser"]:
+            entry = {"num": i + 1,"user_type": "Appraiser", "email": user.email, "f_name": user.f_name, "l_name": user.l_name, "Lic_num": RATable[i], "user_id": user.user_id, "verification_status": user.verification_status}
+        if user.user_type == USER_TYPE_TO_CODE["lender"]:
+            entry = {"num": i + 1,"user_type": "Lender", "email": user.email, "f_name": user.f_name, "l_name": user.l_name, "Lic_num": RATable[i], "user_id": user.user_id, "verification_status": user.verification_status}
+        NewRARTable.append(entry)
+
+    print(RATable)
+    return render(request, 'Williz/accountRequests.html',{'UserRequests':NewRARTable})
+
+
+
+def adminLogin(request):
+    context = {}
+    return render(request, "Williz/adminLogin.html", context)
+
+
+def adminLogin_handler(request):
+    try:
+        if request.method == 'POST':
+            post = request.POST
+            if "email" in post and "Psw" in post:
+                email = post["email"]
+                passwordAttempt = post["Psw"]
+                try:
+                    query = User.objects.get(email=email)
+                except Exception:
+                    raise ValueError("Email not found")
+                if not query.email_validation:
+                    return HttpResponseRedirect(f"/adminLogin?&status=Need_validation")
+                # The password from the user
+                # the salt from the database
+                salt = query.pw_salt
+                print("salt", salt)
+                #passwordGuess = hashlib.sha256(str(passwordAttempt + salt).encode('utf-8')).hexdigest()
+                #uncomment this line below to test request stuff
+                passwordGuess = passwordAttempt
+                # the salted and hashed password from the database
+                correctPwHash = (query.pw_hash)
+                isAdmin = query.user_type
+                print("isAdmin: ", isAdmin)
+                print("correct:", correctPwHash)
+                print("correct:", correctPwHash, "   GUESS: ", passwordGuess)
+                if(isAdmin == 0):
+                    print("passed isAdmin")
+                    if (passwordGuess == correctPwHash):
+                        print("passed pword")
+                        # login success
+                        # Set the uname session value to username the user logged in with
+                        if (request.POST.get('remember') == 'on'):
+                            print(request.POST.get('remember'))
+
+                            request.session["email"] = email
+                            request.session.set_expiry(
+                                SESSION_EXPIRATION * 60)  # expires in SESSION_EXPIRATION * 60s seconds (Final Suggestion: if remember me is checked we can set session to last mabye 7 days)
+
+                        else:
+                            print(request.POST.get('remember'))
+                            request.session["email"] = email
+                            request.session.set_expiry(
+                                SESSION_EXPIRATION * 30)  # expires in SESSION_EXPIRATION * 30s seconds (Final Suggestion: if remember me is unchecked we can set session to last 1 day)
+                        response = HttpResponseRedirect(f"/accountRequests?&status=Login_success")
+                        return response
+                    else:
+                        messages.error(request, 'Email or password not correct')
+                        return HttpResponseRedirect(f"/adminLogin?&status=Login_Failed")
+                else:
+                    return HttpResponseRedirect(f"/adminLogin?&status=Not_An_Admin")
+            else:
+                return HttpResponseRedirect(f"/adminLogin?&status=not_valid")
+        else:
+            return HttpResponseRedirect(f"/adminLogin?&status=rediect_not_post")
+    except ValueError:
+        return HttpResponseRedirect(f"/adminLogin?&status=Account_Not_Found")
+    except Exception as e:
+        print(e)
+        return HttpResponseRedirect(f"/adminLogin?&status=server_error")
+      
+
 def resetPassword(request):
     context = {}
     return render(request, "Williz/resetPassword.html", context)
@@ -106,7 +228,6 @@ def resetPassword(request):
 
 def resetPassword_Handler(request):
     context = {}
-
     email = request.POST["email"]
     user = User.objects.get(email=email)
     chars = []
@@ -118,7 +239,9 @@ def resetPassword_Handler(request):
         ForgotPassword = RequestReset(verification_str=verificationKey,
                                       user=user)
         ForgotPassword.save()
+
     RequestReset.objects.get(verification_str=verificationKey).verification_str
+
 
     request.session["email"] = email
     try:
@@ -172,8 +295,6 @@ def resetPasswordVerify(request):
     return HttpResponseRedirect(f"../resetPasswordVerify/?&status=Code_Expired")
 
 
-# Adam's helper functions
-
 # Carson's Views
 @transaction.atomic  # Carson
 def register_user_handler(request):
@@ -199,7 +320,6 @@ def register_user_handler(request):
     # gathers data
     utype = request.POST["radio"]
     utype = int(utype)
-    print(utype)
     name1 = request.POST["fname"]
     name2 = request.POST["lname"]
     email_given = request.POST["email"]
@@ -242,8 +362,70 @@ def register_user_handler(request):
     return HttpResponseRedirect("../login/")
 
 
+
+
+@transaction.atomic  # Carson
+def create_listing_handler(request):
+    """
+              Author: Carson
+              Function which creates a new listing in the database based off info added in HTML form
+              :return: redirects to login page
+          """
+    context = {}
+
+    user = User.objects.get(user_id=int(request.POST['user_id'].replace('/', '')))
+
+    if user.user_type != 1:
+        return HttpResponseRedirect(f"/profile/email/{user.email}?&status=access_denied")
+
+    h_num = request.POST["house_num"]
+    street_given = request.POST["street"]
+    city_given = request.POST["city"]
+    state_given = request.POST["state"]
+    zip_given = request.POST["zip"]
+    h_size = request.POST["house_size"]
+    p_size = request.POST["prop_size"]
+    bed_num = request.POST["bed_num"]
+    bath_num = request.POST["bath_num"]
+    asking = request.POST["ask_price"]
+
+    if request.POST['desc'] != "":
+        desc = request.POST['desc']
+
+        listing = Listing(house_num=h_num,
+                          street_name=street_given,
+                          city=city_given,
+                          state=state_given,
+                          zip_code=zip_given,
+                          house_size=h_size,
+                          property_size=p_size,
+                          num_beds=bed_num,
+                          num_baths=bath_num,
+                          asking_price=asking,
+                          realtor=user,
+                          description=desc)
+    else:
+        listing = Listing(house_num=h_num,
+                          street_name=street_given,
+                          city=city_given,
+                          state=state_given,
+                          zip_code=zip_given,
+                          house_size=h_size,
+                          property_size=p_size,
+                          num_beds=bed_num,
+                          num_baths=bath_num,
+                          asking_price=asking,
+                          realtor=user)
+
+    listing.save()
+    return HttpResponseRedirect(f"/profile/email/{user.email}?&status=creation_success")
+
+
 # Dan's Views
-@transaction.atomic
+"""
+   Author: Dan
+   Function that handles login requests
+"""
 def login_handler(request):
     try:
         if request.method == 'POST':
@@ -299,7 +481,9 @@ def login_handler(request):
                         request.session.set_expiry(
                             SESSION_EXPIRATION * 30)  # expires in SESSION_EXPIRATION * 30s seconds (Final Suggestion: if remember me is unchecked we can set session to last 1 day)
                     response = HttpResponseRedirect(f"/profile/email/{email}?&status=Login_success")
+
                     response.set_cookie("device", new_cookie_str)
+
                     return response
                 else:  # Case of failed login should add a failed attempt
                     if "device" in request.COOKIES:
@@ -324,7 +508,22 @@ def login_handler(request):
         raise e
         return HttpResponseRedirect(f"/login?&status=server_error")
 
+    """
+           Author: Dan
+           Function that gets called on the accountRequests page when user clicks the Delete button
+           
+           Deletes user account from the database
+       """
+def delete_user_account(request, user_id):
+    try:
+        user = User.objects.get(user_id=user_id)
+        user.delete()
+        messages.success(request, "The user has been deleted.")
+    except Exception as e:
+        print(e)
+    return render(request, template_name="Williz/accountRequests.html")
 
+  
 # Mike's Views
 def email_verification_page(request, verify_string=None):
     """
@@ -428,6 +627,18 @@ def edit_user_info(request):
         lender.save()
     return HttpResponseRedirect("Williz/login")
 
+
+def change_verification(request, email):
+    """
+        Author: Zak
+        Function which allows admin to change status of license validation for all user types
+        :return: redirect to current page with updated info
+    """
+    user = User.objects.get(email=email)
+    user.verification_status = not user.verification_status
+    user.save()
+    response = HttpResponseRedirect(f"/accountRequests")
+    return response
 
 """
 ============================================= Helper Functions =========================================================
@@ -759,3 +970,4 @@ def verify_hmac_hex_digest(skey, email, nonce, hmac_hex_received):
     return generated_hmac.hexdigest() == hmac_hex_received
 
 # Zak's helper functions
+# ...*tumble weed blows in wind*
