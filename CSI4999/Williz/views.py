@@ -1,3 +1,4 @@
+import binascii
 import hashlib
 import random
 
@@ -12,8 +13,6 @@ from django.utils import timezone
 from .models import *
 # HMAC imports
 import hmac
-from binascii import unhexlify
-from binascii import Error as BinasciiError
 from CSI4999.settings import SECRET_KEY
 # Time and random imports
 from random import choices, seed
@@ -23,7 +22,7 @@ from time import time
 """
 ============================================= Constants & Globals ======================================================
 """
-ASCII_PRINTABLE = "0123456789abcdefghIjklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()-=_+[]{},./<>?\\|'\"`~ "
+ASCII_PRINTABLE = "0123456789abcdefghIjklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()-=_+[]{}./<>?|`~ "
 URL_SAFE_CHARS = "0123456789abcdefghIjklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ–_"
 BASE_URL = settings.BASE_URL  # Get the base URL from settings.py for use in email links
 # If we needed to add a new user, and give it a code in the DB, we simply need to add to the below constant list
@@ -129,7 +128,7 @@ def resetPassword_Handler(request):
                   f"\nIf you find this link has expired please submit another verification request from the login page." \
                   + f"\n\nRegards,\nThe Williz team"
         send_mail(
-            "Williz Email Verification",
+            "Reset Password",
             message,
             "williznotifmail@gmail.com",
             [email],
@@ -256,7 +255,7 @@ def login_handler(request):
                     return HttpResponseRedirect(f"/login?&status=account_lockout")
                 dev_id = None
                 if "device" in request.COOKIES:
-                    dev_id = int(request.COOKIES["device"][128:].split(",")[2])
+                    dev_id = int(request.COOKIES["device"].split(",")[3])
                 passwordAttempt = post["Psw"]
                 try:
                     query = User.objects.get(email=email)
@@ -267,16 +266,13 @@ def login_handler(request):
                 # The password from the user
                 # the salt from the database
                 salt = query.pw_salt
-                print("salt", salt)
                 passwordGuess = hashlib.sha256(str(passwordAttempt + salt).encode('utf-8')).hexdigest()
                 # the salted and hashed password from the database
                 correctPwHash = (query.pw_hash)
-                print("correct:", correctPwHash)
-                print("correct:", correctPwHash, "   GUESS: ", passwordGuess)
                 if (passwordGuess == correctPwHash):
                     # Make a new device cookie and delete one if it exists
                     digest, nonce = make_hmac_digest(SECRET_KEY, email)
-                    new_cookie_str = digest.hex() + f"{nonce},{email}," # Still need to get the cookie key
+                    new_cookie_str = digest.hex() + f",{nonce.hex()},{email},"  # Still need to get the cookie key
                     with transaction.atomic():
                         if dev_id is not None:
                             DeviceCookie.objects.get(pk=dev_id).delete()
@@ -289,18 +285,16 @@ def login_handler(request):
                     # Now that we have the id tack it on to the cookie, and send the cookie in response
                     dev_id = str(new_dev_cookie.pk)
                     new_cookie_str += dev_id
-                    print(f"new cookie length {len(new_cookie_str)}")
-                    print(f"hex_digest_len={len(digest.hex())} nonce len={len(nonce)}, email len={len(email)}")
                     # login success
                     # Set the uname session value to username the user logged in with
                     if (request.POST.get('remember') == 'on'):
-                        print(request.POST.get('remember'))
+                        print("remember?", request.POST.get('remember'))
                         request.session["email"] = email
                         request.session.set_expiry(
                             SESSION_EXPIRATION * 60)  # expires in SESSION_EXPIRATION * 60s seconds (Final Suggestion: if remember me is checked we can set session to last mabye 7 days)
 
                     else:
-                        print(request.POST.get('remember'))
+                        print("remember?", request.POST.get('remember'))
                         request.session["email"] = email
                         request.session.set_expiry(
                             SESSION_EXPIRATION * 30)  # expires in SESSION_EXPIRATION * 30s seconds (Final Suggestion: if remember me is unchecked we can set session to last 1 day)
@@ -308,8 +302,11 @@ def login_handler(request):
                     response.set_cookie("device", new_cookie_str)
                     return response
                 else:  # Case of failed login should add a failed attempt
-                    if dev_id is not None and verify_device_cookie(request.COOKIES["device"]):
-                        record_failed_device_attempt(dev_id)
+                    if "device" in request.COOKIES:
+                        print("device cookie set")
+                        if verify_device_cookie(request.COOKIES["device"]):
+                            print("and cookie is valid")
+                            record_failed_device_attempt(dev_id)
                     else:
                         record_failed_untrusted_attempt(email)
                     messages.error(request, 'Email or password not correct')
@@ -320,9 +317,11 @@ def login_handler(request):
             return HttpResponseRedirect(f"/login?&status=rediect_not_post")
     except ValueError as e:
         print(e)
+        raise e
         return HttpResponseRedirect(f"/login?&status=Account_Not_Found")
     except Exception as e:
         print(f"Exception while attempting login: {e}")
+        raise e
         return HttpResponseRedirect(f"/login?&status=server_error")
 
 
@@ -578,29 +577,32 @@ def verify_device_cookie(cookie):
     if len(cookie) <= 128:
         return False
     try:
-        hmac_hex_received = cookie[:128]
-        try:
-            _, email, dev_id = cookie[128:].split(",")
-        except Exception as e:
-            print("cookie length: " , len(cookie))
-            print(f"splitting after 128 chars \n\t + {cookie[128:].split(',')}")
-        if dev_id.isnumeric() and (dev_pk := int(dev_id)) >= 0:
+        hmac_received, nonce_received, email, dev_id = cookie.split(",")
+        print("cookie given to us")
+        for thing in (hmac_received, nonce_received, email, dev_id ):
+            print(thing)
+        if dev_id.isnumeric() and int(dev_id) >= 0:
+            print("id is valid integer")
+            dev_pk = int(dev_id)
             user_id = User.objects.get(email=email).user_id
-            dev_cookie = DeviceCookie.objects.get(pk=dev_id)
-            if dev_cookie.user != user_id:
+            dev_cookie = DeviceCookie.objects.get(pk=dev_pk)
+            if int(dev_cookie.user.pk) != user_id:
+                print("cookie ID does not match user ID for actual user")
                 return False  # Cookie is for the wrong user
-            nonce = bytes(dev_cookie.nonce, "ascii")
-            return verify_hmac_hex_digest(skey=SECRET_KEY, email=email, nonce=nonce, hmac_hex_digest= hmac_hex_received)
+            print("problem is verifying the digest")
+            nonce = dev_cookie.nonce
+            return verify_hmac_hex_digest(skey=SECRET_KEY, email=email, nonce=nonce, hmac_hex_received= hmac_received)
         else:
+            print("cookie had an invalid ID")
             return False  # invalid device cookie ID provided
     except Exception as e:
         print(f"Error validating cookie\n {cookie}\n{e}")
+        raise e
     return False
 
 
 @transaction.atomic
 def is_locked_out(request, email):
-    # TODO: Test/Debug
     """
     Author: Mike
     Function which returns whether the user is locked out or not. This is done by checking device lockouts if a
@@ -615,7 +617,8 @@ def is_locked_out(request, email):
             sent_dev_cookie = request.COOKIES["device"]
             # If valid cookie was sent, check if user is locked out
             if verify_device_cookie(sent_dev_cookie):
-                dev_id = sent_dev_cookie[128:].split(",")[1]
+                print(f"I verified the cookie!")
+                dev_id = sent_dev_cookie[128:].split(",")[3]
                 dev_pk = int(dev_id)
                 now = timezone.now()
                 with transaction.atomic():
@@ -625,6 +628,7 @@ def is_locked_out(request, email):
                         lockout.delete()  # While we're here let's delete expired lockouts
             # Invalid cookie locks out if there is an untrusted lockout for the user's account
             else:
+                print(f"I'm is_locked_out and I didn't trust this cookie\n{sent_dev_cookie}")
                 untrusted_lockouts = UntrustedLockout.objects.filter(pk=user_id)
                 if len(untrusted_lockouts) == 1:
                     return True
@@ -637,17 +641,18 @@ def is_locked_out(request, email):
         print(f"No user found for email {email}")
         return True
     except DeviceCookie.DoesNotExist as e:
-        print(f"No device cookie with id={dev_pk} found")
+        bad_id = request.COOKIES["device"].split(",")[3]
+        print(f"No device cookie with the id={bad_id} found")
         return True
     except Exception as e:
         print(f"Device cookie {sent_dev_cookie} caused exception:\n\t{e}")
-        return True
+        #return True
+        raise e
     return False
 
 
 @transaction.atomic
 def record_failed_untrusted_attempt(email):
-    # TODO: Test
     """
     Author: Mike
     Function which adds a failed attempt from an unstrusted device. Sets an untrusted lockout if
@@ -657,17 +662,18 @@ def record_failed_untrusted_attempt(email):
     """
     global FAILED_LOGINS_THRESHOLD, LOCKOUT_DURATION_THRESHOLD
     try:
-        user_pk = User.get(email=email).user_id
-        attempt = LoginAttempt(
-            user=user_pk,
+        user = User.objects.get(email=email)
+        user_pk = user.pk
+        attempt = FailedLoginAttempt(
+            user=user,
             device_cookie=None
         )
         attempt.save()
         time_window = timezone.now() - datetime.timedelta(minutes=LOCKOUT_DURATION_THRESHOLD)
         # If too many failed logins have happened, set an untrusted lockout
-        if len(LoginAttempt.objects.filter(user=user_pk).filter(when__gte=time_window)) >= FAILED_LOGINS_THRESHOLD:
+        if len(FailedLoginAttempt.objects.filter(user=user_pk).filter(when__gte=time_window)) >= FAILED_LOGINS_THRESHOLD:
             u_lockout = UntrustedLockout(
-                user_id=user_pk,
+                user_id=user,
                 lock_exp=timezone.now() + datetime.timedelta(minutes=LOCKOUT_DURATION_THRESHOLD)
             )
             u_lockout.save()
@@ -675,10 +681,10 @@ def record_failed_untrusted_attempt(email):
         print(f"Failed to register a failed login. User with email {email} does not exist.")
     except Exception as e:
         print(f"Uncaught exception while attempting to add a failed login attempt for user with email {email}.")
+        raise e
 
 
 def record_failed_device_attempt(dev_pk):
-    # TODO: Test
     """
     Author: Mike
     Function which adds a failed attempt from an specific device. Sets a device lockout if
@@ -688,22 +694,22 @@ def record_failed_device_attempt(dev_pk):
     """
     global FAILED_LOGINS_THRESHOLD, LOCKOUT_DURATION_THRESHOLD
     try:
-        device = DeviceCookie.get(pk=dev_pk)
-        user_pk = User.get(pk=device.user).user_id
-        attempt = LoginAttempt(
-            user=user_pk,
-            device_cookie=dev_pk
+        device = DeviceCookie.objects.get(pk=dev_pk)
+        user = User.objects.get(pk=device.user.pk)
+        user_pk = user.user_id
+        attempt = FailedLoginAttempt(
+            user=user,
+            device_cookie=device
         )
         attempt.save()
         time_window = timezone.now() - datetime.timedelta(minutes=LOCKOUT_DURATION_THRESHOLD)
         # If too many failed logins have happened on this device, set a device lockout
-        if len(LoginAttempt.objects.filter(user=user_pk)
+        if len(FailedLoginAttempt.objects.filter(user=user_pk)
                        .filter(device_cookie=dev_pk)
                        .filter(when__gte=time_window)) >= FAILED_LOGINS_THRESHOLD:
-            dev_lockout = UntrustedLockout(
-                user_id=user_pk,
+            dev_lockout = DeviceLockout(
                 lock_exp=timezone.now() + datetime.timedelta(minutes=LOCKOUT_DURATION_THRESHOLD),
-                device_cookie=dev_pk
+                device_cookie=device
             )
             dev_lockout.save()
     except User.DoesNotExist as e:
