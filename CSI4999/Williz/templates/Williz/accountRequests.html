@@ -144,6 +144,7 @@ function showRealtorTable() {
   <div class="grid-item"><b><i>Email</b></i></div>  
   <div class="grid-item"><b><i>User Type</b></i></div>
   <div class="grid-item"><b><i>License #</b></i></div>
+    <div class="grid-item"><b><i>Verification Status</b></i></div>
     <div class="grid-item"><b><i>Change Verification</b></i></div>
     <div class="grid-item"><b><i>Delete</b></i></div>
 
@@ -154,6 +155,7 @@ function showRealtorTable() {
   <div class="grid-item">{{ Requests.email }}</div>
   <div class="grid-item">{{ Requests.user_type }}</div>
   <div class="grid-item">{{Requests.Lic_num}} </div>
+    <div class="grid-item">{{Requests.verification_status}} </div>
 
   <div class="grid-item"><button onclick="changeVerification('{{Requests.email}}')">Change Verification Status</button></div>
   <div class="grid-item"><button onclick="deleteUserAccount('{{Requests.user_id}}')">Delete</button></div>
