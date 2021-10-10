@@ -125,31 +125,34 @@ def accountRequests(request):
     """
     context = {}
 
-    iduser = User.objects.values_list('user_id', flat=True).filter(verification_status=False)
-    UserReqeustTable = User.objects.all().filter(verification_status=False)
-    #RATable = Realtor.objects.all().filter(user_id = iduser)
-    print(UserReqeustTable.count())
+    UserReqeustTable = User.objects.all().exclude(user_type=0)
+
+    print(UserReqeustTable)
     #print(RATable)
     RATable = []
     for us in UserReqeustTable.iterator():
-        print(us.user_id)
         if (User.objects.get(user_id=us.user_id).user_type == 1):
             RATable.append(Realtor.objects.get(user_id = us.user_id).lic_num)
         elif  (User.objects.get(user_id=us.user_id).user_type == 2):
             RATable.append(Appraiser.objects.get(user_id = us.user_id).lic_num)
         elif  (User.objects.get(user_id=us.user_id).user_type == 3):
             RATable.append("N/A")
+
+    print("length", len(RATable))
     NewRARTable = []
     for i, user in enumerate(UserReqeustTable):
         if user.user_type == USER_TYPE_TO_CODE["realtor"]:
             entry = {"num": i + 1,"user_type": "realtor", "email": user.email, "f_name": user.f_name, "l_name": user.l_name, "Lic_num": RATable[i], "user_id": user.user_id, "verification_status": user.verification_status}
+            NewRARTable.append(entry)
         if user.user_type == USER_TYPE_TO_CODE["appraiser"]:
             entry = {"num": i + 1,"user_type": "Appraiser", "email": user.email, "f_name": user.f_name, "l_name": user.l_name, "Lic_num": RATable[i], "user_id": user.user_id, "verification_status": user.verification_status}
+            NewRARTable.append(entry)
         if user.user_type == USER_TYPE_TO_CODE["lender"]:
             entry = {"num": i + 1,"user_type": "Lender", "email": user.email, "f_name": user.f_name, "l_name": user.l_name, "Lic_num": RATable[i], "user_id": user.user_id, "verification_status": user.verification_status}
-        NewRARTable.append(entry)
+            NewRARTable.append(entry)
 
-    print(RATable)
+    for i in NewRARTable:
+        print(i)
     return render(request, 'Williz/accountRequests.html',{'UserRequests':NewRARTable})
       
 
