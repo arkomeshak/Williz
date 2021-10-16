@@ -512,6 +512,53 @@ def email_verification_page(request, verify_string=None):
     return render(request, contex=context, template_name="Williz/stub_verify_email.html")
 
 
+def listing(request, **kwargs):
+    for arg_name in ("state", "house_num", "zip", "city", "street"):
+        assert arg_name in kwargs
+    # Try to find the listing and build context
+    try:
+        # This looks bad, but filters are lazy, so actually only runs 1 big query with a gnarly where statement
+        listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"]))\
+            .filter(street_name=kwargs["street"].replace("_", " ").strip())\
+            .filter(city=kwargs["city"].replace("_", " ").strip())\
+            .filter(state=kwargs["state"].replace("_", " ").strip())\
+            .filter(zip_code=int(kwargs["zip"]))
+        if len(listing_set) != 1:  # Should get us one unique listing
+            raise ValueError(f"Found {len(listing_set)} listings, expected to find one.")
+        listing = listing_set[0]
+        context = {
+            "street": listing.street_name,
+            "street_num": listing.house_num,
+            "city": listing.city,
+            "state": listing.state,
+            "zip": listing.zip_code,
+            "size": listing.house_size,
+            "prop_size": listing.property_size,
+            "beds": listing.num_beds,
+            "baths": listing.num_baths,
+            "listed_date": listing.list_date,
+            "asking": listing.asking_price,
+            "description": listing.description,
+        }
+        # Get the realtor data we need. Realtor ID = their User ID, so go straight there
+        realtor_usr = listing.realtor
+        # user should be a realtor, else something's fishy and we should throw and exception
+        assert realtor_usr.user_type == USER_TYPE_TO_CODE["realtor"]
+        context.update(
+            {
+                "realtor_fname": realtor_usr.f_name,
+                "realtor_lname": realtor_usr.l_name,
+                "realtor_email": realtor_usr.email
+            }
+        )
+        # TOOD: Once we have listing images, look for them and add their paths to a list in context
+        context["listing_images"] = []
+    except Exception as e:
+        print(f"Exception in listing view: {e}")
+        raise e
+    return render(request, context=context, template_name="Williz/listing.html")
+
+
 def handler404(request, *args, **argv):
     """
     A 404 handler which directs to the 404 page.
