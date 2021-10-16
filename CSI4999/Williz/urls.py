@@ -20,5 +20,7 @@ urlpatterns = [
     path("delete_user_account/<user_id>", views.delete_user_account, name="delete_user_account"),
     path("change_verification/email/<email>", views.change_verification, name="changeVerification"),
     path("listing/<state>/<zip>/<city>/<street>/<house_num>", views.listing, name="listing"),
+    path("listing/update/<state>/<zip>/<city>/<street>/<house_num>", views.updateListing, name="updateListing"),
+    path("update/<state>/<zip>/<city>/<street>/<house_num>", views.update, name="update")
 ]
 
