@@ -279,6 +279,40 @@ Profile CSS
     text-align: center;
 }
 
+
+#MapContainer {
+    z-index: 0;
+    width: 100%;
+    text-align: center;
+}
+
+#mapid {
+    z-index: 0;
+    position: relative;
+    height: 800px;
+    width: 1500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.grid-container2 {
+    display: grid;
+    grid-template-columns: auto auto auto;
+    padding: 10px;
+    background-color: #3bb7909c;
+    background-image: linear-gradient(315deg, #3bb7909c 0%, #0bab639c 74%);
+    border: 5px solid black;
+}
+
+.grid-item2 {
+    color: white;
+    border-left: 1px solid rgba(0, 0, 0, 0.8);
+    border-bottom: 3px solid rgba(0, 0, 0, 0.8);
+    padding: 1%;
+    font-size: 20px;
+    text-align: center;
+}
+
 /*************************************************************
 Listing CSS
 **************************************************************/
@@ -376,4 +410,5 @@ p.warning {
 .render-inline {
     display: inline-block;
 }
+
 
