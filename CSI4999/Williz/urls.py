@@ -10,6 +10,7 @@ urlpatterns = [
     path("resetPassword/", views.resetPassword, name="resetPassword"),
     path("resetPassword_Handler/", views.resetPassword_Handler, name="resetPassword_Handler"),
     path("resetPasswordVerify/", views.resetPasswordVerify, name="resetPasswordVerify"),
+    path("password_reset/", views.password_reset, name="password_reset"),
     path("verify/email/<verify_string>", views.email_verification_page, name="verify email"),
     path("profile/edit_user_info", views.edit_user_info, name="update"),
     path("register_user_handler/", views.register_user_handler, name="register_user_handler"),
@@ -26,7 +27,5 @@ urlpatterns = [
          name="adminUpdateListing"),
     path("listing/confirm/delete/<state>/<zip>/<city>/<street>/<house_num>", views.delete_listing_confirmation,
          name="confirmDeleteListing"),
-    path("listing/delete", views.delete_listing_handler,
-         name="deleteListing"),
+    path("listing/delete", views.delete_listing_handler, name="deleteListing"),
 ]
-
