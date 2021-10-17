@@ -193,21 +193,25 @@ def resetPassword_Handler(request):
         print("Error:", e)
         raise RuntimeError(f"Failed to send verification email to {email}")
     validation_entry = Validation(user=user, verification_str=verificationKey)
-    return render(request, "Williz/resetPasswordVerify.html", context)
+    return HttpResponseRedirect(f"../password_reset/")
 
 
 def resetPasswordVerify(request):
     context = {}
     salt_chars = []
-    verify = request.POST["verify"]
-    NewPsw = request.POST["NewPassword"]
+    verify = request.POST.get("verify")
+    NewPsw = request.POST.get("NewPassword")
+    str(verify)
+    str(NewPsw)
     print(NewPsw)
     print(request.session.get("email", None))
     ConfPsw = request.POST.get("ConfPassword")
+    ConfPsw = str(ConfPsw)
     print(ConfPsw)
     for i in range(10):
         salt_chars.append(random.choice(ALPHABET))
     salt = "".join(salt_chars)
+    str(salt)
     pw_hashed = hashlib.sha256(str(ConfPsw + salt).encode('utf8')).hexdigest()
     print(salt)
     print(pw_hashed)
@@ -216,6 +220,8 @@ def resetPasswordVerify(request):
     if (((request.session.get("resetID", None))) == verify):
         print("Passed session")
         if (NewPsw == ConfPsw):
+            if not pw_validation(NewPsw):
+                return HttpResponseRedirect(f"../password_reset/?&status=invalid_pw")
             print("Passed passwordConf")
             with transaction.atomic():
                 PswChange = User.objects.get(email=request.session.get("email", None))
@@ -223,11 +229,17 @@ def resetPasswordVerify(request):
                 PswChange.pw_hash = pw_hashed
                 PswChange.save()
                 return HttpResponseRedirect("../login/")
-        return HttpResponseRedirect(f"../register/?&status=pws_didnt_match")
-    return HttpResponseRedirect(f"../resetPasswordVerify/?&status=Code_Expired")
+        return HttpResponseRedirect(f"../password_reset/?&status=pws_didnt_match")
+    return HttpResponseRedirect(f"../password_reset/?&status=Code_Expired")
 
 
 # Carson's Views
+
+def password_reset(request):
+    context = {}
+    return render(request, "Williz/resetPasswordVerify.html", context)
+
+
 @transaction.atomic  # Carson
 def register_user_handler(request):
     """
@@ -243,6 +255,8 @@ def register_user_handler(request):
     if pw != pw_conf:
         messages.error(request, 'Make sure your password fields match')
         return HttpResponseRedirect(f"../register/?&status=pws_didnt_match")
+    if not pw_validation(pw):
+        return HttpResponseRedirect(f"../register/?&status=pw_not_valid")
     salt_chars = []
     for i in range(10):
         salt_chars.append(random.choice(ALPHABET))
@@ -591,6 +605,43 @@ def change_verification(request, email):
 # Adam's helper functions
 
 # Carson's helper functions
+def pw_validation(pw):
+    """
+        Author: Carson
+        Function which accepts the input of a password string that confirms that it does or does not conform to the
+        standards set forth (namely length and contents)
+        :return: true or false
+    """
+
+    if len(pw) < 8:
+        return False
+
+    num_lower = 0
+    num_upper = 0
+    num_digits = 0
+
+    for char in pw:
+        if char.isdigit():
+            num_digits += 1
+        elif char.isupper():
+            num_upper += 1
+        elif char.islower():
+            num_lower += 1
+        else:
+            pass
+
+    print(num_digits)
+    print(num_upper)
+    print(num_lower)
+    if num_lower == 0:
+        return False
+    elif num_upper == 0:
+        return False
+    elif num_digits == 0:
+        return False
+    else:
+        return True
+
 
 # Dan's helper functions
 
