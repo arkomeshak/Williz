@@ -28,8 +28,8 @@
     </div>
     <span id="nav-btn" style="font-size:4em;cursor:pointer; float:left; positon:relative; color:white"  onclick="openNav()">&#9776;</span>
   </head>
-      
-      
+
+
       <script>
 
 
@@ -60,46 +60,8 @@ function closeNav() {
         document.getElementById("dimmer").style.opacity = "0"
         document.getElementById("dimmer").style.zIndex = "-1";
 
-}  
-
-
-
-function RAshowHide() {
-    var x = document.getElementById("License");
-    var y = document.getElementById("state");
-    var z = document.getElementById("LabelCompany");
-    var a = document.getElementById("LabelState");
-    var b = document.getElementById("LabelLicense");
-    var c = document.getElementById("Company");
-    console.log(y);
-  if ((x.style.display == "none") || (y.style.display == "none")  ) {
-    console.log("Yes");
-    x.style.display = "block";
-    y.style.display = "block";
-    z.style.display = "none";
-    c.style.display = "none";
-    a.style.display = "block";
-    b.style.display = "block";
-    console.log("Yes1");
-  document.getElementById("License").required = true;
-  document.getElementById("state").required = true;
-  document.getElementById("Company").required = false;
-  } 
-
-  else if (((x.style.display = "block") || (y.style.display = "block")) && (document.getElementById("ML").checked == true)){
-    console.log("No");
-        x.style.display = "none";
-        y.style.display = "none";
-        z.style.display = "block";
-        c.style.display = "block";
-        a.style.display = "none";
-        b.style.display = "none";
-            console.log("No1");
-        document.getElementById("License").required = false;
-        document.getElementById("state").required = false;
-        document.getElementById("Company").required = true;
-  }
 }
+
 
 </script>
 {% load static %}
@@ -113,67 +75,29 @@ function RAshowHide() {
 
     <div class="dimmer" id = "dimmer"></div>
 
-    <div id="FormCont"> 
-    <h1 id="mainHeader">Create Account</h1>   
+    <div id="FormCont">
+    <h1 id="mainHeader">Update Listing</h1>
 
-
-
-
-
-    <form id="RegisterForm" method="POST" action="../register_user_handler/">
+    <form id="ListingForm" method="POST" action="/update/{{state}}/{{zip}}/{{city}}/{{street}}/{{house_num}}">
         {% csrf_token %}
-<div id = "RadioContainor">
-<h3>Please indicate what Role you are registering for.</h3>
-<label class="Radio-btn">Realtor
-  <input type="radio" id = "Realtor" checked="checked" name="radio" onClick = "RAshowHide()" value="1">
-  <span class="cm"></span>
-</label></br>
-<label class="Radio-btn">Appraiser
-  <input type="radio" name="radio" id = "Apprasier" onClick = "RAshowHide()" value="2">
-  <span class="cm"></span>
-</label>
-</br>
-<label class="Radio-btn">Mortgage Lender
-  <input type="radio" id = "ML" name="radio" onClick = "RAshowHide()" value="3">
-  <span class="cm"></span>
-</label>
-</br>
-</div></br>
 
-    <label><b>First Name</b>    
-        </label>    
-        <input type="text" name="fname" id="fname" class = "FormInput" placeholder="First Name" required></br></br>
-    <label><b>Last Name</b>    
-        </label>    
-        <input type="text" name="lname" id="lname" class = "FormInput" placeholder="Last Name" required></br></br>
+    <label><b>House Number</b>
+        </label>
+        <input type="number" name="house_num" id="house_num" class = "FormInput" value={{house_num}} required></br></br>
 
+    <label><b>Street</b></br>
+        </label>
+        <input type="text" name="street" id="street" class = "FormInput" value="{{street}}" required></br></br>
 
-        <label><b>Email</b>    
-        </label> </br>     
-        <input type="email" name="email" id="email" class = "FormInput" placeholder="Enter Email" required>    
-        <br><br>   
-        <label><b>Password</b>    
+        <label><b>City</b>
+        </label> </br>
+        <input type="text" name="city" id="city" class = "FormInput" value="{{city}}" required>
+        <br><br>
+
+         <label id="LabelState" ><b>State</b>
         </label></br>
-        <label style="font-size: .85em;"><b>Password must be 8 characters long, contain an uppercase letter, a lowercase letter, and a number</b>
-        </label></br>
-        <input type="Password" name="Psw" id="Psw" class = "FormInput" placeholder="Password" required>    
-        <br><br> 
-
-        <label><b>Confirm Password</b>    
-        </label>    
-        <input type="Password" name="ConfPsw" id="ConfPsw" class = "FormInput" placeholder="Confirm Password" required>    
-        <br><br>   
-
-        <label id="LabelLicense" ><b>License Number</b>    
-        </label>    
-        <input type="text" name="License" id="License" class = "FormInput" placeholder="License Number" required>    
-        <br><br> 
-
-        <label id="LabelState" ><b>State</b>    
-        </label>    
-        
-        <select name="state" id = "state" class = "FormInput" required>
-<option value="" selected>Please Select</option>
+        <select style="margin:auto" name="state" id = "state" class = "FormInput" value={{state}} required>
+<option value="">Please Select</option>
 <option value="AK">Alaska</option>
 <option value="AL">Alabama</option>
 <option value="AR">Arkansas</option>
@@ -229,30 +153,52 @@ function RAshowHide() {
 <option value="WA">Washington</option>
 <option value="WI">Wisconsin</option>
 <option value="WV">West Virginia</option>
-<option value="WY">Wyoming</option>    
-</select>
+<option value="WY">Wyoming</option>
+</select> </br>
 
-        <br><br> 
-        <label id="LabelCompany"><b>Mortgage Company</b>    
-        </label>    
-        <input type="text" name="Company" id="Company" class = "FormInput" placeholder="Mortgage Company">    
-        <br><br> 
+        <label><b>Zip Code</b>
+        </label></br>
+        <input type="number" name="zip" id="zip" class = "FormInput" value={{zip}} required>
+        <br><br>
 
-         <button type = "Submit" id ="Submit" name ="Submit" value="Submit">Submit</button>      
-        <br><br>    
-    </form>     
-</div> 
+        <label><b>House Size (Square Feet)</b>
+        </label></br>
+        <input type="number" name="house_size" id="house_size" class = "FormInput" value={{size}} required>
+        <br><br>
 
- <footer class="footer">
-        <nav class="navbar navbar-expand-sm navbar-dark">
-            <a href="#" class="navbar-brand">About Williz</a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav">
-                    <li class="nav-item"><a class="nav-link" href="#">About us</a></li>
-                </ul>
-            </div>
-        </nav>
-    </footer>
+        <label><b>Property Size (Square Feet)</b>
+        </label></br>
+        <input type="number" name="prop_size" id="prop_size" class = "FormInput" value={{prop_size}} required>
 
-  </body>
+        <br><br>
+        <label><b>Number of Bedrooms</b>
+        </label></br>
+        <input type="number" name="bed_num" id="bed_num" class = "FormInput" value={{beds}} required>
+        <br><br>
+
+        <label><b>Number of Bathrooms</b>
+        </label></br>
+        <input type="number" name="bath_num" id="bath_num" class = "FormInput" value={{baths}} required>
+
+        <br><br>
+        <label><b>Asking Price</b>
+        </label></br>
+        <input type="number" name="ask_price" id="ask_price" class = "FormInput" value={{asking}} required>
+        <br><br>
+
+        <label><b>Description (Optional)</b>
+        </label> </br>
+        <textarea type="text" name="desc" id="desc" class = "FormInput" value={{description}}>{{description}}</textarea>
+        <br><br>
+
+         <button type = "Submit" id ="admin-update" name ="Submit" value="Submit" class="Submit">Update</button>
+
+        <input style="visibility: hidden" class="FormInput" name="user_id"/>
+    </form>
+        <a href="/listing/confirm/delete/{{state}}/{{zip}}/{{city_url}}/{{street_url}}/{{house_num}}">
+            <button id="admin-delete" class="link-btn" name ="Submit">Delete Listing</button>
+        </a>
+</div>
+
+</body>
 </html>

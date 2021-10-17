@@ -5,7 +5,7 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title></title>
+    <title>Delete Listing Confirmation</title>
     {% load static %}
     <link id="pageStyle" href="{% static 'Williz/main.css' %}" type="text/css" rel="stylesheet" />
       <div id="mySidenav" class="sidenav">
@@ -20,16 +20,16 @@
       <a href="#Contact" onclick="closeNav()">Contact</a>
       </div>
       <div id = "nav-ele">
-      <a href="../register" onclick="closeNav()">Create Account</a>
+      <a href="../register" onclick="closeNav()">Register</a>
       </div>
       <div id = "nav-ele">
       <a href="../login" onclick="closeNav()">Login</a>
       </div>
     </div>
-    <span id="nav-btn" style="font-size:4em;cursor:pointer; float:left; positon:relative; color:white" onclick="openNav()">&#9776;</span>
+    <span id="nav-btn" style="font-size:4em;cursor:pointer; float:left; positon:relative; color:white"  onclick="openNav()">&#9776;</span>
   </head>
-      
-      
+
+
       <script>
 
 
@@ -60,7 +60,9 @@ function closeNav() {
         document.getElementById("dimmer").style.opacity = "0"
         document.getElementById("dimmer").style.zIndex = "-1";
 
-}  
+}
+
+
 </script>
 {% load static %}
           <img id = "logo" src="{% static 'Williz/logoWhiteStroke.png' %}" style = "float:right" alt = "Logo">
@@ -72,43 +74,30 @@ function closeNav() {
   <body id="main_body">
 
     <div class="dimmer" id = "dimmer"></div>
-
-    <div id="FormCont"> 
-
-    <h1 id="PwdHeader">Verify</h1>   
-    <form id="loginForm" method = "POST" action ="../resetPasswordVerify/">    
-      {% csrf_token %}
-        <label style = "font-size: 23px"><b>Verification Code</b>
-        </label></br>   
-        <input type="text" name="verify" id="verify" class = "FormInput" placeholder="Enter verification key" required>    
-        <br><br>   
-
-        <label style = "font-size: 23px"><b>New Password</b>
-        </label></br></br>
-        <label style="font-size: .85em;"><b>Password must be 8 characters long, contain an uppercase letter, a lowercase letter, and a number</b>
-        </label></br>
-        <input type="password" name="NewPassword" id="NewPassword" class = "FormInput" placeholder="Enter New Password" required>    
-        <br><br> 
-        <label style = "font-size: 23px"><b>Confirm Password</b>
-        </label></br>   
-        <input type="password" name="ConfPassword" id="ConfPassword" class = "FormInput" placeholder="Confirm Password" required>    
-        <br><br> 
-
-
-        <button type = "Submit" id ="Submit" name ="Submit" value="Login">Change Password</button>      
-        <br><br>    
-    </form>     
-</div> 
-
- <footer class="footer">
-        <nav class="navbar navbar-expand-sm navbar-dark">
-            <a href="#" class="navbar-brand">About Williz</a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav">
-                    <li class="nav-item"><a class="nav-link" href="#">About us</a></li>
-                </ul>
+        <h1 id="mainHeader">Confirm Deletion</h1>
+        <div id="listingContainer">
+            <h2 class="subhead">Delete this listing?</h2>
+            <p>{{street_num}} {{street}}, {{city}}, {{state}}, {{zip}}</p>
+            <p class="warning">This action cannot be undone.</p>
+            <div class="render-inline">
+                <form id="ConfirmDeleteForm" method="POST" style="display: inline;"
+                      action="/listing/delete">
+                   {% csrf_token %}
+                    <input id="delete-btn" type="submit" class="link-btn" name="delete" value="Delete">
+                    <input type="hidden" name="state" value="{{state}}">
+                    <input type="hidden" name="house_num" value="{{street_num}}">
+                    <input type="hidden" name="zip" value="{{zip}}">
+                    <input type="hidden" name="city" value="{{city}}">
+                    <input type="hidden" name="street" value="{{street}}">
+                </form>
+                <!--  Canceling delete just redirects user to the listing itself  -->
+                <a href="/listing/{{state}}/{{zip}}/{{city_url}}/{{street_url}}/{{street_num}}">
+                    <button id="cancel-delete" class="link-btn" name ="Submit">Cancel</button>
+                </a>
             </div>
-        </nav>
-    </footer>
-  </body>
+        </div>
+    </div>
+</div>
+
+</body>
 </html>

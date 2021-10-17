@@ -87,7 +87,7 @@ function showRealtorTable() {
             $.ajax({
                 type: 'GET',
                 url: "../delete_user_account/" + user_id,
-                data: {"user_id": user_id,},
+                data: {"user_id": user_id},
                 success: function (response) {
                     window.location.replace("/accountRequests")
                 },
