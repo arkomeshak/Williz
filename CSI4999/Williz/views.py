@@ -19,6 +19,7 @@ from random import choices, seed
 import datetime
 from time import time
 
+
 """
 ============================================= Constants & Globals ======================================================
 """
@@ -154,7 +155,7 @@ def accountRequests(request):
     for i in NewRARTable:
         print(i)
     return render(request, 'Williz/accountRequests.html',{'UserRequests':NewRARTable})
-      
+
 
 def resetPassword(request):
     context = {}
@@ -228,6 +229,31 @@ def resetPasswordVerify(request):
                 return HttpResponseRedirect("../login/")
         return HttpResponseRedirect(f"../register/?&status=pws_didnt_match")
     return HttpResponseRedirect(f"../resetPasswordVerify/?&status=Code_Expired")
+
+def searchListings(request):
+    context = {}
+
+    return render(request, "Williz/searchListings.html", context)
+
+def updateListing(request):
+    context = {}
+    return render(request, "Williz/searchListings.html", context)
+
+def searchListings_handler(request):
+    context = {}
+    userLocation = request.POST["userLoc"]
+    listings = []
+    listingsQ = Listing.objects.all()
+
+    print(listings)
+
+
+    for i, List in enumerate(listingsQ):
+            entry = {"house_num": List.house_num, "street_name": List.street_name, "state": List.state, "asking_price": List.asking_price, "city": List.city, "zip_code": List.zip_code,}
+            listings.append(entry)
+            print(listings)
+    userLocation = request.POST["userLoc"]
+    return render(request, "Williz/searchListings.html", {'UserLoc':userLocation, 'AllListings':listings})
 
 
 # Carson's Views

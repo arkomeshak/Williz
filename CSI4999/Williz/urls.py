@@ -18,6 +18,9 @@ urlpatterns = [
     path("create_listing_handler/", views.create_listing_handler, name="create_listing_handler"),
     path("accountRequests/", views.accountRequests, name="accountRequests"),
     path("delete_user_account/<user_id>", views.delete_user_account, name="delete_user_account"),
-    path("change_verification/email/<email>", views.change_verification, name="changeVerification")
+    path("change_verification/email/<email>", views.change_verification, name="changeVerification"),
+    path("searchListings/", views.searchListings, name="searchListings"),
+    path("searchListings_handler/", views.searchListings_handler, name="searchListings_handler"),
+    path("listing/update/<state>/<zip>/<city>/<street>/<house_num>", views.updateListing, name="updateListing")
 ]
 
