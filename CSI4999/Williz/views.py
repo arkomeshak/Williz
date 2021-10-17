@@ -237,17 +237,28 @@ def resetPasswordVerify(request):
     return HttpResponseRedirect(f"../password_reset/?&status=Code_Expired")
 
 def searchListings(request):
-    context = {}
+    listings = []
+    listingsQ = Listing.objects.all()
 
-    return render(request, "Williz/searchListings.html", context)
+    print(listings)
+
+    for i, List in enumerate(listingsQ):
+        entry = {"house_num": List.house_num,
+                 "street_name": List.street_name,
+                 "state": List.state,
+                 "asking_price": List.asking_price,
+                 "city": List.city,
+                 "zip_code": List.zip_code, }
+        listings.append(entry)
+        print(listings)
+
+    return render(request, "Williz/searchListings.html", {'AllListings': listings})
 
 def updateListing(request):
     context = {}
     return render(request, "Williz/searchListings.html", context)
 
 def searchListings_handler(request):
-    context = {}
-    userLocation = request.POST["userLoc"]
     listings = []
     listingsQ = Listing.objects.all()
 
@@ -255,11 +266,18 @@ def searchListings_handler(request):
 
 
     for i, List in enumerate(listingsQ):
-            entry = {"house_num": List.house_num, "street_name": List.street_name, "state": List.state, "asking_price": List.asking_price, "city": List.city, "zip_code": List.zip_code,}
+            entry = {"house_num": List.house_num,
+                     "street_name": List.street_name,
+                     "state": List.state,
+                     "asking_price": List.asking_price,
+                     "city": List.city,
+                     "zip_code": List.zip_code,}
             listings.append(entry)
             print(listings)
     userLocation = request.POST["userLoc"]
     return render(request, "Williz/searchListings.html", {'UserLoc':userLocation, 'AllListings':listings})
+
+
 
 
 # Carson's Views
@@ -575,8 +593,9 @@ def listing(request, **kwargs):
         if len(listing_set) != 1:  # Should get us one unique listing
             raise ValueError(f"Found {len(listing_set)} listings, expected to find one.")
         listing = listing_set[0]
-        if request.session["email"] == User.objects.get(user_id=listing.realtor.user_id).email:
-            isCreator = True
+        # This is best practice
+        if "email" in request.session and request.session["email"] == User.objects.get(user_id=listing.realtor.user_id).email:
+                isCreator = True
         context = {
             "street": listing.street_name,
             "street_num": listing.house_num,
