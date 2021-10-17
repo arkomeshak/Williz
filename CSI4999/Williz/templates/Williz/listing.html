@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Williz: Listing {{street_name}}</title>
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {% load static %}
+    <link id="pageStyle" href="{% static 'Williz/main.css' %}" type="text/css" rel="stylesheet" />
+      <div id="mySidenav" class="sidenav">
+      <a class="closebtn" onclick="closeNav()" style= "cursor: pointer">&times;</a>
+      <div id = "nav-ele">
+      <a href="#home" onclick="closeNav()">Home</a>
+      </div>
+      <div id = "nav-ele">
+      <a href="#Listings" onclick="closeNav()">Listings</a>
+      </div>
+      <div id = "nav-ele">
+      <a href="#Contact" onclick="closeNav()">Contact</a>
+      </div>
+      <div id = "nav-ele">
+      <a href="../../../../../../register" onclick="closeNav()">Create Account</a>
+      </div>
+      <div id = "nav-ele">
+      <a href="../../../../../../login" onclick="closeNav()">Login</a>
+      </div>
+    </div>
+    <span id="nav-btn" style="font-size:4em;cursor:pointer; float:left; positon:relative; color:white" onclick="openNav()">&#9776;</span>
+
+</head>
+<script>
+function openNav(){document.getElementById("mySidenav").style.width="250px";document.getElementById("main_body").style.marginLeft="250px";document.getElementById("dimmer").style.opacity="0.6";document.getElementById("dimmer").style.zIndex="100"}
+/* Set the width of the side navigation to 0 and the left margin of the page content to 0, and the background color of body to white */
+function closeNav(){document.getElementById("mySidenav").style.width="0";document.getElementById("main_body").style.marginLeft="0";document.getElementById("dimmer").style.opacity="0";document.getElementById("dimmer").style.zIndex="-1"}
+function fnameEdit(){var a=document.getElementsByClassName("fnameInput")[0];if(a.style.display=="none"){a.style.display="block"}else{a.style.display="none"}}
+</script>
+
+<!--Lol Cargo Cult FTW-->
+{% load static %}
+<img id = "logo" src="{% static 'Williz/logoWhiteStroke.png' %}" style = "float:right" alt = "Logo">
+<div style = "clear:both"></div>
+
+<body id="main_body", class="no-caps">
+
+    <div class="dimmer" id = "dimmer"><p></p></div>
+    <h1 id="mainHeader">{{street_num}} {{street}}</h1>
+    <div id="listingContainer">
+        <div class="disable-upper">
+        <div id = "userInfoContainer" style = "text-align: left;">
+        <h2 class="subhead">Listing Information</h2>
+        <div>
+            <ul>
+                <li><p>City: {{city}}</p></li>
+                <li><p>State: {{state}}</p></li>
+                <li><p>Street Addr: {{street_num}} {{street}}</p></li>
+                <li><p>Zip: {{zip}}</p></li>
+                <li><p>Footage: {{size}} sq-ft</p></li>
+                <li><p>Property Size: {{prop_size}} sq-ft</p></li>
+                <li><p>Beds: {{beds}}</p></li>
+                <li><p>Baths: {{baths}}</p></li>
+                <li><p>Listed on: {{listing_date}}</p></li>
+                <li><p>Asking price: ${{asking}}.00</p></li>
+                <li><p>Description: {{description}}</p></li>
+                <li><p>Realtor: {{realtor_fname}} {{realtor_lname}}</p></li>
+                <li><p>Realtor's email: {{realtor_email}}</p></li>
+            </ul>
+        </div>
+        <h2 class="subhead">Listing Images</h2>
+                <div>
+                    <ul>
+                        {% for image in listing_images %}
+                            <!-- TODO: Once we have images, set this for loop up-->
+                            <li><img src="#", alt="listing image"></li>
+                        {% empty %}
+                            <li class="no-list-icon notification"><p>Sorry, no listing images have been posted.</p></li>
+                        {% endfor %}
+                    </ul>
+                    <div class="center-align">
+                        {% if user_type == 1%}
+                            <a href="../../../../../listing/update/{{state}}/{{zip}}/{{city_url}}/{{street_url}}/{{street_num}}">
+                            <button id="realtor-update" class="link-btn" name ="Submit">Update Listing</button>
+                            </a>
+                        {% else %}
+                            <a href="/listing/admin/update/{{state}}/{{zip}}/{{city_url}}/{{street_url}}/{{street_num}}">
+                            <button id="admin-update" class="link-btn" name ="Submit">Update Listing</button>
+                            </a>
+                        {% endif %}
+                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
