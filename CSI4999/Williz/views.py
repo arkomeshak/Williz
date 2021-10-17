@@ -480,7 +480,7 @@ def delete_user_account(request, user_id):
         user.delete()
         messages.success(request, "The user has been deleted.")
     except Exception as e:
-        print(e)
+        print("e", e)
     return render(request, template_name="Williz/accountRequests.html")
 
   
