@@ -21,6 +21,12 @@ urlpatterns = [
     path("change_verification/email/<email>", views.change_verification, name="changeVerification"),
     path("listing/<state>/<zip>/<city>/<street>/<house_num>", views.listing, name="listing"),
     path("listing/update/<state>/<zip>/<city>/<street>/<house_num>", views.updateListing, name="updateListing"),
-    path("update/<state>/<zip>/<city>/<street>/<house_num>", views.update, name="update")
+    path("update/<state>/<zip>/<city>/<street>/<house_num>", views.update, name="update"),
+    path("listing/admin/update/<state>/<zip>/<city>/<street>/<house_num>", views.admin_listing_update,
+         name="adminUpdateListing"),
+    path("listing/confirm/delete/<state>/<zip>/<city>/<street>/<house_num>", views.delete_listing_confirmation,
+         name="confirmDeleteListing"),
+    path("listing/delete", views.delete_listing_handler,
+         name="deleteListing"),
 ]
 

@@ -514,6 +514,13 @@ def email_verification_page(request, verify_string=None):
 
 
 def listing(request, **kwargs):
+    """
+    Author: Mike
+    Function to render a real estate listing and send in a HTTP response.
+    :param request: HTTP GET request
+    :param kwargs: street name, street number, city, state, zip code
+    :return: HTTP response
+    """
     for arg_name in ("state", "house_num", "zip", "city", "street"):
         assert arg_name in kwargs
     # Try to find the listing and build context
@@ -537,7 +544,7 @@ def listing(request, **kwargs):
             "prop_size": listing.property_size,
             "beds": listing.num_beds,
             "baths": listing.num_baths,
-            "listed_date": listing.list_date,
+            "listing_date": listing.list_date,
             "asking": listing.asking_price,
             "description": listing.description,
             "street_url": listing.street_name.replace(" ", "_"),
@@ -562,6 +569,131 @@ def listing(request, **kwargs):
         print(f"Exception in listing view: {e}")
         raise e
     return render(request, context=context, template_name="Williz/listing.html")
+
+
+def admin_listing_update(request, **kwargs):
+    """
+    Function to update a real estate listing with the data sent by an admin's HTTP POST request. If the listing
+    is deleted, redirects them to the home page. Else redirects them to the original listing.
+    :param request: HTTP GET request
+    :param kwargs: Keyword arguments to find the unique listing
+    :return: HTTP Redirect
+    """
+    for arg_name in ("state", "house_num", "zip", "city", "street"):
+        assert arg_name in kwargs
+    # If user session not set redirect them to home page to log in
+    if "email" not in request.session:
+        return HttpResponseRedirect(f"/?&status=not_logged_in")
+    email = request.session.get("email")
+    user = User.objects.get(email=email)
+    # Boot user to home page if they are not an admin
+    if user.user_type != USER_TYPE_TO_CODE["admin"]:
+        print(f"Invalid user type {CODE_TO_USER_TYPE[user.user_type]} tried to access admin listing page edit.")
+        return HttpResponseRedirect("/?&status=non_admin_user")
+    try:
+        listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"]))\
+            .filter(street_name=kwargs["street"].replace("_", " ").strip())\
+            .filter(city=kwargs["city"].replace("_", " ").strip())\
+            .filter(state=kwargs["state"].replace("_", " ").strip())\
+            .filter(zip_code=int(kwargs["zip"]))
+        if len(listing_set) != 1:
+            raise ValueError(f"Found {len(listing_set)} listings, expected to find one.")
+        listing = listing_set[0]
+        context = {
+            "street": listing.street_name,
+            "house_num": listing.house_num,
+            "city": listing.city,
+            "state": listing.state,
+            "zip": listing.zip_code,
+            "size": listing.house_size,
+            "prop_size": listing.property_size,
+            "beds": listing.num_beds,
+            "baths": listing.num_baths,
+            "listed_date": listing.list_date,
+            "asking": listing.asking_price,
+            "description": listing.description,
+            "street_url": listing.street_name.replace(" ", "_"),
+            "city_url": listing.city.replace(" ", "_"),
+        }
+        print(request.session["email"])
+    except Exception as e:
+        print(f"Exception in listing view: {e}")
+        raise e
+    return render(request, context=context, template_name="Williz/AdminUpdateListing.html")
+
+
+def delete_listing_confirmation(request, **kwargs):
+    """
+    Author: Mike
+    View function to confirm the deletion of a listing. If the post is submitted with the yes-button pressed then the
+    listing will be deleted.
+    :param request: HTTP GET request
+    :param kwargs: Keyword url arguments to get the unique listing to delete
+    :return: HTTP Response
+    """
+    for arg_name in ("state", "house_num", "zip", "city", "street"):
+        assert arg_name in kwargs
+        # If user session not set redirect them to home page to log in
+    if "email" not in request.session:
+        return HttpResponseRedirect(f"/?&status=not_logged_in")
+    email = request.session.get("email")
+    user = User.objects.get(email=email)
+    # Boot user to home page if they are not an admin or realtor
+    if user.user_type not in (USER_TYPE_TO_CODE["admin"], USER_TYPE_TO_CODE["realtor"]):
+        print(f"Invalid user type {CODE_TO_USER_TYPE[user.user_type]} tried to delete a listing.")
+        return HttpResponseRedirect("/?&status=non_authorized_user")
+    try:
+        listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"])) \
+            .filter(street_name=kwargs["street"].replace("_", " ").strip()) \
+            .filter(city=kwargs["city"].replace("_", " ").strip()) \
+            .filter(state=kwargs["state"].replace("_", " ").strip()) \
+            .filter(zip_code=int(kwargs["zip"]))
+        if len(listing_set) != 1:
+            raise ValueError(f"Found {len(listing_set)} listings, expected to find one.")
+        listing = listing_set[0]
+        # If they are a realtor, still need to check that they are the right realtor
+        if user.pk != listing.realtor.user_id:
+            print(f"Unauthorized attempt to delete a listing by realtor: {user.pk} which was created by {listing.realtor}")
+            return HttpResponseRedirect("/?&status=non_authorized_user")
+        context = {
+            "street": listing.street_name,
+            "street_num": listing.house_num,
+            "city": listing.city,
+            "state": listing.state,
+            "zip": listing.zip_code,
+            "street_url": listing.street_name.replace(" ", "_"),
+            "city_url": listing.city.replace(" ", "_")
+        }
+        return render(request, context=context, template_name="Williz/confirmListingDelete.html")
+    except Exception as e:
+        print(f"Exception raised while confirming deletion of property. {e}")
+        raise e
+
+
+def delete_listing_handler(request, **kwargs):
+    print(f"HTTP Method: {request.method}")
+    if request.method != "POST":
+        return HttpResponseRedirect("/?&status=invalid_http_method")
+    for arg_name in ("state", "house_num", "zip", "city", "street"):
+        assert arg_name in request.POST
+    try:
+        listing_set = Listing.objects.filter(house_num=int(request.POST["house_num"])) \
+            .filter(street_name=request.POST["street"].replace("_", " ").strip()) \
+            .filter(city=request.POST["city"].replace("_", " ").strip()) \
+            .filter(state=request.POST["state"].replace("_", " ").strip()) \
+            .filter(zip_code=int(request.POST["zip"]))
+        if len(listing_set) != 1:
+            raise ValueError(f"Found {len(listing_set)} listings, expected to find one.")
+        listing = listing_set[0]
+        street = listing.street_name
+        street_num = listing.house_num
+        listing.delete()
+        return HttpResponseRedirect(f"/?&status={street_num}_{street}_listing_deleted")
+    except Exception as e:
+        print(f"Exception while trying to delete listing. {e}")
+        raise e
+    return HttpResponseRedirect("/?&status=failed_listing_deletion")
+
 
 
 def handler404(request, *args, **argv):
@@ -668,6 +800,8 @@ def updateListing(request, **kwargs):
             "listed_date": listing.list_date,
             "asking": listing.asking_price,
             "description": listing.description,
+            "street_url": listing.street_name.replace(" ", "_"),
+            "city_url": listing.city.replace(" ", "_")
         }
         print(request.session["email"])
     except Exception as e:

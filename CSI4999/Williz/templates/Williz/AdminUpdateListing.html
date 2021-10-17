@@ -78,7 +78,7 @@ function closeNav() {
     <div id="FormCont">
     <h1 id="mainHeader">Update Listing</h1>
 
-    <form id="ListingForm" method="POST" action="../../../../../../../update/{{state}}/{{zip}}/{{city}}/{{street}}/{{house_num}}">
+    <form id="ListingForm" method="POST" action="/update/{{state}}/{{zip}}/{{city}}/{{street}}/{{house_num}}">
         {% csrf_token %}
 
     <label><b>House Number</b>
@@ -191,14 +191,14 @@ function closeNav() {
         <textarea type="text" name="desc" id="desc" class = "FormInput" value={{description}}>{{description}}</textarea>
         <br><br>
 
-         <button type = "Submit" id ="realtor-update" name ="Submit" value="Submit" class="Submit">Update</button>
+         <button type = "Submit" id ="admin-update" name ="Submit" value="Submit" class="Submit">Update</button>
 
         <input style="visibility: hidden" class="FormInput" name="user_id"/>
     </form>
         <a href="/listing/confirm/delete/{{state}}/{{zip}}/{{city_url}}/{{street_url}}/{{house_num}}">
-            <button id="realtor-delete" class="link-btn" name ="Submit">Delete Listing</button>
+            <button id="admin-delete" class="link-btn" name ="Submit">Delete Listing</button>
         </a>
 </div>
 
-  </body>
+</body>
 </html>

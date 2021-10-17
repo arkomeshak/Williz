@@ -55,7 +55,7 @@ function fnameEdit(){var a=document.getElementsByClassName("fnameInput")[0];if(a
                 <li><p>Street Addr: {{street_num}} {{street}}</p></li>
                 <li><p>Zip: {{zip}}</p></li>
                 <li><p>Footage: {{size}} sq-ft</p></li>
-                <li><p>Property Size: {{prop_size}} acre(s)</p></li>
+                <li><p>Property Size: {{prop_size}} sq-ft</p></li>
                 <li><p>Beds: {{beds}}</p></li>
                 <li><p>Baths: {{baths}}</p></li>
                 <li><p>Listed on: {{listing_date}}</p></li>
@@ -72,31 +72,23 @@ function fnameEdit(){var a=document.getElementsByClassName("fnameInput")[0];if(a
                             <!-- TODO: Once we have images, set this for loop up-->
                             <li><img src="#", alt="listing image"></li>
                         {% empty %}
-                            <li class="no-list-icon"><p>Sorry, no listing images have been posted.</p></li>
+                            <li class="no-list-icon notification"><p>Sorry, no listing images have been posted.</p></li>
                         {% endfor %}
                     </ul>
-                    {% if user_type == 1%}
-                    <a href="../../../../../listing/update/{{state}}/{{zip}}/{{city_url}}/{{street_url}}/{{street_num}}">
-                    <button type = "Submit" id ="Submit" name ="Submit">Update Listing (Realtor)</button>
-                    </a>
-                    {% else %}
-                    <a href="../../../../../listing/update/{{state}}/{{zip}}/{{city_url}}/{{street_url}}/{{street_num}}">
-                    <button type = "Submit" id ="Submit" name ="Submit">Update Listing (Admin)</button>
-                    </a>
-                    {% endif %}
+                    <div class="center-align">
+                        {% if user_type == 1%}
+                            <a href="../../../../../listing/update/{{state}}/{{zip}}/{{city_url}}/{{street_url}}/{{street_num}}">
+                            <button id="realtor-update" class="link-btn" name ="Submit">Update Listing</button>
+                            </a>
+                        {% else %}
+                            <a href="/listing/admin/update/{{state}}/{{zip}}/{{city_url}}/{{street_url}}/{{street_num}}">
+                            <button id="admin-update" class="link-btn" name ="Submit">Update Listing</button>
+                            </a>
+                        {% endif %}
+                     </div>
                 </div>
             </div>
         </div>
     </div>
-<!--     <footer class="footer">-->
-<!--        <nav class="navbar navbar-expand-sm navbar-dark">-->
-<!--            <a href="#" class="navbar-brand">About Williz</a>-->
-<!--            <div class="collapse navbar-collapse">-->
-<!--                <ul class="navbar-nav">-->
-<!--                    <li class="nav-item"><a class="nav-link" href="#">About us</a></li>-->
-<!--                </ul>-->
-<!--            </div>-->
-<!--        </nav>-->
-<!--    </footer>-->
 </body>
 </html>

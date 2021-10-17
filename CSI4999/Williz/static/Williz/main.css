@@ -293,7 +293,7 @@ Listing CSS
     overflow: hidden;
     margin: auto;
     position: relative;
-    padding: 0 0 3% 0;
+    padding: 0 0 1% 0;
     background-color: #3bb7909c;
     background-image: linear-gradient(315deg, #3bb7909c 0%, #0bab639c 74%);
     border: 5px solid black;
@@ -307,7 +307,11 @@ ul li.no-list-icon {
     margin: 0;
 }
 
-#listingContainer h2.subhead {
+#listingContainer .notification {
+    font-size: 1.25em;
+}
+
+#listingContainer h2.subhead, #FormCont h2.subhead {
     color: whitesmoke;
     text-shadow: 1px 1px 1px #000;
     font-size: 3em;
@@ -323,3 +327,53 @@ ul li.no-list-icon {
 #listingContainer h2.subhead .top {
     border-top: 0;
 }
+
+ button.link-btn, button#admin-delete, button#admin-update, button#realtor-delete, button#realtor-update, input.link-btn {
+    width: auto;
+    height: auto;
+    border: none;
+    border-radius: 17px;
+    padding-left: 7px;
+    font-size: 1.3em;
+    color: Black;
+    background-color: white;
+    transition: .3s;
+    z-index: 101;
+}
+
+button.link-btn:hover, button#admin-delete:hover, button#admin-update:hover, button#realtor-delete:hover,
+button#realtor-update:hover, input.link-btn:hover {
+    background-color: #144133d3;
+    color: white;
+    transition: .3s;
+}
+
+div.center-align {
+    text-align: center;
+}
+
+div.top-border {
+    border-style: solid;
+    border-top: black;
+    border-width: 1px 0 0 0;
+    padding: 0.1em;
+}
+
+form#ListingForm a button.Submit {
+    width: auto;
+}
+
+#ConfirmDeleteForm {
+    margin-bottom: 0.2em;
+}
+
+p.warning {
+    color: red;
+    font-weight: bold;
+    font-size: 1.3em;
+}
+
+.render-inline {
+    display: inline-block;
+}
+
