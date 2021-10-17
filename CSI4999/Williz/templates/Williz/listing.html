@@ -76,11 +76,11 @@ function fnameEdit(){var a=document.getElementsByClassName("fnameInput")[0];if(a
                         {% endfor %}
                     </ul>
                     <div class="center-align">
-                        {% if user_type == 1%}
-                            <a href="../../../../../listing/update/{{state}}/{{zip}}/{{city_url}}/{{street_url}}/{{street_num}}">
+                        {% if isCreator is True %}
+                            <a href="/listing/update/{{state}}/{{zip}}/{{city_url}}/{{street_url}}/{{street_num}}">
                             <button id="realtor-update" class="link-btn" name ="Submit">Update Listing</button>
                             </a>
-                        {% else %}
+                        {% elif user_type == 0 %}
                             <a href="/listing/admin/update/{{state}}/{{zip}}/{{city_url}}/{{street_url}}/{{street_num}}">
                             <button id="admin-update" class="link-btn" name ="Submit">Update Listing</button>
                             </a>

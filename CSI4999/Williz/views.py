@@ -521,6 +521,7 @@ def listing(request, **kwargs):
     :param kwargs: street name, street number, city, state, zip code
     :return: HTTP response
     """
+    isCreator = False
     for arg_name in ("state", "house_num", "zip", "city", "street"):
         assert arg_name in kwargs
     # Try to find the listing and build context
@@ -534,6 +535,8 @@ def listing(request, **kwargs):
         if len(listing_set) != 1:  # Should get us one unique listing
             raise ValueError(f"Found {len(listing_set)} listings, expected to find one.")
         listing = listing_set[0]
+        if request.session["email"] == User.objects.get(user_id=listing.realtor.user_id).email:
+            isCreator = True
         context = {
             "street": listing.street_name,
             "street_num": listing.house_num,
@@ -548,7 +551,8 @@ def listing(request, **kwargs):
             "asking": listing.asking_price,
             "description": listing.description,
             "street_url": listing.street_name.replace(" ", "_"),
-            "city_url": listing.city.replace(" ", "_")
+            "city_url": listing.city.replace(" ", "_"),
+            "isCreator": isCreator
         }
         # Get the realtor data we need. Realtor ID = their User ID, so go straight there
         realtor_usr = listing.realtor
@@ -787,23 +791,26 @@ def updateListing(request, **kwargs):
         if len(listing_set) != 1:
             raise ValueError(f"Found {len(listing_set)} listings, expected to find one.")
         listing = listing_set[0]
-        context = {
-            "street": listing.street_name,
-            "house_num": listing.house_num,
-            "city": listing.city,
-            "state": listing.state,
-            "zip": listing.zip_code,
-            "size": listing.house_size,
-            "prop_size": listing.property_size,
-            "beds": listing.num_beds,
-            "baths": listing.num_baths,
-            "listed_date": listing.list_date,
-            "asking": listing.asking_price,
-            "description": listing.description,
-            "street_url": listing.street_name.replace(" ", "_"),
-            "city_url": listing.city.replace(" ", "_")
-        }
-        print(request.session["email"])
+        if request.session["email"] == User.objects.get(user_id=listing.realtor.user_id).email:
+            context = {
+                "street": listing.street_name,
+                "house_num": listing.house_num,
+                "city": listing.city,
+                "state": listing.state,
+                "zip": listing.zip_code,
+                "size": listing.house_size,
+                "prop_size": listing.property_size,
+                "beds": listing.num_beds,
+                "baths": listing.num_baths,
+                "listed_date": listing.list_date,
+                "asking": listing.asking_price,
+                "description": listing.description,
+                "street_url": listing.street_name.replace(" ", "_"),
+                "city_url": listing.city.replace(" ", "_")
+            }
+            print(request.session["email"])
+        else:
+            return HttpResponseRedirect("/?&status=non_authorized_user")
     except Exception as e:
         print(f"Exception in listing view: {e}")
         raise e
