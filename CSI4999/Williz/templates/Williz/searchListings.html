@@ -90,43 +90,37 @@ function closeNav() {
 <div style = "clear:both"></div>
 
 
-  <body id="main_body">
-
+  <body id="main_body" onload="build_listings()">
+    <script></script>
 
     <div class="dimmer" id = "dimmer"></div>
+    <h1 id="mainHeader">Listings</h1>
+<!--    <div id="FormCont"> -->
 
-    <div id="FormCont"> 
+<!--    <form id="loginForm" method="POST" action="../searchListings_handler/">-->
+<!--        {% csrf_token %}-->
+<!--        <label><b>Location</b>-->
+<!--        </label></br>-->
+<!--        <input type="text" name="userLoc" id="userLoc" class = "FormInput" placeholder="Enter Location">  </br>-->
+<!--        <label><b>Distance</b>-->
+<!--        </label></br>-->
+<!--        -->
+<!--        <label class="Radio-btn" style = "padding-right:2%; display: none">50 Miles-->
+<!--        <input type="radio" id = "Radius50" name="radio" onchange="Radius()" value="0" style = " display: none">-->
+<!--        </label>   -->
 
-    <h1 id="mainHeader">Search</h1>   
-    <form id="loginForm" method="POST" action="../searchListings_handler/">
-        {% csrf_token %}
-        <label><b>Location</b>
-        </label></br>
-        <input type="text" name="userLoc" id="userLoc" class = "FormInput" placeholder="Enter Location">  </br>
-        <label><b>Distance</b>
-        </label></br>
-        
-        <label class="Radio-btn" style = "padding-right:2%; display: none">50 Miles
-        <input type="radio" id = "Radius50" name="radio" onchange="Radius()" value="0" style = " display: none">
-        </label>   
+<!--        <label class="Radio-btn" style = "padding-right:2%; display: none">25 Miles-->
+<!--        <input type="radio" id = "Radius25" name="radio" onchange="Radius()" value="0" style = " display: none">-->
+<!--        </label> -->
 
-        <label class="Radio-btn" style = "padding-right:2%; display: none">25 Miles
-        <input type="radio" id = "Radius25" name="radio" onchange="Radius()" value="0" style = " display: none">
-        </label> 
-
-        <label class="Radio-btn" style = "padding-right:2%; display: none">10 Miles
-        <input type="radio" id = "Radius10" name="radio" onchange="Radius()" value="0" style = " display: none">
-        </label> 
-
-        <label class="Radio-btn">All
-        <input type="radio" id = "Radiusall" name="radio" onchange="Radius()" value="0" checked>
-        </label> 
-
-
-    </form>    
-            <button onClick="Radius()"> Show Listings</button>
-</div> 
-</br>
+<!--        <label class="Radio-btn" style = "padding-right:2%; display: none">10 Miles-->
+<!--        <input type="radio" id = "Radius10" name="radio" onchange="Radius()" value="0" style = " display: none">-->
+<!--        </label>-->
+<!--        <input type="radio" id = "Radiusall" name="radio" onchange="Radius()" style="visibility: hidden" value="0" checked>-->
+<!--    </form>-->
+<!--        <button onClick="build_listings()"> Show Listings</button>-->
+<!--</div> -->
+<!--</br>-->
 <div id ="MapContainer">
     <div id="mapid" style = " display: none;"></div> 
 </div>
@@ -134,21 +128,6 @@ function closeNav() {
 <div id="nearbyListings">
 
 </div>
-
-
-
-
-
- <footer class="footer">
-        <nav class="navbar navbar-expand-sm navbar-dark">
-            <a href="#" class="navbar-brand">About Williz</a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav">
-                    <li class="nav-item"><a class="nav-link" href="#">About us</a></li>
-                </ul>
-            </div>
-        </nav>
-    </footer>
 
   </body>
   <!--
@@ -399,7 +378,7 @@ axios.get('https://api.mapbox.com/geocoding/v5/mapbox.places/'+Uloc+'.json?count
         console.log("output ", output);
         
         console.log("T ARR VALUE ", ArrDistAll[t]);
-        document.getElementById('nearbyListings').innerHTML ='<div class="grid-container2" id = "Listings"><div class="grid-item2"><b><i>Address</b></i></div><div class="grid-item2"><b><i>Asking Price</b></i></div> <div class="grid-item2"><b><i>Details</b></i></div>{% for listing in AllListings %}<div class="grid-item2"><b><i>{{ listing.house_num }} {{ listing.street_name }} {{ listing.state }} </b></i></div><div class="grid-item2"><b><i>{{ listing.asking_price }} </b></i></div><div class="grid-item2"><b><i><form method="POST" action="listing/update/{{ listing.state }}/{{ listing.zip_code }}/{{ listing.city }}/{{ listing.street_name }}/{{ listing.house_num }}">{% csrf_token %}<button type = "Submit" id ="Submit" value="Submit">Details</button></form></b></i></div>{% endfor %}';
+        document.getElementById('nearbyListings').innerHTML ='<div class="grid-container2" id = "Listings"><div class="grid-item2"><b><i>Address</b></i></div><div class="grid-item2"><b><i>Asking Price</b></i></div> <div class="grid-item2"><b><i>Details</b></i></div>{% for listing in AllListings %}<div class="grid-item2"><b><i>{{ listing.house_num }} {{ listing.street_name }} {{ listing.state }} </b></i></div><div class="grid-item2"><b><i>{{ listing.asking_price }} </b></i></div><div class="grid-item2"><b><i><form method="POST" action="update/{{ listing.state }}/{{ listing.zip_code }}/{{ listing.city }}/{{ listing.street_name }}/{{ listing.house_num }}">{% csrf_token %}<button type = "Submit" id ="Submit" value="Submit">Details</button></form></b></i></div>{% endfor %}';
 
         t = t+1;
     })
@@ -420,9 +399,9 @@ console.log("Below 10: " , ArrDist10);
 console.log("Filter: " , output)
 */
 
-
-
-
+function build_listings() {
+    document.getElementById('nearbyListings').innerHTML ='<div class="grid-container2" id = "Listings"><div class="grid-item2"><b><i>Address</b></i></div><div class="grid-item2"><b><i>Asking Price</b></i></div> <div class="grid-item2"><b><i>Details</b></i></div>{% for listing in AllListings %}<div class="grid-item2"><b><i>{{ listing.house_num }} {{ listing.street_name }} {{ listing.state }} </b></i></div><div class="grid-item2"><b><i>{{ listing.asking_price }} </b></i></div><div class="grid-item2"><b><i><form method="POST" action="/listing/{{ listing.state }}/{{ listing.zip_code }}/{{ listing.city }}/{{ listing.street_name }}/{{ listing.house_num }}">{% csrf_token %}<button type = "Submit" id ="Submit" value="Submit">Details</button></form></b></i></div>{% endfor %}'
+}
 
 
 
