@@ -874,7 +874,7 @@ def updateListing(request, **kwargs):
     except Exception as e:
         print(f"Exception in listing view: {e}")
         raise e
-    return render(request, context=context, template_name="Williz/updateListing.html")
+    return render(request, context=context, template_name="Williz/UpdateListing.html")
 
 def update(request, **kwargs):
     """
