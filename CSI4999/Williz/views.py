@@ -874,7 +874,7 @@ def updateListing(request, **kwargs):
     except Exception as e:
         print(f"Exception in listing view: {e}")
         raise e
-    return HttpResponseRedirect(f"/listing/{context['state']}/{context['zip']}/{context['city_url']}/{context['street_url']}/{context['house_num']}")
+    return render(request, context=context, template_name="Williz/updateListing.html")
 
 def update(request, **kwargs):
     """
@@ -923,8 +923,7 @@ def update(request, **kwargs):
         "realtor_lname": realtor_usr.l_name,
         "realtor_email": realtor_usr.email,
     }
-    return render(request, context=context, template_name="Williz/listing.html")
-
+    return HttpResponseRedirect(f"/listing/{context['state']}/{context['zip']}/{context['city_url']}/{context['street_url']}/{context['house_num']}")
 
 
 """
