@@ -617,13 +617,16 @@ def listing(request, **kwargs):
         realtor_usr = listing.realtor
         # user should be a realtor, else something's fishy and we should throw and exception
         assert realtor_usr.user_type == USER_TYPE_TO_CODE["realtor"]
-        user = User.objects.get(email=request.session["email"])
+        if "email" in request.session:
+            user = User.objects.get(email=request.session["email"])
+            context["user_type"] = user.user_type
+        else:
+            context["user_type"] = -1
         context.update(
             {
                 "realtor_fname": realtor_usr.f_name,
                 "realtor_lname": realtor_usr.l_name,
                 "realtor_email": realtor_usr.email,
-                "user_type": user.user_type
             }
         )
         # TOOD: Once we have listing images, look for them and add their paths to a list in context
