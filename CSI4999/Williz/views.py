@@ -254,9 +254,6 @@ def searchListings(request):
 
     return render(request, "Williz/searchListings.html", {'AllListings': listings})
 
-def updateListing(request):
-    context = {}
-    return render(request, "Williz/searchListings.html", context)
 
 def searchListings_handler(request):
     listings = []
@@ -718,7 +715,7 @@ def delete_listing_confirmation(request, **kwargs):
             raise ValueError(f"Found {len(listing_set)} listings, expected to find one.")
         listing = listing_set[0]
         # If they are a realtor, still need to check that they are the right realtor
-        if user.pk != listing.realtor.user_id:
+        if user.user_type == USER_TYPE_TO_CODE["admin"] or user.pk != listing.realtor.user_id:
             print(f"Unauthorized attempt to delete a listing by realtor: {user.pk} which was created by {listing.realtor}")
             return HttpResponseRedirect("/?&status=non_authorized_user")
         context = {
@@ -836,6 +833,7 @@ def change_verification(request, email):
     response = HttpResponseRedirect(f"/accountRequests")
     return response
 
+
 def updateListing(request, **kwargs):
     """
         Author: Zak
@@ -876,7 +874,7 @@ def updateListing(request, **kwargs):
     except Exception as e:
         print(f"Exception in listing view: {e}")
         raise e
-    return render(request, context=context, template_name="Williz/UpdateListing.html")
+    return HttpResponseRedirect(f"/listing/{context['state']}/{context['zip']}/{context['city_url']}/{context['street_url']}/{context['house_num']}")
 
 def update(request, **kwargs):
     """
