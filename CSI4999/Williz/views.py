@@ -715,7 +715,7 @@ def delete_listing_confirmation(request, **kwargs):
             raise ValueError(f"Found {len(listing_set)} listings, expected to find one.")
         listing = listing_set[0]
         # If they are a realtor, still need to check that they are the right realtor
-        if user.user_type == USER_TYPE_TO_CODE["admin"] or user.pk != listing.realtor.user_id:
+        if user.user_type != USER_TYPE_TO_CODE["admin"] or user.pk != listing.realtor.user_id:
             print(f"Unauthorized attempt to delete a listing by realtor: {user.pk} which was created by {listing.realtor}")
             return HttpResponseRedirect("/?&status=non_authorized_user")
         context = {
