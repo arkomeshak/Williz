@@ -478,7 +478,7 @@ def login_handler(request):
 
                     u_type = query.user_type
 
-                    if u_type == 0:
+                    if u_type == USER_TYPE_TO_CODE["admin"]:
                         response = HttpResponseRedirect(f"/accountRequests?&status=Login_success")
 
                     else:
@@ -523,7 +523,9 @@ def delete_user_account(request, user_id):
         messages.success(request, "The user has been deleted.")
     except Exception as e:
         print("e", e)
-    return render(request, template_name="Williz/accountRequests.html")
+    response = render(request, template_name="Williz/accountRequests.html")
+    response.delete_cookie("device")  # Delete the device cookie so diff users can still login from this device
+    return response
 
   
 # Mike's Views
