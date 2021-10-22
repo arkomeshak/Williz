@@ -551,23 +551,23 @@ def email_verification_page(request, verify_string=None):
                 print("now is ", now)
                 print("expires in ", expires)
                 if val_entry.expires <= timezone.now():
-                    return render(request, context={"message": "Ooops, that link has expired. Try requesting another."},
-                                  template_name="Williz/stub_verify_email.html")
+                    return render(request, context={"message": "Ooops, that link has expired. Try requesting another.",},
+                                  template_name="Williz/verify_email.html")
                 user_id = val_entry.user_id
                 user = User.objects.get(pk=user_id)
                 email = user.email
                 context["message"] = f"Your email: {email} has been verified."
                 context["name"] = user.f_name
+                context["success"] = True
                 user.email_validation = True
                 user.save()
                 val_entry.delete()
-                return render(request, context=context, template_name="Williz/stub_verify_email.html")
+                return render(request, context=context, template_name="Williz/verify_email.html")
             except Validation.DoesNotExist:
                 print(f"Invalid verification string {verify_string}")
-                return render(request, context=context, template_name="Williz/stub_verify_email.html")
+                return render(request, context=context, template_name="Williz/verify_email.html")
             # No verification string found, render with the message of failure
-
-    return render(request, contex=context, template_name="Williz/stub_verify_email.html")
+    return render(request, context=context, template_name="Williz/verify_email.html")
 
 
 def listing(request, **kwargs):
