@@ -274,10 +274,8 @@ def searchListings_handler(request):
     userLocation = request.POST["userLoc"]
     return render(request, "Williz/searchListings.html", {'UserLoc':userLocation, 'AllListings':listings})
 
-
-
-
 # Carson's Views
+
 
 def password_reset(request):
     context = {}
