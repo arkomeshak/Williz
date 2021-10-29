@@ -18,7 +18,8 @@ from CSI4999.settings import SECRET_KEY
 from random import choices, seed
 import datetime
 from time import time
-
+# Cryptography imports
+from cryptography.fernet import Fernet
 """
 ============================================= Constants & Globals ======================================================
 """
@@ -36,7 +37,7 @@ SESSION_EXPIRATION = 300  # Sessions last 300 seconds
 FAILED_LOGINS_THRESHOLD = 5
 LOCKOUT_DURATION_THRESHOLD = 60
 ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
+key = settings.ENCRYPTION_KEY
 
 # Create your views here.
 
@@ -987,6 +988,37 @@ def pw_validation(pw):
 
 
 # Dan's helper functions
+def create_key():
+    key = Fernet.generate_key()
+    with open("key.key", "wb") as key_file:
+        key_file.write(key)
+
+
+# def get_key():
+#    return open("key.key", "rb").read()
+
+
+# def get_key():
+#    print(settings.ENCRYPTION_KEY)
+#    return settings.ENCRYPTION_KEY
+
+
+def encrypt(filename, key):
+    f = Fernet(key)
+    with open(filename, "rb") as file:
+        data = file.read()
+    encrypted_data = f.encrypt(data)
+    with open(filename, "wb") as file:
+        file.write(encrypted_data)
+
+
+def decrypt(filename, key):
+    f = Fernet(key)
+    with open(filename, "rb") as file:
+        encrypted_data = file.read()
+    decrypted_data = f.decrypt(encrypted_data)
+    with open(filename, "wb") as file:
+        file.write(decrypted_data)
 
 
 # Mike's helper functions
