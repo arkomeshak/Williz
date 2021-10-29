@@ -19,6 +19,7 @@ from random import choices, seed
 import datetime
 from time import time
 
+
 """
 ============================================= Constants & Globals ======================================================
 """
@@ -154,7 +155,7 @@ def accountRequests(request):
     for i in NewRARTable:
         print(i)
     return render(request, 'Williz/accountRequests.html',{'UserRequests':NewRARTable})
-      
+
 
 def resetPassword(request):
     context = {}
@@ -234,6 +235,46 @@ def resetPasswordVerify(request):
                 return HttpResponseRedirect("../login/")
         return HttpResponseRedirect(f"../password_reset/?&status=pws_didnt_match")
     return HttpResponseRedirect(f"../password_reset/?&status=Code_Expired")
+
+def searchListings(request):
+    listings = []
+    listingsQ = Listing.objects.all()
+
+    print(listings)
+
+    for i, List in enumerate(listingsQ):
+        entry = {"house_num": List.house_num,
+                 "street_name": List.street_name,
+                 "state": List.state,
+                 "asking_price": List.asking_price,
+                 "city": List.city,
+                 "zip_code": List.zip_code, }
+        listings.append(entry)
+        print(listings)
+
+    return render(request, "Williz/searchListings.html", {'AllListings': listings})
+
+
+def searchListings_handler(request):
+    listings = []
+    listingsQ = Listing.objects.all()
+
+    print(listings)
+
+
+    for i, List in enumerate(listingsQ):
+            entry = {"house_num": List.house_num,
+                     "street_name": List.street_name,
+                     "state": List.state,
+                     "asking_price": List.asking_price,
+                     "city": List.city,
+                     "zip_code": List.zip_code,}
+            listings.append(entry)
+            print(listings)
+    userLocation = request.POST["userLoc"]
+    return render(request, "Williz/searchListings.html", {'UserLoc':userLocation, 'AllListings':listings})
+
+
 
 
 # Carson's Views
@@ -431,12 +472,13 @@ def login_handler(request):
                     else:
                         print("remember?", request.POST.get('remember'))
                         request.session["email"] = email
+                        print(request.session["email"])
                         request.session.set_expiry(
-                            SESSION_EXPIRATION * 30)  # expires in SESSION_EXPIRATION * 30s seconds (Final Suggestion: if remember me is unchecked we can set session to last 1 day)
+                            SESSION_EXPIRATION * 3600)  # expires in SESSION_EXPIRATION * 30s seconds (Final Suggestion: if remember me is unchecked we can set session to last 1 day)
 
                     u_type = query.user_type
 
-                    if u_type == 0:
+                    if u_type == USER_TYPE_TO_CODE["admin"]:
                         response = HttpResponseRedirect(f"/accountRequests?&status=Login_success")
 
                     else:
@@ -481,7 +523,9 @@ def delete_user_account(request, user_id):
         messages.success(request, "The user has been deleted.")
     except Exception as e:
         print("e", e)
-    return render(request, template_name="Williz/accountRequests.html")
+    response = render(request, template_name="Williz/accountRequests.html")
+    response.delete_cookie("device")  # Delete the device cookie so diff users can still login from this device
+    return response
 
   
 # Mike's Views
@@ -524,6 +568,197 @@ def email_verification_page(request, verify_string=None):
             # No verification string found, render with the message of failure
 
     return render(request, contex=context, template_name="Williz/stub_verify_email.html")
+
+
+def listing(request, **kwargs):
+    """
+    Author: Mike
+    Function to render a real estate listing and send in a HTTP response.
+    :param request: HTTP GET request
+    :param kwargs: street name, street number, city, state, zip code
+    :return: HTTP response
+    """
+    isCreator = False
+    for arg_name in ("state", "house_num", "zip", "city", "street"):
+        assert arg_name in kwargs
+    # Try to find the listing and build context
+    try:
+        # This looks bad, but filters are lazy, so actually only runs 1 big query with a gnarly where statement
+        listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"]))\
+            .filter(street_name=kwargs["street"].replace("_", " ").strip())\
+            .filter(city=kwargs["city"].replace("_", " ").strip())\
+            .filter(state=kwargs["state"].replace("_", " ").strip())\
+            .filter(zip_code=int(kwargs["zip"]))
+        if len(listing_set) != 1:  # Should get us one unique listing
+            raise ValueError(f"Found {len(listing_set)} listings, expected to find one.")
+        listing = listing_set[0]
+        # This is best practice
+        if "email" in request.session and request.session["email"] == User.objects.get(user_id=listing.realtor.user_id).email:
+                isCreator = True
+        context = {
+            "street": listing.street_name,
+            "street_num": listing.house_num,
+            "city": listing.city,
+            "state": listing.state,
+            "zip": listing.zip_code,
+            "size": listing.house_size,
+            "prop_size": listing.property_size,
+            "beds": listing.num_beds,
+            "baths": listing.num_baths,
+            "listing_date": listing.list_date,
+            "asking": listing.asking_price,
+            "description": listing.description,
+            "street_url": listing.street_name.replace(" ", "_"),
+            "city_url": listing.city.replace(" ", "_"),
+            "isCreator": isCreator
+        }
+        # Get the realtor data we need. Realtor ID = their User ID, so go straight there
+        realtor_usr = listing.realtor
+        # user should be a realtor, else something's fishy and we should throw and exception
+        assert realtor_usr.user_type == USER_TYPE_TO_CODE["realtor"]
+        if "email" in request.session:
+            user = User.objects.get(email=request.session["email"])
+            context["user_type"] = user.user_type
+        else:
+            context["user_type"] = -1
+        context.update(
+            {
+                "realtor_fname": realtor_usr.f_name,
+                "realtor_lname": realtor_usr.l_name,
+                "realtor_email": realtor_usr.email,
+            }
+        )
+        # TOOD: Once we have listing images, look for them and add their paths to a list in context
+        context["listing_images"] = []
+    except Exception as e:
+        print(f"Exception in listing view: {e}")
+        raise e
+    return render(request, context=context, template_name="Williz/listing.html")
+
+
+def admin_listing_update(request, **kwargs):
+    """
+    Function to update a real estate listing with the data sent by an admin's HTTP POST request. If the listing
+    is deleted, redirects them to the home page. Else redirects them to the original listing.
+    :param request: HTTP GET request
+    :param kwargs: Keyword arguments to find the unique listing
+    :return: HTTP Redirect
+    """
+    for arg_name in ("state", "house_num", "zip", "city", "street"):
+        assert arg_name in kwargs
+    # If user session not set redirect them to home page to log in
+    if "email" not in request.session:
+        return HttpResponseRedirect(f"/?&status=not_logged_in")
+    email = request.session.get("email")
+    user = User.objects.get(email=email)
+    # Boot user to home page if they are not an admin
+    if user.user_type != USER_TYPE_TO_CODE["admin"]:
+        print(f"Invalid user type {CODE_TO_USER_TYPE[user.user_type]} tried to access admin listing page edit.")
+        return HttpResponseRedirect("/?&status=non_admin_user")
+    try:
+        listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"]))\
+            .filter(street_name=kwargs["street"].replace("_", " ").strip())\
+            .filter(city=kwargs["city"].replace("_", " ").strip())\
+            .filter(state=kwargs["state"].replace("_", " ").strip())\
+            .filter(zip_code=int(kwargs["zip"]))
+        if len(listing_set) != 1:
+            raise ValueError(f"Found {len(listing_set)} listings, expected to find one.")
+        listing = listing_set[0]
+        context = {
+            "street": listing.street_name,
+            "house_num": listing.house_num,
+            "city": listing.city,
+            "state": listing.state,
+            "zip": listing.zip_code,
+            "size": listing.house_size,
+            "prop_size": listing.property_size,
+            "beds": listing.num_beds,
+            "baths": listing.num_baths,
+            "listed_date": listing.list_date,
+            "asking": listing.asking_price,
+            "description": listing.description,
+            "street_url": listing.street_name.replace(" ", "_"),
+            "city_url": listing.city.replace(" ", "_"),
+        }
+        print(request.session["email"])
+    except Exception as e:
+        print(f"Exception in listing view: {e}")
+        raise e
+    return render(request, context=context, template_name="Williz/AdminUpdateListing.html")
+
+
+def delete_listing_confirmation(request, **kwargs):
+    """
+    Author: Mike
+    View function to confirm the deletion of a listing. If the post is submitted with the yes-button pressed then the
+    listing will be deleted.
+    :param request: HTTP GET request
+    :param kwargs: Keyword url arguments to get the unique listing to delete
+    :return: HTTP Response
+    """
+    for arg_name in ("state", "house_num", "zip", "city", "street"):
+        assert arg_name in kwargs
+        # If user session not set redirect them to home page to log in
+    if "email" not in request.session:
+        return HttpResponseRedirect(f"/?&status=not_logged_in")
+    email = request.session.get("email")
+    user = User.objects.get(email=email)
+    # Boot user to home page if they are not an admin or realtor
+    if user.user_type not in (USER_TYPE_TO_CODE["admin"], USER_TYPE_TO_CODE["realtor"]):
+        print(f"Invalid user type {CODE_TO_USER_TYPE[user.user_type]} tried to delete a listing.")
+        return HttpResponseRedirect("/?&status=non_authorized_user")
+    try:
+        listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"])) \
+            .filter(street_name=kwargs["street"].replace("_", " ").strip()) \
+            .filter(city=kwargs["city"].replace("_", " ").strip()) \
+            .filter(state=kwargs["state"].replace("_", " ").strip()) \
+            .filter(zip_code=int(kwargs["zip"]))
+        if len(listing_set) != 1:
+            raise ValueError(f"Found {len(listing_set)} listings, expected to find one.")
+        listing = listing_set[0]
+        # If they are a realtor, still need to check that they are the right realtor
+        if user.user_type != USER_TYPE_TO_CODE["admin"] and user.pk != listing.realtor.user_id:
+            print(f"Unauthorized attempt to delete a listing by realtor: {user.pk} which was created by {listing.realtor}")
+            return HttpResponseRedirect("/?&status=non_authorized_user")
+        context = {
+            "street": listing.street_name,
+            "street_num": listing.house_num,
+            "city": listing.city,
+            "state": listing.state,
+            "zip": listing.zip_code,
+            "street_url": listing.street_name.replace(" ", "_"),
+            "city_url": listing.city.replace(" ", "_")
+        }
+        return render(request, context=context, template_name="Williz/confirmListingDelete.html")
+    except Exception as e:
+        print(f"Exception raised while confirming deletion of property. {e}")
+        raise e
+
+
+def delete_listing_handler(request, **kwargs):
+    print(f"HTTP Method: {request.method}")
+    if request.method != "POST":
+        return HttpResponseRedirect("/?&status=invalid_http_method")
+    for arg_name in ("state", "house_num", "zip", "city", "street"):
+        assert arg_name in request.POST
+    try:
+        listing_set = Listing.objects.filter(house_num=int(request.POST["house_num"])) \
+            .filter(street_name=request.POST["street"].replace("_", " ").strip()) \
+            .filter(city=request.POST["city"].replace("_", " ").strip()) \
+            .filter(state=request.POST["state"].replace("_", " ").strip()) \
+            .filter(zip_code=int(request.POST["zip"]))
+        if len(listing_set) != 1:
+            raise ValueError(f"Found {len(listing_set)} listings, expected to find one.")
+        listing = listing_set[0]
+        street = listing.street_name
+        street_num = listing.house_num
+        listing.delete()
+        return HttpResponseRedirect(f"/?&status={street_num}_{street}_listing_deleted")
+    except Exception as e:
+        print(f"Exception while trying to delete listing. {e}")
+        raise e
+    return HttpResponseRedirect("/?&status=failed_listing_deletion")
+
 
 
 def handler404(request, *args, **argv):
@@ -599,6 +834,99 @@ def change_verification(request, email):
     user.save()
     response = HttpResponseRedirect(f"/accountRequests")
     return response
+
+
+def updateListing(request, **kwargs):
+    """
+        Author: Zak
+        Function which allows realtor to make changes to listing as needed
+        :return: redirect to listing page with updated info
+    """
+    for arg_name in ("state", "house_num", "zip", "city", "street"):
+        assert arg_name in kwargs
+    try:
+        listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"]))\
+            .filter(street_name=kwargs["street"].replace("_", " ").strip())\
+            .filter(city=kwargs["city"].replace("_", " ").strip())\
+            .filter(state=kwargs["state"].replace("_", " ").strip())\
+            .filter(zip_code=int(kwargs["zip"]))
+        if len(listing_set) != 1:
+            raise ValueError(f"Found {len(listing_set)} listings, expected to find one.")
+        listing = listing_set[0]
+        if request.session["email"] == User.objects.get(user_id=listing.realtor.user_id).email:
+            context = {
+                "street": listing.street_name,
+                "house_num": listing.house_num,
+                "city": listing.city,
+                "state": listing.state,
+                "zip": listing.zip_code,
+                "size": listing.house_size,
+                "prop_size": listing.property_size,
+                "beds": listing.num_beds,
+                "baths": listing.num_baths,
+                "listed_date": listing.list_date,
+                "asking": listing.asking_price,
+                "description": listing.description,
+                "street_url": listing.street_name.replace(" ", "_"),
+                "city_url": listing.city.replace(" ", "_")
+            }
+            print(request.session["email"])
+        else:
+            return HttpResponseRedirect("/?&status=non_authorized_user")
+    except Exception as e:
+        print(f"Exception in listing view: {e}")
+        raise e
+    return render(request, context=context, template_name="Williz/UpdateListing.html")
+
+def update(request, **kwargs):
+    """
+        Author: Zak
+        Processes new data for listing into database
+    """
+    for arg_name in ("state", "house_num", "zip", "city", "street"):
+        assert arg_name in kwargs
+    listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"])) \
+        .filter(street_name=kwargs["street"].replace("_", " ").strip()) \
+        .filter(city=kwargs["city"].replace("_", " ").strip()) \
+        .filter(state=kwargs["state"].replace("_", " ").strip()) \
+        .filter(zip_code=int(kwargs["zip"]))
+    if len(listing_set) != 1:
+        raise ValueError(f"Found {len(listing_set)} listings, expected to find one.")
+    listing = listing_set[0]
+    listing.house_num = request.POST["house_num"]
+    listing.street_name = request.POST["street"]
+    listing.city = request.POST["city"]
+    listing.state = request.POST["state"]
+    listing.zip_code = request.POST["zip"]
+    listing.house_size = request.POST["house_size"]
+    listing.property_size = request.POST["prop_size"]
+    listing.num_beds = request.POST["bed_num"]
+    listing.num_baths = request.POST["bath_num"]
+    listing.asking_price = request.POST["ask_price"]
+    listing.description = request.POST["desc"]
+    listing.save()
+    realtor_usr = listing.realtor
+    context = {
+        "street": listing.street_name,
+        "house_num": listing.house_num,
+        "city": listing.city,
+        "state": listing.state,
+        "zip": listing.zip_code,
+        "size": listing.house_size,
+        "prop_size": listing.property_size,
+        "beds": listing.num_beds,
+        "baths": listing.num_baths,
+        "listed_date": listing.list_date,
+        "asking": listing.asking_price,
+        "description": listing.description,
+        "street_url": listing.street_name.replace(" ", "_"),
+        "city_url": listing.city.replace(" ", "_"),
+        "realtor_fname": realtor_usr.f_name,
+        "realtor_lname": realtor_usr.l_name,
+        "realtor_email": realtor_usr.email,
+    }
+    return HttpResponseRedirect(f"/listing/{context['state']}/{context['zip']}/{context['city_url']}/{context['street_url']}/{context['house_num']}")
+
 
 """
 ============================================= Helper Functions =========================================================
