@@ -18,11 +18,14 @@ from CSI4999.settings import SECRET_KEY
 from random import choices, seed
 import datetime
 from time import time
+from os import listdir
+from os.path import join, isdir
+
 
 """
 ============================================= Constants & Globals ======================================================
 """
-
+ROOT_FILES_DIR = "../"
 ASCII_PRINTABLE = "0123456789abcdefghIjklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()-=_+[]{}./<>?|`~ "
 URL_SAFE_CHARS = "0123456789abcdefghIjklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ–_"
 BASE_URL = settings.BASE_URL  # Get the base URL from settings.py for use in email links
@@ -771,6 +774,27 @@ def delete_listing_handler(request, **kwargs):
     return HttpResponseRedirect("/?&status=failed_listing_deletion")
 
 
+"""
+def test_upload(request):
+    return render(request, template_name="Williz/test_pdf_upload.html")
+
+
+def pdf_upload_handler(request):
+    if request.method != "POST":
+        return HttpResponseRedirect("../?&status=invalid_upload_method")
+    if "pdf" not in request.POST:
+        return HttpResponseRedirect("../?&status=missing_pdf")
+    try:
+        pdf = request.POST["pdf"]
+        file_writer(pdf, )
+    except Exception as e:
+       print(e)
+       return HttpResponseRedirect("../?&status=internal_error")
+
+    pass
+"""
+
+
 def handler404(request, *args, **argv):
     """
     A 404 handler which directs to the 404 page.
@@ -1330,6 +1354,10 @@ def check_session(request):
     except User.DoesNotExist as e:
         print(f"Session has an email which DNE in User table.")
     return is_valid, u_type
+
+def file_writer(binary_file, filepath_suffix):
+    with open(join(ROOT_FILES_DIR, filepath_suffix), "wb") as f:
+        f.write(binary_file)
 
 # Zak's helper functions
 # ...*tumble weed blows in wind*
