@@ -1,5 +1,6 @@
 import binascii
 import hashlib
+import os
 import random
 
 from django.http import request, response, HttpResponse, HttpResponseRedirect
@@ -20,12 +21,12 @@ import datetime
 from time import time
 from os import listdir
 from os.path import join, isdir
-
+from io import *
 
 """
 ============================================= Constants & Globals ======================================================
 """
-ROOT_FILES_DIR = "../"
+ROOT_FILES_DIR = "Files/"
 ASCII_PRINTABLE = "0123456789abcdefghIjklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()-=_+[]{}./<>?|`~ "
 URL_SAFE_CHARS = "0123456789abcdefghIjklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ–_"
 BASE_URL = settings.BASE_URL  # Get the base URL from settings.py for use in email links
@@ -49,10 +50,6 @@ def index(request):
 
 
 def login(request):
-    valid, type_enum = check_session(request)
-    print("Valid session" if valid else "Invalid session")
-    u_type = CODE_TO_USER_TYPE[type_enum] if type_enum in CODE_TO_USER_TYPE else "Not a user"
-    print(f"User Type: {u_type}")
     context = {}
     return render(request, "Williz/login.html", context)
 
@@ -774,25 +771,36 @@ def delete_listing_handler(request, **kwargs):
     return HttpResponseRedirect("/?&status=failed_listing_deletion")
 
 
-"""
 def test_upload(request):
     return render(request, template_name="Williz/test_pdf_upload.html")
 
 
 def pdf_upload_handler(request):
+    """
+    Author: Mike
+    Handler view used to upload PDF files to the server. These PDFs are the appraisal documents
+    uploaded by appraisers.
+    :param request: http POST
+    :return: http response
+    """
     if request.method != "POST":
+        print("method", request.method)
         return HttpResponseRedirect("../?&status=invalid_upload_method")
-    if "pdf" not in request.POST:
+    print("Form files content: ", request.FILES.keys())
+    if "pdf" not in request.FILES:
         return HttpResponseRedirect("../?&status=missing_pdf")
     try:
-        pdf = request.POST["pdf"]
-        file_writer(pdf, )
+        pdf = request.FILES["pdf"]
+        print("upload file methods", dir(pdf))
+        app_type = "1004" if request.POST["form_type"] == "1004" else "1073"
+        app_id = 1 #TODO: Make this appraisal id
+        file_writer(pdf.read(), f"Appraisals/{app_id}/", f"Appraisal{app_id}_{app_type}.pdf")
     except Exception as e:
        print(e)
        return HttpResponseRedirect("../?&status=internal_error")
 
-    pass
-"""
+    return HttpResponseRedirect("/searchListings")
+
 
 
 def handler404(request, *args, **argv):
@@ -1355,8 +1363,19 @@ def check_session(request):
         print(f"Session has an email which DNE in User table.")
     return is_valid, u_type
 
-def file_writer(binary_file, filepath_suffix):
-    with open(join(ROOT_FILES_DIR, filepath_suffix), "wb") as f:
+
+def file_writer(binary_file, filepath, filename):
+    """
+    Author: Mike
+    :param binary_file:
+    :param filepath:
+    :param filename:
+    :return: None sucka
+    """
+    full_path = join(ROOT_FILES_DIR, filepath)
+    if not isdir(full_path):
+        os.makedirs(full_path)
+    with open(join(full_path, filename), "wb") as f:
         f.write(binary_file)
 
 # Zak's helper functions
