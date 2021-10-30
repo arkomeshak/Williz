@@ -20,6 +20,7 @@ import datetime
 from time import time
 from os import listdir
 from os.path import join, isdir
+from cryptography.fernet import Fernet
 
 
 """
@@ -1011,7 +1012,28 @@ def pw_validation(pw):
 
 
 # Dan's helper functions
+def create_key():
+    key = Fernet.generate_key()
+    with open("key.key", "wb") as key_file:
+        key_file.write(key)
 
+
+def encrypt(filename, key):
+    f = Fernet(key)
+    with open(filename, "rb") as file:
+        data = file.read()
+    encrypted_data = f.encrypt(data)
+    with open(filename, "wb") as file:
+        file.write(encrypted_data)
+
+
+def decrypt(filename, key):
+    f = Fernet(key)
+    with open(filename, "rb") as file:
+        encrypted_data = file.read()
+    decrypted_data = f.decrypt(encrypted_data)
+    with open(filename, "wb") as file:
+        file.write(decrypted_data)
 
 # Mike's helper functions
 @transaction.atomic
