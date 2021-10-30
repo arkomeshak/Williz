@@ -2,6 +2,7 @@ import binascii
 import hashlib
 import os
 import random
+import os
 
 from django.http import request, response, HttpResponse, HttpResponseRedirect
 from django.db import transaction, IntegrityError
@@ -423,6 +424,68 @@ def create_listing_handler(request):
 
     listing.save()
     return HttpResponseRedirect(f"/profile/email/{user.email}?&status=creation_success")
+
+
+def listing_image_upload(request):
+    return render(request, "Williz/listing_image_upload.html")
+
+
+def listing_image_handler(request):
+    """
+                  Author: Carson
+                  Function which uploads an image to the server for the purpose of being used in a listing
+                  :return:
+              """
+
+    if request.method != 'POST':
+        print("Method", request.method)
+        return HttpResponseRedirect("../?&status=invalid_upload_method")
+
+    if "images" not in request.FILES:
+        return HttpResponseRedirect("../?&status=missing_images")
+
+    images = request.FILES.getlist('images')
+    listing_id = 1  # TODO: Add logic for listing id
+    count = 0
+
+    for image in images:
+        count = count + 1
+        file_type = image.name.split(".")[-1]
+        assert file_type.lower() in ("jpg", "png", "jpeg")
+        file_writer(image.read(), f"Listings/{listing_id}/", f"Listing{listing_id}_img{count}.{file_type}")
+
+    return HttpResponseRedirect("../searchListings")
+
+
+def appraisal_image_upload(request):
+    return render(request, "Williz/appraisal_image_upload.html")
+
+
+def appraisal_image_handler(request):
+    """
+                  Author: Carson
+                  Function which uploads an image to the server for the purpose of being used in an appraisal
+                  :return:
+              """
+
+    if request.method != 'POST':
+        print("Method", request.method)
+        return HttpResponseRedirect("../?&status=invalid_upload_method")
+
+    if "images" not in request.FILES:
+        return HttpResponseRedirect("../?&status=missing_images")
+
+    images = request.FILES.getlist('images')
+    app_id = 1  # TODO: Add logic for listing id
+    count = 0
+
+    for image in images:
+        count = count + 1
+        file_type = image.name.split(".")[-1]
+        assert file_type.lower() in ("jpg", "png", "jpeg")
+        file_writer(image.read(), f"Appraisals/{app_id}/images", f"Appraisal{app_id}_img{count}.{file_type}")
+
+    return HttpResponseRedirect("../searchListings")
 
 
 # Dan's Views
@@ -1385,8 +1448,8 @@ def check_session(request):
     except User.DoesNotExist as e:
         print(f"Session has an email which DNE in User table.")
     return is_valid, u_type
-
-
+  
+  
 def file_writer(binary_file, filepath, filename):
     """
     Author: Mike
@@ -1400,6 +1463,5 @@ def file_writer(binary_file, filepath, filename):
         os.makedirs(full_path)
     with open(join(full_path, filename), "wb") as f:
         f.write(binary_file)
-
 # Zak's helper functions
 # ...*tumble weed blows in wind*
