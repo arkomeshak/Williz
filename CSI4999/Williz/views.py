@@ -772,7 +772,7 @@ def delete_listing_handler(request, **kwargs):
 
 
 def test_upload(request):
-    return render(request, template_name="Williz/test_pdf_upload.html")
+    return render(request, template_name="Williz/appraisal_upload.html")
 
 
 def pdf_upload_handler(request):
