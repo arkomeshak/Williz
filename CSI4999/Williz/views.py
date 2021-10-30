@@ -18,12 +18,14 @@ from CSI4999.settings import SECRET_KEY
 from random import choices, seed
 import datetime
 from time import time
-# Cryptography imports
-from cryptography.fernet import Fernet
+from os import listdir
+from os.path import join, isdir
+
+
 """
 ============================================= Constants & Globals ======================================================
 """
-
+ROOT_FILES_DIR = "../"
 ASCII_PRINTABLE = "0123456789abcdefghIjklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()-=_+[]{}./<>?|`~ "
 URL_SAFE_CHARS = "0123456789abcdefghIjklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ–_"
 BASE_URL = settings.BASE_URL  # Get the base URL from settings.py for use in email links
@@ -37,7 +39,7 @@ SESSION_EXPIRATION = 300  # Sessions last 300 seconds
 FAILED_LOGINS_THRESHOLD = 5
 LOCKOUT_DURATION_THRESHOLD = 60
 ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-key = settings.ENCRYPTION_KEY
+
 
 # Create your views here.
 
@@ -772,6 +774,27 @@ def delete_listing_handler(request, **kwargs):
     return HttpResponseRedirect("/?&status=failed_listing_deletion")
 
 
+"""
+def test_upload(request):
+    return render(request, template_name="Williz/test_pdf_upload.html")
+
+
+def pdf_upload_handler(request):
+    if request.method != "POST":
+        return HttpResponseRedirect("../?&status=invalid_upload_method")
+    if "pdf" not in request.POST:
+        return HttpResponseRedirect("../?&status=missing_pdf")
+    try:
+        pdf = request.POST["pdf"]
+        file_writer(pdf, )
+    except Exception as e:
+       print(e)
+       return HttpResponseRedirect("../?&status=internal_error")
+
+    pass
+"""
+
+
 def handler404(request, *args, **argv):
     """
     A 404 handler which directs to the 404 page.
@@ -988,37 +1011,6 @@ def pw_validation(pw):
 
 
 # Dan's helper functions
-def create_key():
-    key = Fernet.generate_key()
-    with open("key.key", "wb") as key_file:
-        key_file.write(key)
-
-
-# def get_key():
-#    return open("key.key", "rb").read()
-
-
-# def get_key():
-#    print(settings.ENCRYPTION_KEY)
-#    return settings.ENCRYPTION_KEY
-
-
-def encrypt(filename, key):
-    f = Fernet(key)
-    with open(filename, "rb") as file:
-        data = file.read()
-    encrypted_data = f.encrypt(data)
-    with open(filename, "wb") as file:
-        file.write(encrypted_data)
-
-
-def decrypt(filename, key):
-    f = Fernet(key)
-    with open(filename, "rb") as file:
-        encrypted_data = file.read()
-    decrypted_data = f.decrypt(encrypted_data)
-    with open(filename, "wb") as file:
-        file.write(decrypted_data)
 
 
 # Mike's helper functions
@@ -1362,6 +1354,10 @@ def check_session(request):
     except User.DoesNotExist as e:
         print(f"Session has an email which DNE in User table.")
     return is_valid, u_type
+
+def file_writer(binary_file, filepath_suffix):
+    with open(join(ROOT_FILES_DIR, filepath_suffix), "wb") as f:
+        f.write(binary_file)
 
 # Zak's helper functions
 # ...*tumble weed blows in wind*
