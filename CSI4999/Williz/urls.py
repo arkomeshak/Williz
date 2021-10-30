@@ -15,17 +15,13 @@ urlpatterns = [
     path("profile/edit_user_info", views.edit_user_info, name="update"),
     path("register_user_handler/", views.register_user_handler, name="register_user_handler"),
     path("login_handler/", views.login_handler, name="login_handler"),
-  
     path("createListing/email/<email>", views.create_listing, name="createListing"),
     path("create_listing_handler/", views.create_listing_handler, name="create_listing_handler"),
     path("accountRequests/", views.accountRequests, name="accountRequests"),
     path("delete_user_account/<user_id>", views.delete_user_account, name="delete_user_account"),
     path("change_verification/email/<email>", views.change_verification, name="changeVerification"),
-
     path("searchListings/", views.searchListings, name="searchListings"),
     path("searchListings_handler/", views.searchListings_handler, name="searchListings_handler"),
-
-
     path("listing/<state>/<zip>/<city>/<street>/<house_num>", views.listing, name="listing"),
     path("listing/update/<state>/<zip>/<city>/<street>/<house_num>", views.updateListing, name="updateListing"),
     path("update/<state>/<zip>/<city>/<street>/<house_num>", views.update, name="update"),
@@ -38,4 +34,6 @@ urlpatterns = [
     path("upload_listing_images", views.listing_image_upload, name="listing_image_upload"),
     path("appraisal_image_handler", views.appraisal_image_handler, name="listing_image_handler"),
     path("upload_appraisal_images", views.appraisal_image_upload, name="listing_image_upload"),
+    path("testUpload", views.test_upload, name="whoCares"),
+    path("upload/pdf", views.pdf_upload_handler, name="pdfHandler"),
 ]

@@ -1,5 +1,6 @@
 import binascii
 import hashlib
+import os
 import random
 import os
 
@@ -22,7 +23,7 @@ from time import time
 from os import listdir
 from os.path import join, isdir
 from io import *
-from django.core.validators import *
+from cryptography.fernet import Fernet
 
 
 """
@@ -52,10 +53,6 @@ def index(request):
 
 
 def login(request):
-    valid, type_enum = check_session(request)
-    print("Valid session" if valid else "Invalid session")
-    u_type = CODE_TO_USER_TYPE[type_enum] if type_enum in CODE_TO_USER_TYPE else "Not a user"
-    print(f"User Type: {u_type}")
     context = {}
     return render(request, "Williz/login.html", context)
 
@@ -839,25 +836,36 @@ def delete_listing_handler(request, **kwargs):
     return HttpResponseRedirect("/?&status=failed_listing_deletion")
 
 
-"""
 def test_upload(request):
-    return render(request, template_name="Williz/test_pdf_upload.html")
+    return render(request, template_name="Williz/appraisal_upload.html")
 
 
 def pdf_upload_handler(request):
+    """
+    Author: Mike
+    Handler view used to upload PDF files to the server. These PDFs are the appraisal documents
+    uploaded by appraisers.
+    :param request: http POST
+    :return: http response
+    """
     if request.method != "POST":
+        print("method", request.method)
         return HttpResponseRedirect("../?&status=invalid_upload_method")
-    if "pdf" not in request.POST:
+    print("Form files content: ", request.FILES.keys())
+    if "pdf" not in request.FILES:
         return HttpResponseRedirect("../?&status=missing_pdf")
     try:
-        pdf = request.POST["pdf"]
-        file_writer(pdf, )
+        pdf = request.FILES["pdf"]
+        print("upload file methods", dir(pdf))
+        app_type = "1004" if request.POST["form_type"] == "1004" else "1073"
+        app_id = 1 #TODO: Make this appraisal id
+        file_writer(pdf.read(), f"Appraisals/{app_id}/", f"Appraisal{app_id}_{app_type}.pdf")
     except Exception as e:
        print(e)
        return HttpResponseRedirect("../?&status=internal_error")
 
-    pass
-"""
+    return HttpResponseRedirect("/searchListings")
+
 
 
 def handler404(request, *args, **argv):
@@ -1076,7 +1084,28 @@ def pw_validation(pw):
 
 
 # Dan's helper functions
+def create_key():
+    key = Fernet.generate_key()
+    with open("key.key", "wb") as key_file:
+        key_file.write(key)
 
+
+def encrypt(filename, key):
+    f = Fernet(key)
+    with open(filename, "rb") as file:
+        data = file.read()
+    encrypted_data = f.encrypt(data)
+    with open(filename, "wb") as file:
+        file.write(encrypted_data)
+
+
+def decrypt(filename, key):
+    f = Fernet(key)
+    with open(filename, "rb") as file:
+        encrypted_data = file.read()
+    decrypted_data = f.decrypt(encrypted_data)
+    with open(filename, "wb") as file:
+        file.write(decrypted_data)
 
 # Mike's helper functions
 @transaction.atomic
@@ -1419,7 +1448,8 @@ def check_session(request):
     except User.DoesNotExist as e:
         print(f"Session has an email which DNE in User table.")
     return is_valid, u_type
-
+  
+  
 def file_writer(binary_file, filepath, filename):
     """
     Author: Mike
