@@ -1,6 +1,7 @@
 import binascii
 import hashlib
 import random
+import os
 
 from django.http import request, response, HttpResponse, HttpResponseRedirect
 from django.db import transaction, IntegrityError
@@ -20,12 +21,14 @@ import datetime
 from time import time
 from os import listdir
 from os.path import join, isdir
+from io import *
+from django.core.validators import *
 
 
 """
 ============================================= Constants & Globals ======================================================
 """
-ROOT_FILES_DIR = "../"
+ROOT_FILES_DIR = "Files/"
 ASCII_PRINTABLE = "0123456789abcdefghIjklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()-=_+[]{}./<>?|`~ "
 URL_SAFE_CHARS = "0123456789abcdefghIjklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ–_"
 BASE_URL = settings.BASE_URL  # Get the base URL from settings.py for use in email links
@@ -424,6 +427,68 @@ def create_listing_handler(request):
 
     listing.save()
     return HttpResponseRedirect(f"/profile/email/{user.email}?&status=creation_success")
+
+
+def listing_image_upload(request):
+    return render(request, "Williz/listing_image_upload.html")
+
+
+def listing_image_handler(request):
+    """
+                  Author: Carson
+                  Function which uploads an image to the server for the purpose of being used in a listing
+                  :return:
+              """
+
+    if request.method != 'POST':
+        print("Method", request.method)
+        return HttpResponseRedirect("../?&status=invalid_upload_method")
+
+    if "images" not in request.FILES:
+        return HttpResponseRedirect("../?&status=missing_images")
+
+    images = request.FILES.getlist('images')
+    listing_id = 1  # TODO: Add logic for listing id
+    count = 0
+
+    for image in images:
+        count = count + 1
+        file_type = image.name.split(".")[-1]
+        assert file_type.lower() in ("jpg", "png", "jpeg")
+        file_writer(image.read(), f"Listings/{listing_id}/", f"Listing{listing_id}_img{count}.{file_type}")
+
+    return HttpResponseRedirect("../searchListings")
+
+
+def appraisal_image_upload(request):
+    return render(request, "Williz/appraisal_image_upload.html")
+
+
+def appraisal_image_handler(request):
+    """
+                  Author: Carson
+                  Function which uploads an image to the server for the purpose of being used in an appraisal
+                  :return:
+              """
+
+    if request.method != 'POST':
+        print("Method", request.method)
+        return HttpResponseRedirect("../?&status=invalid_upload_method")
+
+    if "images" not in request.FILES:
+        return HttpResponseRedirect("../?&status=missing_images")
+
+    images = request.FILES.getlist('images')
+    app_id = 1  # TODO: Add logic for listing id
+    count = 0
+
+    for image in images:
+        count = count + 1
+        file_type = image.name.split(".")[-1]
+        assert file_type.lower() in ("jpg", "png", "jpeg")
+        file_writer(image.read(), f"Appraisals/{app_id}/images", f"Appraisal{app_id}_img{count}.{file_type}")
+
+    return HttpResponseRedirect("../searchListings")
 
 
 # Dan's Views
@@ -1355,9 +1420,18 @@ def check_session(request):
         print(f"Session has an email which DNE in User table.")
     return is_valid, u_type
 
-def file_writer(binary_file, filepath_suffix):
-    with open(join(ROOT_FILES_DIR, filepath_suffix), "wb") as f:
+def file_writer(binary_file, filepath, filename):
+    """
+    Author: Mike
+    :param binary_file:
+    :param filepath:
+    :param filename:
+    :return: None sucka
+    """
+    full_path = join(ROOT_FILES_DIR, filepath)
+    if not isdir(full_path):
+        os.makedirs(full_path)
+    with open(join(full_path, filename), "wb") as f:
         f.write(binary_file)
-
 # Zak's helper functions
 # ...*tumble weed blows in wind*

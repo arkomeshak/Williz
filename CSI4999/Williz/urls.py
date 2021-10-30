@@ -34,5 +34,8 @@ urlpatterns = [
     path("listing/confirm/delete/<state>/<zip>/<city>/<street>/<house_num>", views.delete_listing_confirmation,
          name="confirmDeleteListing"),
     path("listing/delete", views.delete_listing_handler, name="deleteListing"),
-
+    path("listing_image_handler", views.listing_image_handler, name="listing_image_handler"),
+    path("upload_listing_images", views.listing_image_upload, name="listing_image_upload"),
+    path("appraisal_image_handler", views.appraisal_image_handler, name="listing_image_handler"),
+    path("upload_appraisal_images", views.appraisal_image_upload, name="listing_image_upload"),
 ]
