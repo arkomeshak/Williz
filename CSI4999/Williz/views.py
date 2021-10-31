@@ -961,6 +961,7 @@ def updateListing(request, **kwargs):
             raise ValueError(f"Found {len(listing_set)} listings, expected to find one.")
         listing = listing_set[0]
         if request.session["email"] == User.objects.get(user_id=listing.realtor.user_id).email:
+            lender = MortgageCo.objects.get(co_name=request.POST["lender"])
             context = {
                 "street": listing.street_name,
                 "house_num": listing.house_num,
@@ -975,7 +976,8 @@ def updateListing(request, **kwargs):
                 "asking": listing.asking_price,
                 "description": listing.description,
                 "street_url": listing.street_name.replace(" ", "_"),
-                "city_url": listing.city.replace(" ", "_")
+                "city_url": listing.city.replace(" ", "_"),
+                "lender": lender.co_name
             }
             print(request.session["email"])
         else:
@@ -1001,6 +1003,7 @@ def update(request, **kwargs):
     if len(listing_set) != 1:
         raise ValueError(f"Found {len(listing_set)} listings, expected to find one.")
     listing = listing_set[0]
+    lender = MortgageCo.objects.get(co_name=request.POST["lender"])
     listing.house_num = request.POST["house_num"]
     listing.street_name = request.POST["street"]
     listing.city = request.POST["city"]
@@ -1012,6 +1015,7 @@ def update(request, **kwargs):
     listing.num_baths = request.POST["bath_num"]
     listing.asking_price = request.POST["ask_price"]
     listing.description = request.POST["desc"]
+    listing.lender = lender
     listing.save()
     realtor_usr = listing.realtor
     context = {
@@ -1032,6 +1036,7 @@ def update(request, **kwargs):
         "realtor_fname": realtor_usr.f_name,
         "realtor_lname": realtor_usr.l_name,
         "realtor_email": realtor_usr.email,
+        "lender": lender.co_name
     }
     return HttpResponseRedirect(
         f"/listing/{context['state']}/{context['zip']}/{context['city_url']}/{context['street_url']}/{context['house_num']}")
