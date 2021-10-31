@@ -99,3 +99,12 @@ class Listing(models.Model):
     lender = models.ForeignKey(MortgageCo, on_delete=models.CASCADE, null=True)
     appraiser = models.ForeignKey(Appraiser, on_delete=models.CASCADE, null=True)
     description = models.CharField(max_length=1000, null=True)
+    image_count = models.IntegerField(null=False, default=0)
+
+
+class Appraisal(models.Model):
+    appraisal_id = models.AutoField(primary_key=True)
+    listing = models.ForeignKey(Listing, null=True, on_delete=models.CASCADE)
+    appraiser = models.ForeignKey(Appraiser, on_delete=models.CASCADE)
+    mortgage_co = models.ForeignKey(MortgageCo, null=True, on_delete=models.CASCADE)
+    image_count = models.IntegerField(null=False, default=0)

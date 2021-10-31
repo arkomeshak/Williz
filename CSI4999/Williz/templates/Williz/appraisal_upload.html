@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Appraisal Upload</title>
+    {% load static %}
+    <link id="pageStyle" href="{% static 'Williz/main.css' %}" type="text/css" rel="stylesheet" />
+      <div id="mySidenav" class="sidenav">
+      <a class="closebtn" onclick="closeNav()" style= "cursor: pointer">&times;</a>
+      <div id = "nav-ele">
+      <a href="#home" onclick="closeNav()">Home</a>
+      </div>
+      <div id = "nav-ele">
+      <a href="/searchListings" onclick="closeNav()">Listings</a>
+      </div>
+      <div id = "nav-ele">
+      <a href="https://bit.ly/3ALsOBD" onclick="closeNav()">Contact</a>
+      </div>
+      <div id = "nav-ele">
+      <a href="/register" onclick="closeNav()">Create Account</a>
+      </div>
+      <div id = "nav-ele">
+      <a href="/login" onclick="closeNav()">Login</a>
+      </div>
+    </div>
+    <span id="nav-btn" style="font-size:4em;cursor:pointer; float:left; positon:relative; color:white" onclick="openNav()">&#9776;</span>
+</head>
+
+<script>
+function openNav(){document.getElementById("mySidenav").style.width="250px";document.getElementById("main_body").style.marginLeft="250px";document.getElementById("dimmer").style.opacity="0.6";document.getElementById("dimmer").style.zIndex="100"}
+/* Set the width of the side navigation to 0 and the left margin of the page content to 0, and the background color of body to white */
+function closeNav(){document.getElementById("mySidenav").style.width="0";document.getElementById("main_body").style.marginLeft="0";document.getElementById("dimmer").style.opacity="0";document.getElementById("dimmer").style.zIndex="-1"}
+function fnameEdit(){var a=document.getElementsByClassName("fnameInput")[0];if(a.style.display=="none"){a.style.display="block"}else{a.style.display="none"}}
+</script>
+
+<!--Lol Cargo Cult FTW-->
+{% load static %}
+<img id = "logo" src="{% static 'Williz/logoWhiteStroke.png' %}" style = "float:right" alt = "Logo">
+<div style = "clear:both"></div>
+
+<body id="main_body" class="no-caps">
+    <div class="dimmer" id = "dimmer"><p></p></div>
+    <h1 id="mainHeader">Upload Appraisal PDF</h1>
+    <div id="listingContainer">
+        <div class="disable-upper">
+            <div id = "userInfoContainer" style = "text-align: left;">
+            <h2 class="subhead">Appraisal PDF</h2>
+            <form class="pad-top" action="upload/pdf" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <label for="pdf">PDF: </label>
+                <input name="pdf" id="pdf" accept=".pdf" type="file">
+                <label for="1004">1004: </label>
+                <input type="radio" name="form_type" value="1004" id="1004" checked>
+                <label for="1073">1073: </label>
+                <input type="radio" name="form_type" value="1073" id="1073">
+                <input name="submit" formmethod="post" type="submit">
+            </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

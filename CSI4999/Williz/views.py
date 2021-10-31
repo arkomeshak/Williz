@@ -1,6 +1,8 @@
 import binascii
 import hashlib
+import os
 import random
+import os
 
 from django.http import request, response, HttpResponse, HttpResponseRedirect
 from django.db import transaction, IntegrityError
@@ -18,12 +20,16 @@ from CSI4999.settings import SECRET_KEY
 from random import choices, seed
 import datetime
 from time import time
+from os import listdir
+from os.path import join, isdir
+from io import *
+from cryptography.fernet import Fernet
 
 
 """
 ============================================= Constants & Globals ======================================================
 """
-
+ROOT_FILES_DIR = "Files/"
 ASCII_PRINTABLE = "0123456789abcdefghIjklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()-=_+[]{}./<>?|`~ "
 URL_SAFE_CHARS = "0123456789abcdefghIjklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ–_"
 BASE_URL = settings.BASE_URL  # Get the base URL from settings.py for use in email links
@@ -32,8 +38,7 @@ USER_TYPES = ("admin", "realtor", "appraiser", "lender")
 CODE_TO_USER_TYPE = {user_code: user_type for user_code, user_type in enumerate(USER_TYPES)}
 USER_TYPE_TO_CODE = {USER_TYPES[i]: i for i in range(len(USER_TYPES))}
 STATES = ()  # TODO: make a const list of 2-letter state codes
-SESSION_EXPIRATION = 1
-
+SESSION_EXPIRATION = 300  # Sessions last 300 seconds
 # Brute force lockout values
 FAILED_LOGINS_THRESHOLD = 5
 LOCKOUT_DURATION_THRESHOLD = 60
@@ -58,9 +63,12 @@ def register(request):
 
 
 def create_listing(request, email):
+    # Check session, if invalid, or no user type redirect home
+    valid_session, u_type = check_session(request)
+    if not valid_session or u_type == -1:
+        return HttpResponseRedirect("/?&status=invalid_session")
     user = User.objects.get(email=email)
-
-    if user.user_type != 1:
+    if CODE_TO_USER_TYPE[user.user_type] != "realtor":
         return HttpResponseRedirect(f"/profile/email/{email}?&status=access_denied")
 
     context = {
@@ -77,6 +85,10 @@ def profile(request, email):
         :param email: user email associated with account
         :return: render of profile.html with new information
     """
+    # Check session, if invalid, or no user type redirect home
+    valid_session, u_type = check_session(request)
+    if not valid_session or u_type == -1:
+        return HttpResponseRedirect("/?&status=invalid_session")
     user = User.objects.get(email=email)
     if user.user_type == 1:
         realtor = Realtor.objects.get(user_id=user.user_id)
@@ -129,32 +141,38 @@ def accountRequests(request):
     UserReqeustTable = User.objects.all().exclude(user_type=0)
 
     print(UserReqeustTable)
-    #print(RATable)
+    # print(RATable)
     RATable = []
     for us in UserReqeustTable.iterator():
         if (User.objects.get(user_id=us.user_id).user_type == 1):
-            RATable.append(Realtor.objects.get(user_id = us.user_id).lic_num)
-        elif  (User.objects.get(user_id=us.user_id).user_type == 2):
-            RATable.append(Appraiser.objects.get(user_id = us.user_id).lic_num)
-        elif  (User.objects.get(user_id=us.user_id).user_type == 3):
+            RATable.append(Realtor.objects.get(user_id=us.user_id).lic_num)
+        elif (User.objects.get(user_id=us.user_id).user_type == 2):
+            RATable.append(Appraiser.objects.get(user_id=us.user_id).lic_num)
+        elif (User.objects.get(user_id=us.user_id).user_type == 3):
             RATable.append("N/A")
 
     print("length", len(RATable))
     NewRARTable = []
     for i, user in enumerate(UserReqeustTable):
         if user.user_type == USER_TYPE_TO_CODE["realtor"]:
-            entry = {"num": i + 1,"user_type": "realtor", "email": user.email, "f_name": user.f_name, "l_name": user.l_name, "Lic_num": RATable[i], "user_id": user.user_id, "verification_status": user.verification_status}
+            entry = {"num": i + 1, "user_type": "realtor", "email": user.email, "f_name": user.f_name,
+                     "l_name": user.l_name, "Lic_num": RATable[i], "user_id": user.user_id,
+                     "verification_status": user.verification_status}
             NewRARTable.append(entry)
         if user.user_type == USER_TYPE_TO_CODE["appraiser"]:
-            entry = {"num": i + 1,"user_type": "Appraiser", "email": user.email, "f_name": user.f_name, "l_name": user.l_name, "Lic_num": RATable[i], "user_id": user.user_id, "verification_status": user.verification_status}
+            entry = {"num": i + 1, "user_type": "Appraiser", "email": user.email, "f_name": user.f_name,
+                     "l_name": user.l_name, "Lic_num": RATable[i], "user_id": user.user_id,
+                     "verification_status": user.verification_status}
             NewRARTable.append(entry)
         if user.user_type == USER_TYPE_TO_CODE["lender"]:
-            entry = {"num": i + 1,"user_type": "Lender", "email": user.email, "f_name": user.f_name, "l_name": user.l_name, "Lic_num": RATable[i], "user_id": user.user_id, "verification_status": user.verification_status}
+            entry = {"num": i + 1, "user_type": "Lender", "email": user.email, "f_name": user.f_name,
+                     "l_name": user.l_name, "Lic_num": RATable[i], "user_id": user.user_id,
+                     "verification_status": user.verification_status}
             NewRARTable.append(entry)
 
     for i in NewRARTable:
         print(i)
-    return render(request, 'Williz/accountRequests.html',{'UserRequests':NewRARTable})
+    return render(request, 'Williz/accountRequests.html', {'UserRequests': NewRARTable})
 
 
 def resetPassword(request):
@@ -177,7 +195,6 @@ def resetPassword_Handler(request):
         ForgotPassword.save()
 
     RequestReset.objects.get(verification_str=verificationKey).verification_str
-
 
     request.session["email"] = email
     try:
@@ -236,6 +253,7 @@ def resetPasswordVerify(request):
         return HttpResponseRedirect(f"../password_reset/?&status=pws_didnt_match")
     return HttpResponseRedirect(f"../password_reset/?&status=Code_Expired")
 
+
 def searchListings(request):
     listings = []
     listingsQ = Listing.objects.all()
@@ -265,23 +283,20 @@ def searchListings_handler(request):
 
     print(listings)
 
-
     for i, List in enumerate(listingsQ):
-            entry = {"house_num": List.house_num,
-                     "street_name": List.street_name,
-                     "state": List.state,
-                     "asking_price": List.asking_price,
-                     "city": List.city,
-                     "zip_code": List.zip_code,}
-            listings.append(entry)
-            print(listings)
+        entry = {"house_num": List.house_num,
+                 "street_name": List.street_name,
+                 "state": List.state,
+                 "asking_price": List.asking_price,
+                 "city": List.city,
+                 "zip_code": List.zip_code, }
+        listings.append(entry)
+        print(listings)
     userLocation = request.POST["userLoc"]
-    return render(request, "Williz/searchListings.html", {'UserLoc':userLocation, 'AllListings':listings})
-
-
-
+    return render(request, "Williz/searchListings.html", {'UserLoc': userLocation, 'AllListings': listings})
 
 # Carson's Views
+
 
 def password_reset(request):
     context = {}
@@ -356,8 +371,6 @@ def register_user_handler(request):
     return HttpResponseRedirect("../login/")
 
 
-
-
 @transaction.atomic  # Carson
 def create_listing_handler(request):
     """
@@ -365,11 +378,13 @@ def create_listing_handler(request):
               Function which creates a new listing in the database based off info added in HTML form
               :return: redirects to login page
           """
-    context = {}
 
+    # Check session, if invalid, or no user type redirect home
+    valid_session, u_type = check_session(request)
+    if not valid_session or u_type == -1:
+        return HttpResponseRedirect("/?&status=invalid_session")
     user = User.objects.get(user_id=int(request.POST['user_id'].replace('/', '')))
-
-    if user.user_type != 1:
+    if CODE_TO_USER_TYPE[u_type] != "realtor":
         return HttpResponseRedirect(f"/profile/email/{user.email}?&status=access_denied")
 
     h_num = request.POST["house_num"]
@@ -415,11 +430,75 @@ def create_listing_handler(request):
     return HttpResponseRedirect(f"/profile/email/{user.email}?&status=creation_success")
 
 
+def listing_image_upload(request):
+    return render(request, "Williz/listing_image_upload.html")
+
+
+def listing_image_handler(request):
+    """
+                  Author: Carson
+                  Function which uploads an image to the server for the purpose of being used in a listing
+                  :return:
+              """
+
+    if request.method != 'POST':
+        print("Method", request.method)
+        return HttpResponseRedirect("../?&status=invalid_upload_method")
+
+    if "images" not in request.FILES:
+        return HttpResponseRedirect("../?&status=missing_images")
+
+    images = request.FILES.getlist('images')
+    listing_id = 1  # TODO: Add logic for listing id
+    count = 0
+
+    for image in images:
+        count = count + 1
+        file_type = image.name.split(".")[-1]
+        assert file_type.lower() in ("jpg", "png", "jpeg")
+        file_writer(image.read(), f"Listings/{listing_id}/", f"Listing{listing_id}_img{count}.{file_type}")
+
+    return HttpResponseRedirect("../searchListings")
+
+
+def appraisal_image_upload(request):
+    return render(request, "Williz/appraisal_image_upload.html")
+
+
+def appraisal_image_handler(request):
+    """
+                  Author: Carson
+                  Function which uploads an image to the server for the purpose of being used in an appraisal
+                  :return:
+              """
+
+    if request.method != 'POST':
+        print("Method", request.method)
+        return HttpResponseRedirect("../?&status=invalid_upload_method")
+
+    if "images" not in request.FILES:
+        return HttpResponseRedirect("../?&status=missing_images")
+
+    images = request.FILES.getlist('images')
+    app_id = 1  # TODO: Add logic for listing id
+    count = 0
+
+    for image in images:
+        count = count + 1
+        file_type = image.name.split(".")[-1]
+        assert file_type.lower() in ("jpg", "png", "jpeg")
+        file_writer(image.read(), f"Appraisals/{app_id}/images", f"Appraisal{app_id}_img{count}.{file_type}")
+
+    return HttpResponseRedirect("../searchListings")
+
+
 # Dan's Views
 """
    Author: Dan
    Function that handles login requests
 """
+
+
 def login_handler(request):
     try:
         if request.method == 'POST':
@@ -466,25 +545,13 @@ def login_handler(request):
                     dev_id = str(new_dev_cookie.pk)
                     new_cookie_str += dev_id
                     # login success
-                    # Set the uname session value to username the user logged in with
-                    if (request.POST.get('remember') == 'on'):
-                        print("remember?", request.POST.get('remember'))
-                        request.session["email"] = email
-                        request.session.set_expiry(
-                            SESSION_EXPIRATION * 60)  # expires in SESSION_EXPIRATION * 60s seconds (Final Suggestion: if remember me is checked we can set session to last mabye 7 days)
-
-                    else:
-                        print("remember?", request.POST.get('remember'))
-                        request.session["email"] = email
-                        print(request.session["email"])
-                        request.session.set_expiry(
-                            SESSION_EXPIRATION * 3600)  # expires in SESSION_EXPIRATION * 30s seconds (Final Suggestion: if remember me is unchecked we can set session to last 1 day)
-
+                    # Set the uname session value to username the user logged in with, and an expiration time
+                    request.session["email"] = email
+                    request.session["expires"] = timezone.now() + timedelta(seconds=SESSION_EXPIRATION)
+                    # Admins redirect to a different page on login
                     u_type = query.user_type
-
-                    if u_type == 0:
+                    if u_type == USER_TYPE_TO_CODE["admin"]:
                         response = HttpResponseRedirect(f"/accountRequests?&status=Login_success")
-
                     else:
                         response = HttpResponseRedirect(f"/profile/email/{email}?&status=Login_success")
 
@@ -520,6 +587,8 @@ def login_handler(request):
            
            Deletes user account from the database
        """
+
+
 def delete_user_account(request, user_id):
     try:
         user = User.objects.get(user_id=user_id)
@@ -527,9 +596,11 @@ def delete_user_account(request, user_id):
         messages.success(request, "The user has been deleted.")
     except Exception as e:
         print("e", e)
-    return render(request, template_name="Williz/accountRequests.html")
+    response = render(request, template_name="Williz/accountRequests.html")
+    response.delete_cookie("device")  # Delete the device cookie so diff users can still login from this device
+    return response
 
-  
+
 # Mike's Views
 def email_verification_page(request, verify_string=None):
     """
@@ -553,23 +624,24 @@ def email_verification_page(request, verify_string=None):
                 print("now is ", now)
                 print("expires in ", expires)
                 if val_entry.expires <= timezone.now():
-                    return render(request, context={"message": "Ooops, that link has expired. Try requesting another."},
-                                  template_name="Williz/stub_verify_email.html")
+                    return render(request,
+                                  context={"message": "Ooops, that link has expired. Try requesting another.", },
+                                  template_name="Williz/verify_email.html")
                 user_id = val_entry.user_id
                 user = User.objects.get(pk=user_id)
                 email = user.email
                 context["message"] = f"Your email: {email} has been verified."
                 context["name"] = user.f_name
+                context["success"] = True
                 user.email_validation = True
                 user.save()
                 val_entry.delete()
-                return render(request, context=context, template_name="Williz/stub_verify_email.html")
+                return render(request, context=context, template_name="Williz/verify_email.html")
             except Validation.DoesNotExist:
                 print(f"Invalid verification string {verify_string}")
-                return render(request, context=context, template_name="Williz/stub_verify_email.html")
+                return render(request, context=context, template_name="Williz/verify_email.html")
             # No verification string found, render with the message of failure
-
-    return render(request, contex=context, template_name="Williz/stub_verify_email.html")
+    return render(request, context=context, template_name="Williz/verify_email.html")
 
 
 def listing(request, **kwargs):
@@ -586,17 +658,18 @@ def listing(request, **kwargs):
     # Try to find the listing and build context
     try:
         # This looks bad, but filters are lazy, so actually only runs 1 big query with a gnarly where statement
-        listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"]))\
-            .filter(street_name=kwargs["street"].replace("_", " ").strip())\
-            .filter(city=kwargs["city"].replace("_", " ").strip())\
-            .filter(state=kwargs["state"].replace("_", " ").strip())\
+        listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"])) \
+            .filter(street_name=kwargs["street"].replace("_", " ").strip()) \
+            .filter(city=kwargs["city"].replace("_", " ").strip()) \
+            .filter(state=kwargs["state"].replace("_", " ").strip()) \
             .filter(zip_code=int(kwargs["zip"]))
         if len(listing_set) != 1:  # Should get us one unique listing
             raise ValueError(f"Found {len(listing_set)} listings, expected to find one.")
         listing = listing_set[0]
         # This is best practice
-        if "email" in request.session and request.session["email"] == User.objects.get(user_id=listing.realtor.user_id).email:
-                isCreator = True
+        if "email" in request.session and request.session["email"] == User.objects.get(
+                user_id=listing.realtor.user_id).email:
+            isCreator = True
         context = {
             "street": listing.street_name,
             "street_num": listing.house_num,
@@ -658,10 +731,10 @@ def admin_listing_update(request, **kwargs):
         print(f"Invalid user type {CODE_TO_USER_TYPE[user.user_type]} tried to access admin listing page edit.")
         return HttpResponseRedirect("/?&status=non_admin_user")
     try:
-        listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"]))\
-            .filter(street_name=kwargs["street"].replace("_", " ").strip())\
-            .filter(city=kwargs["city"].replace("_", " ").strip())\
-            .filter(state=kwargs["state"].replace("_", " ").strip())\
+        listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"])) \
+            .filter(street_name=kwargs["street"].replace("_", " ").strip()) \
+            .filter(city=kwargs["city"].replace("_", " ").strip()) \
+            .filter(state=kwargs["state"].replace("_", " ").strip()) \
             .filter(zip_code=int(kwargs["zip"]))
         if len(listing_set) != 1:
             raise ValueError(f"Found {len(listing_set)} listings, expected to find one.")
@@ -698,6 +771,10 @@ def delete_listing_confirmation(request, **kwargs):
     :param kwargs: Keyword url arguments to get the unique listing to delete
     :return: HTTP Response
     """
+    # Check session, if invalid, or no user type redirect home
+    valid_session, u_type = check_session(request)
+    if not valid_session or u_type == -1:
+        return HttpResponseRedirect("/?&status=invalid_session")
     for arg_name in ("state", "house_num", "zip", "city", "street"):
         assert arg_name in kwargs
         # If user session not set redirect them to home page to log in
@@ -720,7 +797,8 @@ def delete_listing_confirmation(request, **kwargs):
         listing = listing_set[0]
         # If they are a realtor, still need to check that they are the right realtor
         if user.user_type != USER_TYPE_TO_CODE["admin"] and user.pk != listing.realtor.user_id:
-            print(f"Unauthorized attempt to delete a listing by realtor: {user.pk} which was created by {listing.realtor}")
+            print(
+                f"Unauthorized attempt to delete a listing by realtor: {user.pk} which was created by {listing.realtor}")
             return HttpResponseRedirect("/?&status=non_authorized_user")
         context = {
             "street": listing.street_name,
@@ -760,6 +838,37 @@ def delete_listing_handler(request, **kwargs):
         print(f"Exception while trying to delete listing. {e}")
         raise e
     return HttpResponseRedirect("/?&status=failed_listing_deletion")
+
+
+def test_upload(request):
+    return render(request, template_name="Williz/appraisal_upload.html")
+
+
+def pdf_upload_handler(request):
+    """
+    Author: Mike
+    Handler view used to upload PDF files to the server. These PDFs are the appraisal documents
+    uploaded by appraisers.
+    :param request: http POST
+    :return: http response
+    """
+    if request.method != "POST":
+        print("method", request.method)
+        return HttpResponseRedirect("../?&status=invalid_upload_method")
+    print("Form files content: ", request.FILES.keys())
+    if "pdf" not in request.FILES:
+        return HttpResponseRedirect("../?&status=missing_pdf")
+    try:
+        pdf = request.FILES["pdf"]
+        print("upload file methods", dir(pdf))
+        app_type = "1004" if request.POST["form_type"] == "1004" else "1073"
+        app_id = 1 #TODO: Make this appraisal id
+        file_writer(pdf.read(), f"Appraisals/{app_id}/", f"Appraisal{app_id}_{app_type}.pdf")
+    except Exception as e:
+       print(e)
+       return HttpResponseRedirect("../?&status=internal_error")
+
+    return HttpResponseRedirect("/searchListings")
 
 
 
@@ -847,10 +956,10 @@ def updateListing(request, **kwargs):
     for arg_name in ("state", "house_num", "zip", "city", "street"):
         assert arg_name in kwargs
     try:
-        listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"]))\
-            .filter(street_name=kwargs["street"].replace("_", " ").strip())\
-            .filter(city=kwargs["city"].replace("_", " ").strip())\
-            .filter(state=kwargs["state"].replace("_", " ").strip())\
+        listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"])) \
+            .filter(street_name=kwargs["street"].replace("_", " ").strip()) \
+            .filter(city=kwargs["city"].replace("_", " ").strip()) \
+            .filter(state=kwargs["state"].replace("_", " ").strip()) \
             .filter(zip_code=int(kwargs["zip"]))
         if len(listing_set) != 1:
             raise ValueError(f"Found {len(listing_set)} listings, expected to find one.")
@@ -879,6 +988,7 @@ def updateListing(request, **kwargs):
         print(f"Exception in listing view: {e}")
         raise e
     return render(request, context=context, template_name="Williz/UpdateListing.html")
+
 
 def update(request, **kwargs):
     """
@@ -927,7 +1037,8 @@ def update(request, **kwargs):
         "realtor_lname": realtor_usr.l_name,
         "realtor_email": realtor_usr.email,
     }
-    return HttpResponseRedirect(f"/listing/{context['state']}/{context['zip']}/{context['city_url']}/{context['street_url']}/{context['house_num']}")
+    return HttpResponseRedirect(
+        f"/listing/{context['state']}/{context['zip']}/{context['city_url']}/{context['street_url']}/{context['house_num']}")
 
 
 """
@@ -977,7 +1088,28 @@ def pw_validation(pw):
 
 
 # Dan's helper functions
+def create_key():
+    key = Fernet.generate_key()
+    with open("key.key", "wb") as key_file:
+        key_file.write(key)
 
+
+def encrypt(filename, key):
+    f = Fernet(key)
+    with open(filename, "rb") as file:
+        data = file.read()
+    encrypted_data = f.encrypt(data)
+    with open(filename, "wb") as file:
+        file.write(encrypted_data)
+
+
+def decrypt(filename, key):
+    f = Fernet(key)
+    with open(filename, "rb") as file:
+        encrypted_data = file.read()
+    decrypted_data = f.decrypt(encrypted_data)
+    with open(filename, "wb") as file:
+        file.write(decrypted_data)
 
 # Mike's helper functions
 @transaction.atomic
@@ -1068,16 +1200,6 @@ def generate_reset_request_veri_str():
     return veri_str
 
 
-def verify_session(request):
-    """
-    Author: Mike
-    Verifies the user session is still valid.
-    :param request: http request
-    :return: boolean
-    """
-    return "sessionid" in request.COOKIES and request.session.get_expiry_age() != 0
-
-
 def user_is_expected_type(expected_type, usr_id=None, email=None):
     """
     Author: Mike
@@ -1117,7 +1239,7 @@ def verify_device_cookie(cookie):
     try:
         hmac_received, nonce_received, email, dev_id = cookie.split(",")
         print("cookie given to us")
-        for thing in (hmac_received, nonce_received, email, dev_id ):
+        for thing in (hmac_received, nonce_received, email, dev_id):
             print(thing)
         if dev_id.isnumeric() and int(dev_id) >= 0:
             print("id is valid integer")
@@ -1129,7 +1251,7 @@ def verify_device_cookie(cookie):
                 return False  # Cookie is for the wrong user
             print("problem is verifying the digest")
             nonce = dev_cookie.nonce
-            return verify_hmac_hex_digest(skey=SECRET_KEY, email=email, nonce=nonce, hmac_hex_received= hmac_received)
+            return verify_hmac_hex_digest(skey=SECRET_KEY, email=email, nonce=nonce, hmac_hex_received=hmac_received)
         else:
             print("cookie had an invalid ID")
             return False  # invalid device cookie ID provided
@@ -1184,7 +1306,7 @@ def is_locked_out(request, email):
         return True
     except Exception as e:
         print(f"Device cookie {sent_dev_cookie} caused exception:\n\t{e}")
-        #return True
+        # return True
         raise e
     return False
 
@@ -1209,7 +1331,8 @@ def record_failed_untrusted_attempt(email):
         attempt.save()
         time_window = timezone.now() - datetime.timedelta(minutes=LOCKOUT_DURATION_THRESHOLD)
         # If too many failed logins have happened, set an untrusted lockout
-        if len(FailedLoginAttempt.objects.filter(user=user_pk).filter(when__gte=time_window)) >= FAILED_LOGINS_THRESHOLD:
+        if len(FailedLoginAttempt.objects.filter(user=user_pk).filter(
+                when__gte=time_window)) >= FAILED_LOGINS_THRESHOLD:
             u_lockout = UntrustedLockout(
                 user_id=user,
                 lock_exp=timezone.now() + datetime.timedelta(minutes=LOCKOUT_DURATION_THRESHOLD)
@@ -1296,5 +1419,53 @@ def verify_hmac_hex_digest(skey, email, nonce, hmac_hex_received):
     generated_hmac = hmac.new(key=bytes(skey, encoding="ascii"), msg=message, digestmod="sha3_512")
     return generated_hmac.hexdigest() == hmac_hex_received
 
+
+def check_session(request):
+    """
+    Author: Mike
+    Check is a session cookie is valid. Returns a pair (bool, int). The first value represents whether
+    the session was valid or not. The second return value is the user-type enum, with -1 representing N/A.
+    If the session is valid, the request session is mutated in-place so that the session cookie is refreshed
+    and the session duration extended.
+    :param request: Django http request
+    :return: dictionary
+    """
+    is_valid, u_type = False, -1  # Default to invalid session, user is N/A
+    print(f"Expiry age: {request.session.get_expiry_age()}")
+    print(f"Expiration datetime: {request.session.get('expires')}")
+    print(f"Email: {request.session.get('email')}")
+    # If no session, or session is missing an email it's invalid
+    if "sessionid" not in request.COOKIES or not request.session.get("email", default=False):
+        print("Session not set, or missing an email")
+        return is_valid, u_type
+    # Likewise if the session has expired it's invalid
+    now = timezone.now()
+    if now >= request.session.get("expires", default=now):
+        print("Session has expired, or was missing an expiration datetime")
+        return is_valid, u_type
+    try:
+        email = request.session.get("email")
+        u_type = User.objects.get(email=email).user_type
+        is_valid = True
+        # Update the session as the user was active
+        request.session["expires"] = timezone.now() + timedelta(seconds=SESSION_EXPIRATION)
+    except User.DoesNotExist as e:
+        print(f"Session has an email which DNE in User table.")
+    return is_valid, u_type
+  
+  
+def file_writer(binary_file, filepath, filename):
+    """
+    Author: Mike
+    :param binary_file:
+    :param filepath:
+    :param filename:
+    :return: None sucka
+    """
+    full_path = join(ROOT_FILES_DIR, filepath)
+    if not isdir(full_path):
+        os.makedirs(full_path)
+    with open(join(full_path, filename), "wb") as f:
+        f.write(binary_file)
 # Zak's helper functions
 # ...*tumble weed blows in wind*
