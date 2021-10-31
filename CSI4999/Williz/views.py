@@ -1089,13 +1089,10 @@ def load_key():
     return key
 
 
-def encrypt(filename, key):
+def encrypt(binfile, key):
     f = Fernet(key)
-    with open(filename, "rb") as file:
-        data = file.read()
-    encrypted_data = f.encrypt(data)
-    with open(filename, "wb") as file:
-        file.write(encrypted_data)
+    encrypted_data = f.encrypt(binfile)
+    return encrypted_data
 
 
 def decrypt(filename, key):
