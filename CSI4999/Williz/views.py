@@ -1084,10 +1084,9 @@ def pw_validation(pw):
 
 
 # Dan's helper functions
-def create_key():
+def load_key():
     key = Fernet.generate_key()
-    with open("key.key", "wb") as key_file:
-        key_file.write(key)
+    return key
 
 
 def encrypt(filename, key):
@@ -1104,8 +1103,8 @@ def decrypt(filename, key):
     with open(filename, "rb") as file:
         encrypted_data = file.read()
     decrypted_data = f.decrypt(encrypted_data)
-    with open(filename, "wb") as file:
-        file.write(decrypted_data)
+    return decrypted_data
+
 
 # Mike's helper functions
 @transaction.atomic
