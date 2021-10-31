@@ -279,7 +279,6 @@ Profile CSS
     text-align: center;
 }
 
-
 #MapContainer {
     z-index: 0;
     width: 100%;
@@ -297,7 +296,7 @@ Profile CSS
 
 .grid-container2 {
     display: grid;
-    grid-template-columns: auto auto auto;
+    grid-template-columns: 25% 25% 25% 25%;
     padding: 10px;
     background-color: #3bb7909c;
     background-image: linear-gradient(315deg, #3bb7909c 0%, #0bab639c 74%);
@@ -307,11 +306,12 @@ Profile CSS
 .grid-item2 {
     color: white;
     border-left: 1px solid rgba(0, 0, 0, 0.8);
-    border-bottom: 3px solid rgba(0, 0, 0, 0.8);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.8);
     padding: 1%;
     font-size: 20px;
     text-align: center;
 }
+
 
 /*************************************************************
 Listing CSS
@@ -345,12 +345,14 @@ ul li.no-list-icon {
     font-size: 1.25em;
 }
 
-#listingContainer h2.subhead, #FormCont h2.subhead {
+#listingContainer h2.subhead,
+#FormCont h2.subhead {
     color: whitesmoke;
     text-shadow: 1px 1px 1px #000;
     font-size: 3em;
     margin: 0;
-    background-color: rgba(44, 138, 108, 1); /* same color as container bg but only 3/4 as bright and 1005 opaque*/
+    background-color: rgba(44, 138, 108, 1);
+    /* same color as container bg but only 3/4 as bright and 1005 opaque*/
     border-top: black;
     border-bottom: black;
     border-width: 1px 0 1px 0;
@@ -362,7 +364,12 @@ ul li.no-list-icon {
     border-top: 0;
 }
 
- button.link-btn, button#admin-delete, button#admin-update, button#realtor-delete, button#realtor-update, input.link-btn {
+button.link-btn,
+button#admin-delete,
+button#admin-update,
+button#realtor-delete,
+button#realtor-update,
+input.link-btn {
     width: auto;
     height: auto;
     border: none;
@@ -375,8 +382,12 @@ ul li.no-list-icon {
     z-index: 101;
 }
 
-button.link-btn:hover, button#admin-delete:hover, button#admin-update:hover, button#realtor-delete:hover,
-button#realtor-update:hover, input.link-btn:hover {
+button.link-btn:hover,
+button#admin-delete:hover,
+button#admin-update:hover,
+button#realtor-delete:hover,
+button#realtor-update:hover,
+input.link-btn:hover {
     background-color: #144133d3;
     color: white;
     transition: .3s;
@@ -410,5 +421,3 @@ p.warning {
 .render-inline {
     display: inline-block;
 }
-
-

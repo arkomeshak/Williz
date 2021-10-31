@@ -242,17 +242,21 @@ def searchListings(request):
 
     print(listings)
 
-    for i, List in enumerate(listingsQ):
-        entry = {"house_num": List.house_num,
-                 "street_name": List.street_name,
-                 "state": List.state,
-                 "asking_price": List.asking_price,
-                 "city": List.city,
-                 "zip_code": List.zip_code, }
-        listings.append(entry)
-        print(listings)
 
-    return render(request, "Williz/searchListings.html", {'AllListings': listings})
+    for i, List in enumerate(listingsQ):
+            entry = {"house_num": List.house_num,
+                     "street_name": List.street_name,
+                     "state": List.state,
+                     "asking_price": List.asking_price,
+                     "city": List.city,
+                     "zip_code": List.zip_code,}
+            listings.append(entry)
+            print(listings)
+    if(request.POST.get("userLoc")):
+        userLocation = request.POST["userLoc"]
+    else:
+        userLocation = ""
+    return render(request, "Williz/searchListings.html", {'UserLoc':userLocation, 'AllListings':listings})
 
 
 def searchListings_handler(request):
