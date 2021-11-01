@@ -78,7 +78,7 @@ function closeNav() {
     <div id="FormCont">
     <h1 id="mainHeader">Update Listing</h1>
 
-    <form id="ListingForm" method="POST" action="../../../../../../../update/{{state}}/{{zip}}/{{city}}/{{street}}/{{house_num}}">
+    <form id="ListingForm" method="POST" action="/update/{{state}}/{{zip}}/{{city}}/{{street}}/{{house_num}}">
         {% csrf_token %}
 
     <label><b>House Number</b>
@@ -184,6 +184,11 @@ function closeNav() {
         <label><b>Asking Price</b>
         </label></br>
         <input type="number" min="0" name="ask_price" id="ask_price" class = "FormInput" value={{asking}} required>
+        <br><br>
+
+        <label><b>Lender</b>
+        </label> </br>
+        <input type="text" name="lender" id="lender" class = "FormInput" value="{{lender}}">
         <br><br>
 
         <label><b>Description (Optional)</b>
