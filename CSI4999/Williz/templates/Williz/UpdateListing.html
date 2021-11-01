@@ -158,32 +158,32 @@ function closeNav() {
 
         <label><b>Zip Code</b>
         </label></br>
-        <input type="number" name="zip" id="zip" class = "FormInput" value={{zip}} required>
+        <input type="number" min="0" name="zip" id="zip" class = "FormInput" value={{zip}} required>
         <br><br>
 
         <label><b>House Size (Square Feet)</b>
         </label></br>
-        <input type="number" name="house_size" id="house_size" class = "FormInput" value={{size}} required>
+        <input type="number" min="0" name="house_size" id="house_size" class = "FormInput" value={{size}} required>
         <br><br>
 
         <label><b>Property Size (Square Feet)</b>
         </label></br>
-        <input type="number" name="prop_size" id="prop_size" class = "FormInput" value={{prop_size}} required>
+        <input type="number" min="0" name="prop_size" id="prop_size" class = "FormInput" value={{prop_size}} required>
 
         <br><br>
         <label><b>Number of Bedrooms</b>
         </label></br>
-        <input type="number" name="bed_num" id="bed_num" class = "FormInput" value={{beds}} required>
+        <input type="number" min="0" name="bed_num" id="bed_num" class = "FormInput" value={{beds}} required>
         <br><br>
 
         <label><b>Number of Bathrooms</b>
         </label></br>
-        <input type="number" name="bath_num" id="bath_num" class = "FormInput" value={{baths}} required>
+        <input type="number" min="0" name="bath_num" id="bath_num" class = "FormInput" value={{baths}} required>
 
         <br><br>
         <label><b>Asking Price</b>
         </label></br>
-        <input type="number" name="ask_price" id="ask_price" class = "FormInput" value={{asking}} required>
+        <input type="number" min="0" name="ask_price" id="ask_price" class = "FormInput" value={{asking}} required>
         <br><br>
 
         <label><b>Description (Optional)</b>

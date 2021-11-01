@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+              {% load static %}
+    <meta charset="UTF-8">
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Set/View Appraiser</title>
+  <link id="pageStyle" href="{% static 'Williz/main.css' %}" type="text/css" rel="stylesheet" />
+      <div id="mySidenav" class="sidenav">
+      <a class="closebtn" onclick="closeNav()" style= "cursor: pointer">&times;</a>
+      <div id = "nav-ele">
+      <a href="#home" onclick="closeNav()">Home</a>
+      </div>
+      <div id = "nav-ele">
+      <a href="/searchListings" onclick="closeNav()">Listings</a>
+      </div>
+      <div id = "nav-ele">
+      <a href="https://bit.ly/3ALsOBD" onclick="closeNav()">Contact</a>
+      </div>
+      <div id = "nav-ele">
+      <a href="/register" onclick="closeNav()">Create Account</a>
+      </div>
+      <div id = "nav-ele">
+      <a href="/login" onclick="closeNav()">Login</a>
+      </div>
+    </div>
+    <span id="nav-btn" style="font-size:4em;cursor:pointer; float:left; positon:relative; color:white" onclick="openNav()">&#9776;</span>
+</head>
+<script>
+function openNav() {
+
+    document.getElementById("mySidenav").style.width = "250px";
+    document.getElementById("main_body").style.marginLeft = "250px";
+
+    /*
+    document.getElementById("main_body").style.backgroundImage = "linear-gradient( rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://dm0qx8t0i9gc9.cloudfront.net/thumbnails/video/qmraJpx/videoblocks-portrait-of-smiling-family-standing-in-front-of-their-home_skmbaiws0m_thumbnail-1080_01.png')";
+    document.getElementById("loginCont").style.backgroundColor = "#3bb79090";
+    document.getElementById("loginCont").style.backgroundImage = "linear-gradient(315deg, #3bb79080 0%, #0bab6380 74%)";
+    */
+ document.getElementById("dimmer").style.opacity = "0.6"
+ document.getElementById("dimmer").style.zIndex = "100";
+}
+
+/* Set the width of the side navigation to 0 and the left margin of the page content to 0, and the background color of body to white */
+function closeNav() {
+     document.getElementById("mySidenav").style.width = "0";
+      document.getElementById("main_body").style.marginLeft = "0";
+
+        /*
+    document.getElementById("main_body").style.backgroundImage = "linear-gradient( rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('https://dm0qx8t0i9gc9.cloudfront.net/thumbnails/video/qmraJpx/videoblocks-portrait-of-smiling-family-standing-in-front-of-their-home_skmbaiws0m_thumbnail-1080_01.png')";
+      document.getElementById("loginCont").style.backgroundColor = "#3bb7909c";
+       document.getElementById("loginCont").style.backgroundImage = "linear-gradient(315deg, #3bb7909c 0%, #0bab639c 74%)";
+           */
+        document.getElementById("dimmer").style.opacity = "0"
+        document.getElementById("dimmer").style.zIndex = "-1";
+
+}
+</script>
+          <img id = "logo" src="{% static 'Williz/logoWhiteStroke.png' %}" style = "float:right" alt = "Logo">
+
+
+<div style = "clear:both"></div>
+
+
+
+<body id="main_body" class="no-caps">
+  <div class="dimmer" id = "dimmer"></div>
+  <h1 id="mainHeader">Set Appraiser</h1>
+  <div id="FormCont">
+      <form id="ListingForm" method="POST" action="/listing/update/appraiser/handler/{{state}}/{{zip}}/{{city}}/{{street}}/{{house_num}}">
+        {% csrf_token %}
+        {% if has_appraiser is False %}
+            <h2 class="subhead">No Appraiser Currently Set!</h2>
+          {% else %}
+          <h2 class="subhead">Current Appraiser</h2>
+        {% endif %}
+        <h3>First Name: {{f_name|capfirst}}</h3>
+        <h3>Last Name: {{l_name|capfirst}}</h3>
+        <h3>Email: {{email}}</h3>
+          <br>
+          <hr>
+        <h3>Set new appraiser</h3>
+          <select id="appraiser" name="appraiser">
+        {% for app in appraisers %}
+            <option value="{{ app.email }}">{{app.fname}} {{app.lname}}: {{ app.email }}</option>
+        {% endfor %}
+          </select>
+       <button type = "Submit" id ="set-Appraiser" name ="Submit" value="Submit" class="Submit">Update</button>
+
+      </form>
+
+  </div>
+</body>
+</html>
