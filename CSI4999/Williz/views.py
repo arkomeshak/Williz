@@ -734,6 +734,7 @@ def listing(request, **kwargs):
     """
     isCreator = False
     isLender = False
+    isAppraiser = False
     for arg_name in ("state", "house_num", "zip", "city", "street"):
         assert arg_name in kwargs
     # Try to find the listing and build context
@@ -756,6 +757,18 @@ def listing(request, **kwargs):
             user = User.objects.get(email=email)
             if "lender" == CODE_TO_USER_TYPE[user.user_type] and Lender.objects.get(pk=user.pk).mortgage_co == listing.lender:
                 isLender = True
+        elif listing.appraiser is not None:
+            email = request.session["email"]
+            user = User.objects.get(email=email)
+            if "appraiser" == CODE_TO_USER_TYPE[user.user_type] and Appraiser.objects.get(
+                    user_id=user.pk) == listing.appraiser:
+                apps = Appraisal.objects.filter(listing=listing).filter(appraiser=listing.appraiser)
+                if len(apps) == 0:
+                    isAppraiser = True
+                elif not apps[0].is_complete:
+                    isAppraiser = True
+                else:
+                    isAppraiser = False
         context = {
             "street": listing.street_name,
             "street_num": listing.house_num,
@@ -772,7 +785,8 @@ def listing(request, **kwargs):
             "street_url": listing.street_name.replace(" ", "_"),
             "city_url": listing.city.replace(" ", "_"),
             "isCreator": isCreator,
-            "isLender": isLender
+            "isLender": isLender,
+            "isAppraiser": isAppraiser
         }
         # Get the realtor data we need. Realtor ID = their User ID, so go straight there
         realtor_usr = listing.realtor
