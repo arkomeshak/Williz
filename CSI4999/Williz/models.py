@@ -21,7 +21,7 @@ class User(models.Model):
 
 class MortgageCo(models.Model):
     co_id = models.AutoField(primary_key=True)
-    co_name = models.CharField(max_length=50, null=False, default="")
+    co_name = models.CharField(max_length=50, null=False, default="", unique=True)
 
 
 class Appraiser(models.Model):
