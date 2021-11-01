@@ -598,6 +598,90 @@ def delete_user_account(request, user_id):
 
 
 # Mike's Views
+def set_appraiser_handler(request, **kwargs):
+    """
+    Author: Mike
+    :param request:
+    :return:
+    """
+    # Check session, if invalid, or no user type redirect home
+    valid_session, u_type = check_session(request)
+    if not valid_session or u_type == -1:
+        return HttpResponseRedirect("/?&status=invalid_session")
+    try:
+        if request.method != "POST":
+            return HttpResponseRedirect(f"/?&status=invalid_method")
+        elif "appraiser" not in request.POST:
+            return HttpResponseRedirect(f"/?&status=no_appraiser_set")
+        app_email = request.POST["appraiser"]
+        listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"])) \
+            .filter(street_name=kwargs["street"].replace("_", " ").strip()) \
+            .filter(city=kwargs["city"].replace("_", " ").strip()) \
+            .filter(state=kwargs["state"].replace("_", " ").strip()) \
+            .filter(zip_code=int(kwargs["zip"]))
+        # Set appraiser
+        assert len(listing_set) == 1
+        listing = listing_set[0]
+        user = User.objects.get(email=app_email)
+        listing.appraiser = Appraiser.objects.get(pk=user)
+        listing.save()
+    except Exception as e:
+        print(e)
+        return HttpResponseRedirect(f"/?&status=no_appraiser_set")
+    return HttpResponseRedirect(f"/listing/update/appraiser/{kwargs['state']}/{kwargs['zip']}/{kwargs['city']}/{kwargs['street']}/{kwargs['house_num']}")
+
+
+def set_appraiser(request, **kwargs):
+    """
+    Author: Mike
+    View to render a page used to set an  for a listing.
+    :param request:
+    :param kwargs:
+    :return:
+    """
+    try:
+        # This looks bad, but filters are lazy, so actually only runs 1 big query with a gnarly where statement
+        listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"])) \
+            .filter(street_name=kwargs["street"].replace("_", " ").strip()) \
+            .filter(city=kwargs["city"].replace("_", " ").strip()) \
+            .filter(state=kwargs["state"].replace("_", " ").strip()) \
+            .filter(zip_code=int(kwargs["zip"]))
+        if len(listing_set) != 1:  # Should get us one unique listing
+            raise ValueError(f"Found {len(listing_set)} listings, expected to find one.")
+        listing = listing_set[0]
+        if listing.appraiser is not None:
+            appraiser = listing.appraiser
+            user = User.objects.get(pk=appraiser.user_id.pk)
+            context = {
+                "f_name": user.f_name,
+                "l_name": user.l_name,
+                "email": user.email,
+                "has_appraiser": True
+            }
+        else:
+            context = {
+                "f_name": "Dan",
+                "l_name": "Dannerson",
+                "email": "JeremyBuxioJulioValazII@aol.com",
+                "has_appraiser": False
+            }
+        # Add the appraisers
+        appraiser_set = User.objects.filter(user_type=USER_TYPE_TO_CODE["appraiser"])
+        appraisers = [{"fname": app.f_name.capitalize(), "lname": app.l_name.capitalize(), "email": app.email} for app in appraiser_set]
+        context["appraisers"] = appraisers
+        context.update({
+            "street": listing.street_name.replace(" ", "_"),
+            "house_num": listing.house_num,
+            "city": listing.city.replace(" ", "_"),
+            "state": listing.state,
+            "zip": listing.zip_code,
+        })
+        return render(request, context=context, template_name="Williz/set_appraiser.html")
+    except Exception as e:
+        print(e)
+
+
+
 def email_verification_page(request, verify_string=None):
     """
     Author: Mike
@@ -649,6 +733,7 @@ def listing(request, **kwargs):
     :return: HTTP response
     """
     isCreator = False
+    isLender = False
     for arg_name in ("state", "house_num", "zip", "city", "street"):
         assert arg_name in kwargs
     # Try to find the listing and build context
@@ -666,6 +751,11 @@ def listing(request, **kwargs):
         if "email" in request.session and request.session["email"] == User.objects.get(
                 user_id=listing.realtor.user_id).email:
             isCreator = True
+        elif  listing.lender is not None:
+            email = request.session["email"]
+            user = User.objects.get(email=email)
+            if "lender" == CODE_TO_USER_TYPE[user.user_type] and Lender.objects.get(pk=user.pk).mortgage_co == listing.lender:
+                isLender = True
         context = {
             "street": listing.street_name,
             "street_num": listing.house_num,
@@ -681,7 +771,8 @@ def listing(request, **kwargs):
             "description": listing.description,
             "street_url": listing.street_name.replace(" ", "_"),
             "city_url": listing.city.replace(" ", "_"),
-            "isCreator": isCreator
+            "isCreator": isCreator,
+            "isLender": isLender
         }
         # Get the realtor data we need. Realtor ID = their User ID, so go straight there
         realtor_usr = listing.realtor
@@ -706,6 +797,7 @@ def listing(request, **kwargs):
         raise e
     return render(request, context=context, template_name="Williz/listing.html")
 
+#
 
 def admin_listing_update(request, **kwargs):
     """
@@ -1451,7 +1543,7 @@ def check_session(request):
     return is_valid, u_type
   
   
-def file_writer(binary_file, filepath, filename):
+def file_writer(binary_file, filepath, filename, key=None):
     """
     Author: Mike
     :param binary_file:
@@ -1462,7 +1554,11 @@ def file_writer(binary_file, filepath, filename):
     full_path = join(ROOT_FILES_DIR, filepath)
     if not isdir(full_path):
         os.makedirs(full_path)
-    with open(join(full_path, filename), "wb") as f:
-        f.write(binary_file)
+    if key is None:
+        with open(join(full_path, filename), "wb") as f:
+            f.write(binary_file)
+    else:
+
+        encrypt(binary_file, )
 # Zak's helper functions
 # ...*tumble weed blows in wind*
