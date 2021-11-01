@@ -1006,11 +1006,31 @@ def delete_listing_handler(request, **kwargs):
     return HttpResponseRedirect("/?&status=failed_listing_deletion")
 
 
-def test_upload(request):
-    return render(request, template_name="Williz/appraisal_upload.html")
+def appraisal_pdf_upload(request, **kwargs):
+    # Check session, if invalid, or no user type redirect home
+    valid_session, u_type = check_session(request)
+    if not valid_session or u_type == -1:
+        return HttpResponseRedirect("/?&status=invalid_session")
+    listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"])) \
+        .filter(street_name=kwargs["street"].replace("_", " ").strip()) \
+        .filter(city=kwargs["city"].replace("_", " ").strip()) \
+        .filter(state=kwargs["state"].replace("_", " ").strip()) \
+        .filter(zip_code=int(kwargs["zip"]))
+    assert len(listing_set) == 1
+    listing = listing_set[0]
+    context = {
+            "street": listing.street_name.replace(" ", "_"),
+            "street_num": listing.house_num,
+            "city": listing.city,
+            "state": listing.state,
+            "zip": listing.zip_code,
+            "street_url": listing.street_name.replace(" ", "_"),
+            "city_url": listing.city.replace(" ", "_")
+        }
+    return render(request, template_name="Williz/appraisal_upload.html", context=context)
 
 
-def pdf_upload_handler(request):
+def pdf_upload_handler(request, **kwargs):
     """
     Author: Mike
     Handler view used to upload PDF files to the server. These PDFs are the appraisal documents
@@ -1026,10 +1046,30 @@ def pdf_upload_handler(request):
         return HttpResponseRedirect("../?&status=missing_pdf")
     try:
         pdf = request.FILES["pdf"]
-        print("upload file methods", dir(pdf))
-        app_type = "1004" if request.POST["form_type"] == "1004" else "1073"
-        app_id = 1 #TODO: Make this appraisal id
-        file_writer(pdf.read(), f"Appraisals/{app_id}/", f"Appraisal{app_id}_{app_type}.pdf")
+        app_type = request.POST["form_type"]
+        listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"])) \
+            .filter(street_name=kwargs["street"].replace("_", " ").strip()) \
+            .filter(city=kwargs["city"].replace("_", " ").strip()) \
+            .filter(state=kwargs["state"].replace("_", " ").strip()) \
+            .filter(zip_code=int(kwargs["zip"]))
+        assert len(listing_set) == 1
+        listing = listing_set[0]
+        # get the appraiser from their session
+        email = request.session["email"]
+        app_user = User.objects.get(email=email)
+        appraiser = Appraiser.objects.get(pk=app_user.pk)
+        key = load_key()
+        app = Appraisal(
+            listing=listing,
+            appraiser=appraiser,
+            mortgage_co=listing.lender,
+            image_count=0,
+            enc_key=key,
+            is_complete=False
+        )
+        app.save()
+        app_id = app.pk
+        file_writer(pdf.read(), f"Appraisals/{app_id}/", f"Appraisal{app_id}_{app_type}.pdf", key=key)
     except Exception as e:
        print(e)
        return HttpResponseRedirect("../?&status=internal_error")
@@ -1631,16 +1671,21 @@ def file_writer(binary_file, filepath, filename, key=None):
     :param binary_file:
     :param filepath:
     :param filename:
+    :param key:
     :return: None sucka
     """
     full_path = join(ROOT_FILES_DIR, filepath)
+    # Make dir if DNE
     if not isdir(full_path):
         os.makedirs(full_path)
+    # decide whether to encrypt or not
     if key is None:
-        with open(join(full_path, filename), "wb") as f:
-            f.write(binary_file)
+        data = binary_file
     else:
+        data = encrypt(binary_file, key)
+    # Write to disk
+    with open(join(full_path, filename), "wb") as f:
+        f.write(data)
 
-        encrypt(binary_file, )
 # Zak's helper functions
 # ...*tumble weed blows in wind*
