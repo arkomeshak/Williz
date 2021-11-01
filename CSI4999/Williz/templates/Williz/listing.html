@@ -84,6 +84,10 @@ function fnameEdit(){var a=document.getElementsByClassName("fnameInput")[0];if(a
                             <a href="/listing/admin/update/{{state}}/{{zip}}/{{city_url}}/{{street_url}}/{{street_num}}">
                             <button id="admin-update" class="link-btn" name ="Submit">Update Listing</button>
                             </a>
+                        {% elif isLender is True %}
+                            <a href="/listing/update/appraiser/{{state}}/{{zip}}/{{city_url}}/{{street_url}}/{{street_num}}">
+                            <button id="view-Appraisals" class="link-btn" name ="Submit">View Appraisals</button>
+                            </a>
                         {% endif %}
                      </div>
                 </div>
