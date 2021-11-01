@@ -426,16 +426,52 @@ def create_listing_handler(request):
     return HttpResponseRedirect(f"/profile/email/{user.email}?&status=creation_success")
 
 
-def listing_image_upload(request):
-    return render(request, "Williz/listing_image_upload.html")
+def listing_image_upload(request, **kwargs):
+    # Check session, if invalid, or no user type redirect home
+    valid_session, u_type = check_session(request)
+    if not valid_session or u_type == -1:
+        return HttpResponseRedirect("/?&status=invalid_session")
+
+    # This looks bad, but filters are lazy, so actually only runs 1 big query with a gnarly where statement
+    listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"])) \
+        .filter(street_name=kwargs["street"].replace("_", " ").strip()) \
+        .filter(city=kwargs["city"].replace("_", " ").strip()) \
+        .filter(state=kwargs["state"].replace("_", " ").strip()) \
+        .filter(zip_code=int(kwargs["zip"]))
+    listing = listing_set[0]
+
+    ctx = {
+            "street": listing.street_name.replace(" ", "_"),
+            "house_num": listing.house_num,
+            "city": listing.city.replace(" ", "_"),
+            "state": listing.state,
+            "zip": listing.zip_code,
+        }
+
+    print(ctx)
+
+    return render(request, context=ctx, template_name="Williz/listing_image_upload.html")
 
 
-def listing_image_handler(request):
+def listing_image_handler(request, **kwargs):
     """
                   Author: Carson
                   Function which uploads an image to the server for the purpose of being used in a listing
                   :return:
               """
+
+    # Check session, if invalid, or no user type redirect home
+    valid_session, u_type = check_session(request)
+    if not valid_session or u_type == -1:
+        return HttpResponseRedirect("/?&status=invalid_session")
+
+    # This looks bad, but filters are lazy, so actually only runs 1 big query with a gnarly where statement
+    listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"])) \
+        .filter(street_name=kwargs["street"].replace("_", " ").strip()) \
+        .filter(city=kwargs["city"].replace("_", " ").strip()) \
+        .filter(state=kwargs["state"].replace("_", " ").strip()) \
+        .filter(zip_code=int(kwargs["zip"]))
+    listing = listing_set[0]
 
     if request.method != 'POST':
         print("Method", request.method)
@@ -445,8 +481,8 @@ def listing_image_handler(request):
         return HttpResponseRedirect("../?&status=missing_images")
 
     images = request.FILES.getlist('images')
-    listing_id = 1  # TODO: Add logic for listing id
-    count = 0
+    listing_id = listing.pk
+    count = listing.image_count
 
     for image in images:
         count = count + 1
@@ -454,7 +490,10 @@ def listing_image_handler(request):
         assert file_type.lower() in ("jpg", "png", "jpeg")
         file_writer(image.read(), f"Listings/{listing_id}/", f"Listing{listing_id}_img{count}.{file_type}")
 
-    return HttpResponseRedirect("../searchListings")
+    listing.image_count = count
+    listing.save()
+
+    return HttpResponseRedirect(f"/listing/{kwargs['state']}/{kwargs['zip']}/{kwargs['city']}/{kwargs['street']}/{kwargs['house_num']}")
 
 
 def appraisal_image_upload(request):
@@ -476,7 +515,7 @@ def appraisal_image_handler(request):
         return HttpResponseRedirect("../?&status=missing_images")
 
     images = request.FILES.getlist('images')
-    app_id = 1  # TODO: Add logic for listing id
+    app_id = 1  # TODO: Add logic for app id
     count = 0
 
     for image in images:

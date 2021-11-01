@@ -109,3 +109,4 @@ class Appraisal(models.Model):
     mortgage_co = models.ForeignKey(MortgageCo, null=True, on_delete=models.CASCADE)
     image_count = models.IntegerField(null=False, default=0)
     enc_key = models.CharField(null=False, max_length=44, default="")
+    is_complete = models.BooleanField(null=False, default=False)

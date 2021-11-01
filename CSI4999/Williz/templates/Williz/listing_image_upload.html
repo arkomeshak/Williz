@@ -45,7 +45,8 @@ function fnameEdit(){var a=document.getElementsByClassName("fnameInput")[0];if(a
         <div class="disable-upper">
             <div id = "userInfoContainer" style = "text-align: left;">
             <h2 class="subhead">Listing Images</h2>
-            <form class="pad-top" action="listing_image_handler" method="post" enctype="multipart/form-data">
+            <form class="pad-top" action="/listing/image_handler/{{state}}/{{zip}}/{{city}}/{{street}}/{{house_num}}"
+                  method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 <label for="images">Image: </label>
                 <input required accept=".jpg,.jpeg,.png" name="images" id="images" type="file" multiple>
