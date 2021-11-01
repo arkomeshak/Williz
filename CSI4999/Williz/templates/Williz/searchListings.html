@@ -148,24 +148,8 @@ const mymap = new mapboxgl.Map({
 
 
 var element = document.getElementById('nearbyListings');
-
-
-let testing = 3;
-    console.log(testing);
-let loc = [];
-var loc1 = L.LatLng(-78.8270882041, 167.7921310181);
-var loc2 = L.LatLng(-79.8270882041, 168.7921310181);
+//Get coordinates from map when right clicking
 /*
-mymap.on('click', function(ev) {
-    var latlng = mymap.mouseEventToLatLng(ev.originalEvent);
-    console.log("Latitude: " + latlng.lat.toFixed(10) + ', Longitude: ' + latlng.lng.toFixed(10));
-    marker = L.marker([latlng.lat, latlng.lng]).addTo(mymap);
-
-    mymap.addLayer(marker);
-
-});
-*/
-
 mymap.on('style.load', function() {
   mymap.on('click', function(e) {
     var coordinates = e.lngLat;
@@ -175,10 +159,7 @@ mymap.on('style.load', function() {
       .addTo(mymap);
   });
 });
-
-
-
-
+*/
 function getDistance(origin, destination) {
     // return distance in meters
     var lon1 = toRadian(origin[0]),
@@ -198,17 +179,6 @@ function getDistance(origin, destination) {
 function toRadian(degree) {
     return degree * Math.PI / 180;
 }
-
-
-
-var loc3 = [42.6696129578, -83.0337731854];
-var loc4 = [42.6841200442, -83.0343570748];
-
-    //var distance = getDistance(loc3, loc4);
-
-
-//console.log(distance);
-
     var t = 0;
 
 function Radius() {
@@ -216,7 +186,7 @@ function Radius() {
     let Listings = [];
     let ListingsAskingPrice = [];
     let ListingLink = [];
-let temp = [];
+    let temp = [];
 
     {% for List in AllListings %}
     
@@ -234,7 +204,7 @@ let temp = [];
     temp = [];
     {% endfor %}
 console.log("LISTING LINK:" ,ListingLink[0])
-let pop = [];
+
 let trueListings = [];
 let urls = [];
 for (var z = 0; z < Listings.length; z++) {
@@ -246,7 +216,6 @@ axios.all([axios.get('https://api.mapbox.com/geocoding/v5/mapbox.places/'+Uloc+'
     console.log('submitted all axios calls');
   }))
 .catch(error => {})
-
 let ListingCoords = []
 for (var i = 0; i < Listings.length; i++) {
 axios.get('https://api.mapbox.com/geocoding/v5/mapbox.places/'+Listings[i]+'.json?country=US&access_token=pk.eyJ1IjoiYXJrMzciLCJhIjoiY2t1bjVyeHFsMHBhZTJ1b3h3czV0MXl6cSJ9.fde6IAv5ibKTxPMIMAX_EQ')
@@ -254,8 +223,6 @@ axios.get('https://api.mapbox.com/geocoding/v5/mapbox.places/'+Listings[i]+'.jso
     ListingCoords.push(response.data.features[0].geometry.coordinates);
 })
 .then(response => {
-
-
 axios.get('https://api.mapbox.com/geocoding/v5/mapbox.places/'+Uloc+'.json?country=US&access_token=pk.eyJ1IjoiYXJrMzciLCJhIjoiY2t1bjVyeHFsMHBhZTJ1b3h3czV0MXl6cSJ9.fde6IAv5ibKTxPMIMAX_EQ')
     .then(response => {
 
@@ -268,12 +235,9 @@ axios.get('https://api.mapbox.com/geocoding/v5/mapbox.places/'+Uloc+'.json?count
     var radio50 = document.getElementById('Radius50');
     var radioall = document.getElementById('Radiusall');
     var ArrDistAll = [];
-
-
     for (var p = 0; p < Listings.length; p++) {
         var ListingObject = new Object();
         var distance = getDistance(requestArr, ListingCoords[p]);
-        pop.push(ListingCoords[p], Listings[p], distance)
     if (t == Listings.length-1){
         ListingObject = {
             Coords: ListingCoords[p],
@@ -281,46 +245,24 @@ axios.get('https://api.mapbox.com/geocoding/v5/mapbox.places/'+Uloc+'.json?count
             Distance: distance,
             AskingPrice: ListingsAskingPrice[p]
         };
-        
         trueListings.push(ListingObject);
 
-        pop = [];
         ArrDistAll.push(distance)
 
 }  
     }
-
-
     if ((radio10.checked == true) && (radio25.checked == false) && (radio50.checked == false) && (radioall.checked == false)) {
         output.push(trueListings.filter(CheckDist => CheckDist.Distance <= 10));
-        
-        /*output.push(ArrDistAll.filter(function(distance) {
-            return distance < 10;
-            console.log(ArrDistAll);
-        }), Listings[t]);*/
     } else if ((radio10.checked == false) && (radio25.checked == true) && (radio50.checked == false) && (radioall.checked == false)) {
         output.push(trueListings.filter(CheckDist => CheckDist.Distance <= 25));
-      /* output.push(ArrDistAll.filter(function(distance) {
-            return distance < 25;
-        }));*/
     } else if ((radio10.checked == false) && (radio25.checked == false) && (radio50.checked == true) && (radioall.checked == false)) {
         output.push(trueListings.filter(CheckDist => CheckDist.Distance <= 50));
-       /* output.push(ArrDistAll.filter(function(distance) {
-            return distance < 50;
-        }));*/
     } else if ((radio10.checked == false) && (radio25.checked == false) && (radio50.checked == false) && (radioall.checked == true)) {
         output.push(trueListings.filter(CheckDist => CheckDist.Distance > 0));
-       /*output.push(ArrDistAll.filter(function(distance) {
-            return distance > 0;
-        }));*/
     }
         else{
             console.log("error");
         }
-
-
-
-        //document.getElementById('nearbyListings').innerHTML ='<div class="grid-container2" id = "Listings"><div class="grid-item2"><b><i>Address</b></i></div><div class="grid-item2"><b><i>Asking Price</b></i></div> <div class="grid-item2"><b><i>Details</b></i></div>{% for listing in AllListings %}<div class="grid-item2"><b><i>{{ listing.house_num }} {{ listing.street_name }} {{ listing.state }} </b></i></div><div class="grid-item2"><b><i>{{ listing.asking_price }} </b></i></div><div class="grid-item2"><b><i><form method="POST" action="update/{{ listing.state }}/{{ listing.zip_code }}/{{ listing.city }}/{{ listing.street_name }}/{{ listing.house_num }}">{% csrf_token %}<button type = "Submit" id ="Submit" value="Submit">Details</button></form></b></i></div>{% endfor %}';
        if(t === (ArrDistAll.length-1)){
             var GridContainer = document.createElement("div");
             var GridItem5 = document.createElement("div");
@@ -365,12 +307,9 @@ axios.get('https://api.mapbox.com/geocoding/v5/mapbox.places/'+Uloc+'.json?count
 
                 GridContainer.className = "grid-container2";
 
-
-               
                 GridItem1.className = "grid-item2";
                 var index1 = document.createTextNode(output[0][x].Address);
                 GridItem1.appendChild(index1);
-
 
                 GridItem2.className = "grid-item2";
                 var index2 = document.createTextNode(output[0][x].AskingPrice +"$");
@@ -431,27 +370,13 @@ t= 0;
 
 }
 
-function Delete() {
-     //onchange="Radius()"
-     GridContainer.removeChild(GridContainer)
-     element.removeChild(element);
-     
-}
-
-/*
-console.log("All: " , ArrDistAll);
-console.log("50 Mile Radius: " , ArrDist50);
-console.log("Below 25: " , ArrDist25);
-console.log("Below 10: " , ArrDist10);
-console.log("Filter: " , output)
-*/
 
 function build_listings() {
     document.getElementById('nearbyListings').innerHTML ='<div class="grid-container2" id = "Listings"><div class="grid-item2"><b><i>Address</b></i></div><div class="grid-item2"><b><i>Asking Price</b></i></div> <div class="grid-item2"><b><i>Details</b></i></div>{% for listing in AllListings %}<div class="grid-item2"><b><i>{{ listing.house_num }} {{ listing.street_name }} {{ listing.state }} </b></i></div><div class="grid-item2"><b><i>{{ listing.asking_price }} </b></i></div><div class="grid-item2"><b><i><form method="POST" action="/listing/{{ listing.state }}/{{ listing.zip_code }}/{{ listing.city }}/{{ listing.street_name }}/{{ listing.house_num }}">{% csrf_token %}<button type = "Submit" id ="Submit" value="Submit">Details</button></form></b></i></div>{% endfor %}'
 }
 
-
-
+//map function(go to location user entered)
+/*
 function Flyto() {
     navigator.geolocation.getCurrentPosition(function(position) {
         latit = position.coords.latitude;
@@ -463,6 +388,7 @@ function Flyto() {
         mymap.flyTo(new L.LatLng(latit, longit));
     });
 }
+*/
      </script>
 
 
