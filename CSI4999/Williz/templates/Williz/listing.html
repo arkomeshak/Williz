@@ -75,14 +75,32 @@ function fnameEdit(){var a=document.getElementsByClassName("fnameInput")[0];if(a
                             <li class="no-list-icon notification"><p>Sorry, no listing images have been posted.</p></li>
                         {% endfor %}
                     </ul>
+        <h2 style="margin-bottom: .5em" class="subhead">Options</h2>
                     <div class="center-align">
                         {% if isCreator is True %}
                             <a href="/listing/update/{{state}}/{{zip}}/{{city_url}}/{{street_url}}/{{street_num}}">
-                            <button id="realtor-update" class="link-btn" name ="Submit">Update Listing</button>
+                            <button style="padding: 1em" id="realtor-update" class="link-btn" name ="Submit">Update Listing</button>
+                            </a>
+                            <a href="/listing/upload_images/{{state}}/{{zip}}/{{city_url}}/{{street_url}}/{{street_num}}">
+                            <button style="padding: 1em; margin-left: 1em" id="upload-images" class="link-btn" name ="Submit">Upload Images</button>
                             </a>
                         {% elif user_type == 0 %}
                             <a href="/listing/admin/update/{{state}}/{{zip}}/{{city_url}}/{{street_url}}/{{street_num}}">
                             <button id="admin-update" class="link-btn" name ="Submit">Update Listing</button>
+                            </a>
+                        {% elif isLender is True %}
+                            <a href="/listing/update/appraiser/{{state}}/{{zip}}/{{city_url}}/{{street_url}}/{{street_num}}">
+                            <button id="view-Appraisals" class="link-btn" name ="Submit">View Appraisals</button>
+                            </a>
+                        {% elif isAppraiser is True %}
+                            <a href="/listing/update/{{state}}/{{zip}}/{{city_url}}/{{street_url}}/{{street_num}}">
+                            <button style="padding: 1em" id="upload-pdf" class="link-btn" name ="Submit">Upload Appraisal PDF</button>
+                            </a>
+                            <a href="/listing/upload_images/{{state}}/{{zip}}/{{city_url}}/{{street_url}}/{{street_num}}">
+                            <button style="padding: 1em; margin-left: 1em; margin-left: 1em" id="upload-app-images" class="link-btn" name ="Submit">Upload Appraisal Images</button>
+                            </a>
+                            <a href="newUrl">
+                            <button style="padding: 1em" id="submit-app" class="link-btn" name ="Submit">Submit Appraisal</button>
                             </a>
                         {% endif %}
                      </div>
