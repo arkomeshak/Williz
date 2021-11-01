@@ -496,16 +496,42 @@ def listing_image_handler(request, **kwargs):
     return HttpResponseRedirect(f"/listing/{kwargs['state']}/{kwargs['zip']}/{kwargs['city']}/{kwargs['street']}/{kwargs['house_num']}")
 
 
-def appraisal_image_upload(request):
+def appraisal_image_upload(request, **kwargs):
+    # Check session, if invalid, or no user type redirect home
+    valid_session, u_type = check_session(request)
+    if not valid_session or u_type == -1:
+        return HttpResponseRedirect("/?&status=invalid_session")
+
+    # This looks bad, but filters are lazy, so actually only runs 1 big query with a gnarly where statement
+    listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"])) \
+        .filter(street_name=kwargs["street"].replace("_", " ").strip()) \
+        .filter(city=kwargs["city"].replace("_", " ").strip()) \
+        .filter(state=kwargs["state"].replace("_", " ").strip()) \
+        .filter(zip_code=int(kwargs["zip"]))
+    listing = listing_set[0]
+
     return render(request, "Williz/appraisal_image_upload.html")
 
 
-def appraisal_image_handler(request):
+def appraisal_image_handler(request, **kwargs):
     """
                   Author: Carson
                   Function which uploads an image to the server for the purpose of being used in an appraisal
                   :return:
               """
+
+    # Check session, if invalid, or no user type redirect home
+    valid_session, u_type = check_session(request)
+    if not valid_session or u_type == -1:
+        return HttpResponseRedirect("/?&status=invalid_session")
+
+    # This looks bad, but filters are lazy, so actually only runs 1 big query with a gnarly where statement
+    listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"])) \
+        .filter(street_name=kwargs["street"].replace("_", " ").strip()) \
+        .filter(city=kwargs["city"].replace("_", " ").strip()) \
+        .filter(state=kwargs["state"].replace("_", " ").strip()) \
+        .filter(zip_code=int(kwargs["zip"]))
+    listing = listing_set[0]
 
     if request.method != 'POST':
         print("Method", request.method)
@@ -788,26 +814,25 @@ def listing(request, **kwargs):
             raise ValueError(f"Found {len(listing_set)} listings, expected to find one.")
         listing = listing_set[0]
         # This is best practice
+
+        email = request.session["email"]
+        user = User.objects.get(email=email)
+
         if "email" in request.session and request.session["email"] == User.objects.get(
                 user_id=listing.realtor.user_id).email:
             isCreator = True
-        elif  listing.lender is not None:
-            email = request.session["email"]
-            user = User.objects.get(email=email)
-            if "lender" == CODE_TO_USER_TYPE[user.user_type] and Lender.objects.get(pk=user.pk).mortgage_co == listing.lender:
-                isLender = True
-        elif listing.appraiser is not None:
-            email = request.session["email"]
-            user = User.objects.get(email=email)
-            if "appraiser" == CODE_TO_USER_TYPE[user.user_type] and Appraiser.objects.get(
-                    user_id=user.pk) == listing.appraiser:
-                apps = Appraisal.objects.filter(listing=listing).filter(appraiser=listing.appraiser)
-                if len(apps) == 0:
-                    isAppraiser = True
-                elif not apps[0].is_complete:
-                    isAppraiser = True
-                else:
-                    isAppraiser = False
+        elif listing.lender is not None and ("lender" == CODE_TO_USER_TYPE[user.user_type] and Lender.objects.get(pk=user.pk).mortgage_co == listing.lender):
+            isLender = True
+        elif listing.appraiser is not None and ("appraiser" == CODE_TO_USER_TYPE[user.user_type] and Appraiser.objects.get(
+                    user_id=user.pk) == listing.appraiser):
+            apps = Appraisal.objects.filter(listing=listing).filter(appraiser=listing.appraiser)
+            print("asdfgasdfgasdgfasgasfasdfasgasgsafsadfasgasfsadfasdfgasgfasgasdgfsadfsagfsag ", len(apps))
+            if len(apps) == 0:
+                isAppraiser = True
+            elif not apps[0].is_complete:
+                isAppraiser = True
+            else:
+                isAppraiser = False
         context = {
             "street": listing.street_name,
             "street_num": listing.house_num,
@@ -1097,6 +1122,7 @@ def updateListing(request, **kwargs):
     for arg_name in ("state", "house_num", "zip", "city", "street"):
         assert arg_name in kwargs
     try:
+        print("req= ", request.POST)
         listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"])) \
             .filter(street_name=kwargs["street"].replace("_", " ").strip()) \
             .filter(city=kwargs["city"].replace("_", " ").strip()) \
@@ -1106,7 +1132,10 @@ def updateListing(request, **kwargs):
             raise ValueError(f"Found {len(listing_set)} listings, expected to find one.")
         listing = listing_set[0]
         if request.session["email"] == User.objects.get(user_id=listing.realtor.user_id).email:
-            lender = MortgageCo.objects.get(co_name=request.POST["lender"])
+            co_name = "No Lender Assigned"
+            lender = listing.lender
+            if lender is not None:
+                co_name = lender.co_name
             context = {
                 "street": listing.street_name,
                 "house_num": listing.house_num,
@@ -1122,7 +1151,7 @@ def updateListing(request, **kwargs):
                 "description": listing.description,
                 "street_url": listing.street_name.replace(" ", "_"),
                 "city_url": listing.city.replace(" ", "_"),
-                "lender": lender.co_name
+                "lender": co_name
             }
             print(request.session["email"])
         else:
