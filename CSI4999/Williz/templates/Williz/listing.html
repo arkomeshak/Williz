@@ -93,7 +93,7 @@ function fnameEdit(){var a=document.getElementsByClassName("fnameInput")[0];if(a
                             <button id="view-Appraisals" class="link-btn" name ="Submit">View Appraisals</button>
                             </a>
                         {% elif isAppraiser is True %}
-                            <a href="/listing/update/{{state}}/{{zip}}/{{city_url}}/{{street_url}}/{{street_num}}">
+                            <a href="/listing/upload/pdf/{{state}}/{{zip}}/{{city_url}}/{{street_url}}/{{street_num}}">
                             <button style="padding: 1em" id="upload-pdf" class="link-btn" name ="Submit">Upload Appraisal PDF</button>
                             </a>
                             <a href="/listing/app_images/{{state}}/{{zip}}/{{city_url}}/{{street_url}}/{{street_num}}">

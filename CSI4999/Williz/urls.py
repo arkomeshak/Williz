@@ -38,9 +38,12 @@ urlpatterns = [
          name="listing_image_handler"),
     path("listing/app_images/<state>/<zip>/<city>/<street>/<house_num>", views.appraisal_image_upload,
          name="listing_image_upload"),
-    path("testUpload", views.test_upload, name="whoCares"),
-    path("upload/pdf/<state>/<zip>/<city>/<street>/<house_num>", views.pdf_upload_handler, name="pdfHandler"),
-    path("listing/update/appraiser/<state>/<zip>/<city>/<street>/<house_num>", views.set_appraiser, name="set_appraiser"),
+    path("listing/upload/pdf/handler/<state>/<zip>/<city>/<street>/<house_num>",
+         views.pdf_upload_handler, name="MikeCares(somewhat)"),
+    path("listing/upload/pdf/<state>/<zip>/<city>/<street>/<house_num>", views.appraisal_pdf_upload,
+         name="pdfHandler"),
+    path("listing/update/appraiser/<state>/<zip>/<city>/<street>/<house_num>", views.set_appraiser,
+         name="set_appraiser"),
     path("listing/update/appraiser/handler/<state>/<zip>/<city>/<street>/<house_num>", views.set_appraiser_handler,
          name="set_appraiser")
 ]

@@ -43,6 +43,65 @@ SESSION_EXPIRATION = 300  # Sessions last 300 seconds
 FAILED_LOGINS_THRESHOLD = 5
 LOCKOUT_DURATION_THRESHOLD = 60
 ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+STATE_NAMES= {
+    "Alabama": "AL",
+    "Alaska": "AK",
+    "Arizona": "AZ",
+    "Arkansas": "AR",
+    "California": "CA",
+    "Colorado": "CO",
+    "Connecticut": "CT",
+    "Delaware": "DE",
+    "Florida": "FL",
+    "Georgia": "GA",
+    "Hawaii": "HI",
+    "Idaho": "ID",
+    "Illinois": "IL",
+    "Indiana": "IN",
+    "Iowa": "IA",
+    "Kansas": "KS",
+    "Kentucky": "KY",
+    "Louisiana": "LA",
+    "Maine": "ME",
+    "Maryland": "MD",
+    "Massachusetts": "MA",
+    "Michigan": "MI",
+    "Minnesota": "MN",
+    "Mississippi": "MS",
+    "Missouri": "MO",
+    "Montana": "MT",
+    "Nebraska": "NE",
+    "Nevada": "NV",
+    "New Hampshire": "NH",
+    "New Jersey": "NJ",
+    "New Mexico": "NM",
+    "New York": "NY",
+    "North Carolina": "NC",
+    "North Dakota": "ND",
+    "Ohio": "OH",
+    "Oklahoma": "OK",
+    "Oregon": "OR",
+    "Pennsylvania": "PA",
+    "Rhode Island": "RI",
+    "South Carolina": "SC",
+    "South Dakota": "SD",
+    "Tennessee": "TN",
+    "Texas": "TX",
+    "Utah": "UT",
+    "Vermont": "VT",
+    "Virginia": "VA",
+    "Washington": "WA",
+    "West Virginia": "WV",
+    "Wisconsin": "WI",
+    "Wyoming": "WY",
+    "District of Columbia": "DC",
+    "American Samoa": "AS",
+    "Guam": "GU",
+    "Northern Mariana Islands": "MP",
+    "Puerto Rico": "PR",
+    "United States Minor Outlying Islands": "UM",
+    "U.S. Virgin Islands": "VI",
+}
 
 
 # Create your views here.
@@ -58,7 +117,9 @@ def login(request):
 
 
 def register(request):
-    context = {}
+    context = {
+        "states": [{"stat": k, "abbr": v} for k, v in STATE_NAMES.items()]
+            }
     return render(request, "Williz/register.html", context)
 
 
@@ -72,7 +133,8 @@ def create_listing(request, email):
         return HttpResponseRedirect(f"/profile/email/{email}?&status=access_denied")
 
     context = {
-        'u_id': user.user_id
+        'u_id': user.user_id,
+        "states": [{"stat": k, "abbr": v} for k, v in STATE_NAMES.items()]
     }
 
     return render(request, "Williz/createListing.html", context)
@@ -99,7 +161,8 @@ def profile(request, email):
             'email': user.email,
             'state': realtor.lic_state,
             'license_num': realtor.lic_num,
-            'bank': 'N/A'
+            'bank': 'N/A',
+            "states": [{"stat": k, "abbr": v} for k, v in STATE_NAMES.items()]
         }
     elif user.user_type == 2:
         appraiser = Appraiser.objects.get(user_id=user.user_id)
@@ -110,7 +173,8 @@ def profile(request, email):
             'email': user.email,
             'state': appraiser.lic_state,
             'license_num': appraiser.lic_num,
-            'bank': 'N/A'
+            'bank': 'N/A',
+            "states": [{"stat": k, "abbr": v} for k, v in STATE_NAMES.items()]
         }
     elif user.user_type == 3:
         lender = Lender.objects.get(user_id=user.user_id)
@@ -121,7 +185,8 @@ def profile(request, email):
             'email': user.email,
             'state': 'N/A',
             'license_num': 'N/A',
-            'bank': lender.mortgage_co
+            'bank': lender.mortgage_co,
+            "states": [{"stat": k, "abbr": v} for k, v in STATE_NAMES.items()]
         }
     return render(request, 'Williz/profile.html', context)
 
@@ -442,6 +507,7 @@ def listing_image_upload(request, **kwargs):
         .filter(city=kwargs["city"].replace("_", " ").strip()) \
         .filter(state=kwargs["state"].replace("_", " ").strip()) \
         .filter(zip_code=int(kwargs["zip"]))
+    assert len(listing_set) == 1
     listing = listing_set[0]
 
     ctx = {
@@ -451,8 +517,6 @@ def listing_image_upload(request, **kwargs):
             "state": listing.state,
             "zip": listing.zip_code,
         }
-
-    print(ctx)
 
     return render(request, context=ctx, template_name="Williz/listing_image_upload.html")
 
@@ -475,6 +539,7 @@ def listing_image_handler(request, **kwargs):
         .filter(city=kwargs["city"].replace("_", " ").strip()) \
         .filter(state=kwargs["state"].replace("_", " ").strip()) \
         .filter(zip_code=int(kwargs["zip"]))
+    assert len(listing_set) == 1
     listing = listing_set[0]
 
     if request.method != 'POST':
@@ -512,9 +577,18 @@ def appraisal_image_upload(request, **kwargs):
         .filter(city=kwargs["city"].replace("_", " ").strip()) \
         .filter(state=kwargs["state"].replace("_", " ").strip()) \
         .filter(zip_code=int(kwargs["zip"]))
+    assert len(listing_set) == 1
     listing = listing_set[0]
 
-    return render(request, "Williz/appraisal_image_upload.html")
+    ctx = {
+        "street": listing.street_name.replace(" ", "_"),
+        "house_num": listing.house_num,
+        "city": listing.city.replace(" ", "_"),
+        "state": listing.state,
+        "zip": listing.zip_code,
+    }
+
+    return render(request, context=ctx, template_name="Williz/appraisal_image_upload.html")
 
 
 def appraisal_image_handler(request, **kwargs):
@@ -535,7 +609,12 @@ def appraisal_image_handler(request, **kwargs):
         .filter(city=kwargs["city"].replace("_", " ").strip()) \
         .filter(state=kwargs["state"].replace("_", " ").strip()) \
         .filter(zip_code=int(kwargs["zip"]))
+    assert len(listing_set) == 1
     listing = listing_set[0]
+
+    app_set = Appraisal.objects.filter(listing=listing).filter(appraiser=listing.appraiser)
+    assert len(app_set) == 1
+    appraisal = app_set[0]
 
     if request.method != 'POST':
         print("Method", request.method)
@@ -545,16 +624,20 @@ def appraisal_image_handler(request, **kwargs):
         return HttpResponseRedirect("../?&status=missing_images")
 
     images = request.FILES.getlist('images')
-    app_id = 1  # TODO: Add logic for app id
-    count = 0
+    key = appraisal.enc_key
+    app_id = appraisal.pk
+    count = appraisal.image_count
 
     for image in images:
         count = count + 1
         file_type = image.name.split(".")[-1]
         assert file_type.lower() in ("jpg", "png", "jpeg")
-        file_writer(image.read(), f"Appraisals/{app_id}/images", f"Appraisal{app_id}_img{count}.{file_type}")
+        file_writer(image.read(), f"Appraisals/{app_id}/images", f"Appraisal{app_id}_img{count}.{file_type}", key)
 
-    return HttpResponseRedirect("../searchListings")
+    appraisal.image_count = count
+    appraisal.save()
+
+    return HttpResponseRedirect(f"/listing/{kwargs['state']}/{kwargs['zip']}/{kwargs['city']}/{kwargs['street']}/{kwargs['house_num']}")
 
 
 # Dan's Views
@@ -1010,11 +1093,31 @@ def delete_listing_handler(request, **kwargs):
     return HttpResponseRedirect("/?&status=failed_listing_deletion")
 
 
-def test_upload(request):
-    return render(request, template_name="Williz/appraisal_upload.html")
+def appraisal_pdf_upload(request, **kwargs):
+    # Check session, if invalid, or no user type redirect home
+    valid_session, u_type = check_session(request)
+    if not valid_session or u_type == -1:
+        return HttpResponseRedirect("/?&status=invalid_session")
+    listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"])) \
+        .filter(street_name=kwargs["street"].replace("_", " ").strip()) \
+        .filter(city=kwargs["city"].replace("_", " ").strip()) \
+        .filter(state=kwargs["state"].replace("_", " ").strip()) \
+        .filter(zip_code=int(kwargs["zip"]))
+    assert len(listing_set) == 1
+    listing = listing_set[0]
+    context = {
+            "street": listing.street_name.replace(" ", "_"),
+            "street_num": listing.house_num,
+            "city": listing.city,
+            "state": listing.state,
+            "zip": listing.zip_code,
+            "street_url": listing.street_name.replace(" ", "_"),
+            "city_url": listing.city.replace(" ", "_")
+        }
+    return render(request, template_name="Williz/appraisal_upload.html", context=context)
 
 
-def pdf_upload_handler(request):
+def pdf_upload_handler(request, **kwargs):
     """
     Author: Mike
     Handler view used to upload PDF files to the server. These PDFs are the appraisal documents
@@ -1030,10 +1133,30 @@ def pdf_upload_handler(request):
         return HttpResponseRedirect("../?&status=missing_pdf")
     try:
         pdf = request.FILES["pdf"]
-        print("upload file methods", dir(pdf))
-        app_type = "1004" if request.POST["form_type"] == "1004" else "1073"
-        app_id = 1 #TODO: Make this appraisal id
-        file_writer(pdf.read(), f"Appraisals/{app_id}/", f"Appraisal{app_id}_{app_type}.pdf")
+        app_type = request.POST["form_type"]
+        listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"])) \
+            .filter(street_name=kwargs["street"].replace("_", " ").strip()) \
+            .filter(city=kwargs["city"].replace("_", " ").strip()) \
+            .filter(state=kwargs["state"].replace("_", " ").strip()) \
+            .filter(zip_code=int(kwargs["zip"]))
+        assert len(listing_set) == 1
+        listing = listing_set[0]
+        # get the appraiser from their session
+        email = request.session["email"]
+        app_user = User.objects.get(email=email)
+        appraiser = Appraiser.objects.get(pk=app_user.pk)
+        key = load_key()
+        app = Appraisal(
+            listing=listing,
+            appraiser=appraiser,
+            mortgage_co=listing.lender,
+            image_count=0,
+            enc_key=key,
+            is_complete=False
+        )
+        app.save()
+        app_id = app.pk
+        file_writer(pdf.read(), f"Appraisals/{app_id}/", f"Appraisal{app_id}_{app_type}.pdf", key=key)
     except Exception as e:
        print(e)
        return HttpResponseRedirect("../?&status=internal_error")
@@ -1155,7 +1278,8 @@ def updateListing(request, **kwargs):
                 "description": listing.description,
                 "street_url": listing.street_name.replace(" ", "_"),
                 "city_url": listing.city.replace(" ", "_"),
-                "lender": co_name
+                "lender": co_name,
+                "states": [{"stat":k, "abbr":v} for k,v in STATE_NAMES.items()]
             }
             print(request.session["email"])
         else:
@@ -1635,16 +1759,21 @@ def file_writer(binary_file, filepath, filename, key=None):
     :param binary_file:
     :param filepath:
     :param filename:
+    :param key:
     :return: None sucka
     """
     full_path = join(ROOT_FILES_DIR, filepath)
+    # Make dir if DNE
     if not isdir(full_path):
         os.makedirs(full_path)
+    # decide whether to encrypt or not
     if key is None:
-        with open(join(full_path, filename), "wb") as f:
-            f.write(binary_file)
+        data = binary_file
     else:
+        data = encrypt(binary_file, key)
+    # Write to disk
+    with open(join(full_path, filename), "wb") as f:
+        f.write(data)
 
-        encrypt(binary_file, )
 # Zak's helper functions
 # ...*tumble weed blows in wind*
