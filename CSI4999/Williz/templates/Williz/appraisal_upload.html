@@ -45,7 +45,8 @@ function fnameEdit(){var a=document.getElementsByClassName("fnameInput")[0];if(a
         <div class="disable-upper">
             <div id = "userInfoContainer" style = "text-align: left;">
             <h2 class="subhead">Appraisal PDF</h2>
-            <form class="pad-top" action="upload/pdf" method="post" enctype="multipart/form-data">
+            <form class="pad-top" action="/listing/upload/pdf/handler/{{state}}/{{zip}}/{{city}}/{{street}}/{{street_num}}"
+                  method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 <label for="pdf">PDF: </label>
                 <input name="pdf" id="pdf" accept=".pdf" type="file">
