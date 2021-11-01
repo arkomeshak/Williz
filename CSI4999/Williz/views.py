@@ -611,9 +611,10 @@ def appraisal_image_handler(request, **kwargs):
         .filter(zip_code=int(kwargs["zip"]))
     assert len(listing_set) == 1
     listing = listing_set[0]
-
+    print(listing.appraiser)
     app_set = Appraisal.objects.filter(listing=listing).filter(appraiser=listing.appraiser)
-    assert len(app_set) == 1
+    print(app_set)
+    assert len(app_set) > 0
     appraisal = app_set[0]
 
     if request.method != 'POST':
