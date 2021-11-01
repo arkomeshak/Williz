@@ -438,6 +438,7 @@ def listing_image_upload(request, **kwargs):
         .filter(city=kwargs["city"].replace("_", " ").strip()) \
         .filter(state=kwargs["state"].replace("_", " ").strip()) \
         .filter(zip_code=int(kwargs["zip"]))
+    assert len(listing_set) == 1
     listing = listing_set[0]
 
     ctx = {
@@ -447,8 +448,6 @@ def listing_image_upload(request, **kwargs):
             "state": listing.state,
             "zip": listing.zip_code,
         }
-
-    print(ctx)
 
     return render(request, context=ctx, template_name="Williz/listing_image_upload.html")
 
@@ -471,6 +470,7 @@ def listing_image_handler(request, **kwargs):
         .filter(city=kwargs["city"].replace("_", " ").strip()) \
         .filter(state=kwargs["state"].replace("_", " ").strip()) \
         .filter(zip_code=int(kwargs["zip"]))
+    assert len(listing_set) == 1
     listing = listing_set[0]
 
     if request.method != 'POST':
@@ -508,9 +508,18 @@ def appraisal_image_upload(request, **kwargs):
         .filter(city=kwargs["city"].replace("_", " ").strip()) \
         .filter(state=kwargs["state"].replace("_", " ").strip()) \
         .filter(zip_code=int(kwargs["zip"]))
+    assert len(listing_set) == 1
     listing = listing_set[0]
 
-    return render(request, "Williz/appraisal_image_upload.html")
+    ctx = {
+        "street": listing.street_name.replace(" ", "_"),
+        "house_num": listing.house_num,
+        "city": listing.city.replace(" ", "_"),
+        "state": listing.state,
+        "zip": listing.zip_code,
+    }
+
+    return render(request, context=ctx, template_name="Williz/appraisal_image_upload.html")
 
 
 def appraisal_image_handler(request, **kwargs):
@@ -531,7 +540,12 @@ def appraisal_image_handler(request, **kwargs):
         .filter(city=kwargs["city"].replace("_", " ").strip()) \
         .filter(state=kwargs["state"].replace("_", " ").strip()) \
         .filter(zip_code=int(kwargs["zip"]))
+    assert len(listing_set) == 1
     listing = listing_set[0]
+
+    app_set = Appraisal.objects.filter(listing=listing).filter(appraiser=listing.appraiser)
+    assert len(app_set) == 1
+    appraisal = app_set[0]
 
     if request.method != 'POST':
         print("Method", request.method)
@@ -541,16 +555,20 @@ def appraisal_image_handler(request, **kwargs):
         return HttpResponseRedirect("../?&status=missing_images")
 
     images = request.FILES.getlist('images')
-    app_id = 1  # TODO: Add logic for app id
-    count = 0
+    key = appraisal.enc_key
+    app_id = appraisal.pk
+    count = appraisal.image_count
 
     for image in images:
         count = count + 1
         file_type = image.name.split(".")[-1]
         assert file_type.lower() in ("jpg", "png", "jpeg")
-        file_writer(image.read(), f"Appraisals/{app_id}/images", f"Appraisal{app_id}_img{count}.{file_type}")
+        file_writer(image.read(), f"Appraisals/{app_id}/images", f"Appraisal{app_id}_img{count}.{file_type}", key)
 
-    return HttpResponseRedirect("../searchListings")
+    appraisal.image_count = count
+    appraisal.save()
+
+    HttpResponseRedirect(f"/listing/{kwargs['state']}/{kwargs['zip']}/{kwargs['city']}/{kwargs['street']}/{kwargs['house_num']}")
 
 
 # Dan's Views
@@ -1631,16 +1649,20 @@ def file_writer(binary_file, filepath, filename, key=None):
     :param binary_file:
     :param filepath:
     :param filename:
+    :param key:
     :return: None sucka
     """
     full_path = join(ROOT_FILES_DIR, filepath)
+    # Make dir if DNE
     if not isdir(full_path):
         os.makedirs(full_path)
+    # decide whether to encrypt or not
     if key is None:
-        with open(join(full_path, filename), "wb") as f:
-            f.write(binary_file)
+        data = binary_file
     else:
-
-        encrypt(binary_file, )
+        data = encrypt(binary_file, key)
+    # Write to disk
+    with open(join(full_path, filename), "wb") as f:
+        f.write(data)
 # Zak's helper functions
 # ...*tumble weed blows in wind*
