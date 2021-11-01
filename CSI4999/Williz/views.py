@@ -633,7 +633,7 @@ def appraisal_image_handler(request, **kwargs):
     appraisal.image_count = count
     appraisal.save()
 
-    HttpResponseRedirect(f"/listing/{kwargs['state']}/{kwargs['zip']}/{kwargs['city']}/{kwargs['street']}/{kwargs['house_num']}")
+    return HttpResponseRedirect(f"/listing/{kwargs['state']}/{kwargs['zip']}/{kwargs['city']}/{kwargs['street']}/{kwargs['house_num']}")
 
 
 # Dan's Views
