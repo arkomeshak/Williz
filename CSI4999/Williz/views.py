@@ -147,6 +147,7 @@ def profile(request, email):
         :param email: user email associated with account
         :return: render of profile.html with new information
     """
+    isLender = False
     # Check session, if invalid, or no user type redirect home
     valid_session, u_type = check_session(request)
     if not valid_session or u_type == -1:
@@ -185,7 +186,7 @@ def profile(request, email):
             'email': user.email,
             'state': 'N/A',
             'license_num': 'N/A',
-            'bank': lender.mortgage_co,
+            'bank': lender.mortgage_co.co_name,
             "states": [{"stat": k, "abbr": v} for k, v in STATE_NAMES.items()]
         }
     return render(request, 'Williz/profile.html', context)
