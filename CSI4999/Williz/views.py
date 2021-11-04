@@ -185,7 +185,7 @@ def profile(request, email):
             'email': user.email,
             'state': 'N/A',
             'license_num': 'N/A',
-            'bank': lender.mortgage_co,
+            'bank': lender.mortgage_co.co_name,
             "states": [{"stat": k, "abbr": v} for k, v in STATE_NAMES.items()]
         }
     return render(request, 'Williz/profile.html', context)
