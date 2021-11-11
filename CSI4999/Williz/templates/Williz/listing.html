@@ -57,6 +57,7 @@ document.getElementById("dimmer").style.opacity="0.6";
 document.getElementById("dimmer").style.zIndex="100";
 }
 /* Set the width of the side navigation to 0 and the left margin of the page content to 0, and the background color of body to white */
+
 function closeNav(){
 document.getElementById("mySidenav").style.width="0";
 document.getElementById("nav-btn").style.width="0";
@@ -72,6 +73,7 @@ if(a.style.display=="none"){
 }else{
     a.style.display="none"
     }}
+
 </script>
 
 <!--Lol Cargo Cult FTW-->
@@ -135,7 +137,7 @@ if(a.style.display=="none"){
                     <ul>
                         {% for image in listing_images %}
                             <!-- TODO: Once we have images, set this for loop up-->
-                            <li><img src="#", alt="listing image"></li>
+                            <li><img src="{% static 'Williz' %}/{{image}}" alt="listing image" width="300" height="300"></li>
                         {% empty %}
                             <li class="no-list-icon notification"><p>Sorry, no listing images have been posted.</p></li>
                         {% endfor %}
