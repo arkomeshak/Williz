@@ -43,6 +43,65 @@ SESSION_EXPIRATION = 300  # Sessions last 300 seconds
 FAILED_LOGINS_THRESHOLD = 5
 LOCKOUT_DURATION_THRESHOLD = 60
 ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+STATE_NAMES= {
+    "Alabama": "AL",
+    "Alaska": "AK",
+    "Arizona": "AZ",
+    "Arkansas": "AR",
+    "California": "CA",
+    "Colorado": "CO",
+    "Connecticut": "CT",
+    "Delaware": "DE",
+    "Florida": "FL",
+    "Georgia": "GA",
+    "Hawaii": "HI",
+    "Idaho": "ID",
+    "Illinois": "IL",
+    "Indiana": "IN",
+    "Iowa": "IA",
+    "Kansas": "KS",
+    "Kentucky": "KY",
+    "Louisiana": "LA",
+    "Maine": "ME",
+    "Maryland": "MD",
+    "Massachusetts": "MA",
+    "Michigan": "MI",
+    "Minnesota": "MN",
+    "Mississippi": "MS",
+    "Missouri": "MO",
+    "Montana": "MT",
+    "Nebraska": "NE",
+    "Nevada": "NV",
+    "New Hampshire": "NH",
+    "New Jersey": "NJ",
+    "New Mexico": "NM",
+    "New York": "NY",
+    "North Carolina": "NC",
+    "North Dakota": "ND",
+    "Ohio": "OH",
+    "Oklahoma": "OK",
+    "Oregon": "OR",
+    "Pennsylvania": "PA",
+    "Rhode Island": "RI",
+    "South Carolina": "SC",
+    "South Dakota": "SD",
+    "Tennessee": "TN",
+    "Texas": "TX",
+    "Utah": "UT",
+    "Vermont": "VT",
+    "Virginia": "VA",
+    "Washington": "WA",
+    "West Virginia": "WV",
+    "Wisconsin": "WI",
+    "Wyoming": "WY",
+    "District of Columbia": "DC",
+    "American Samoa": "AS",
+    "Guam": "GU",
+    "Northern Mariana Islands": "MP",
+    "Puerto Rico": "PR",
+    "United States Minor Outlying Islands": "UM",
+    "U.S. Virgin Islands": "VI",
+}
 
 
 # Create your views here.
@@ -58,7 +117,9 @@ def login(request):
 
 
 def register(request):
-    context = {}
+    context = {
+        "states": [{"stat": k, "abbr": v} for k, v in STATE_NAMES.items()]
+            }
     return render(request, "Williz/register.html", context)
 
 
@@ -72,7 +133,8 @@ def create_listing(request, email):
         return HttpResponseRedirect(f"/profile/email/{email}?&status=access_denied")
 
     context = {
-        'u_id': user.user_id
+        'u_id': user.user_id,
+        "states": [{"stat": k, "abbr": v} for k, v in STATE_NAMES.items()]
     }
 
     return render(request, "Williz/createListing.html", context)
@@ -99,7 +161,8 @@ def profile(request, email):
             'email': user.email,
             'state': realtor.lic_state,
             'license_num': realtor.lic_num,
-            'bank': 'N/A'
+            'bank': 'N/A',
+            "states": [{"stat": k, "abbr": v} for k, v in STATE_NAMES.items()]
         }
     elif user.user_type == 2:
         appraiser = Appraiser.objects.get(user_id=user.user_id)
@@ -110,7 +173,8 @@ def profile(request, email):
             'email': user.email,
             'state': appraiser.lic_state,
             'license_num': appraiser.lic_num,
-            'bank': 'N/A'
+            'bank': 'N/A',
+            "states": [{"stat": k, "abbr": v} for k, v in STATE_NAMES.items()]
         }
     elif user.user_type == 3:
         lender = Lender.objects.get(user_id=user.user_id)
@@ -121,7 +185,8 @@ def profile(request, email):
             'email': user.email,
             'state': 'N/A',
             'license_num': 'N/A',
-            'bank': lender.mortgage_co
+            'bank': lender.mortgage_co.co_name,
+            "states": [{"stat": k, "abbr": v} for k, v in STATE_NAMES.items()]
         }
     return render(request, 'Williz/profile.html', context)
 
@@ -260,17 +325,21 @@ def searchListings(request):
 
     print(listings)
 
-    for i, List in enumerate(listingsQ):
-        entry = {"house_num": List.house_num,
-                 "street_name": List.street_name,
-                 "state": List.state,
-                 "asking_price": List.asking_price,
-                 "city": List.city,
-                 "zip_code": List.zip_code, }
-        listings.append(entry)
-        print(listings)
 
-    return render(request, "Williz/searchListings.html", {'AllListings': listings})
+    for i, List in enumerate(listingsQ):
+            entry = {"house_num": List.house_num,
+                     "street_name": List.street_name,
+                     "state": List.state,
+                     "asking_price": List.asking_price,
+                     "city": List.city,
+                     "zip_code": List.zip_code,}
+            listings.append(entry)
+            print(listings)
+    if(request.POST.get("userLoc")):
+        userLocation = request.POST["userLoc"]
+    else:
+        userLocation = ""
+    return render(request, "Williz/searchListings.html", {'UserLoc':userLocation, 'AllListings':listings})
 
 
 def searchListings_handler(request):
@@ -542,9 +611,10 @@ def appraisal_image_handler(request, **kwargs):
         .filter(zip_code=int(kwargs["zip"]))
     assert len(listing_set) == 1
     listing = listing_set[0]
-
+    print(listing.appraiser)
     app_set = Appraisal.objects.filter(listing=listing).filter(appraiser=listing.appraiser)
-    assert len(app_set) == 1
+    print(app_set)
+    assert len(app_set) > 0
     appraisal = app_set[0]
 
     if request.method != 'POST':
@@ -1209,7 +1279,8 @@ def updateListing(request, **kwargs):
                 "description": listing.description,
                 "street_url": listing.street_name.replace(" ", "_"),
                 "city_url": listing.city.replace(" ", "_"),
-                "lender": co_name
+                "lender": co_name,
+                "states": [{"stat":k, "abbr":v} for k,v in STATE_NAMES.items()]
             }
             print(request.session["email"])
         else:

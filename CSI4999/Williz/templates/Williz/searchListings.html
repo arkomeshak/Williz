@@ -90,173 +90,66 @@ function closeNav() {
 <div style = "clear:both"></div>
 
 
-  <body id="main_body" onload="build_listings()">
+  <body id="main_body" onload = "Radius()">
     <script></script>
 
     <div class="dimmer" id = "dimmer"></div>
     <h1 id="mainHeader">Listings</h1>
-<!--    <div id="FormCont"> -->
+   <div id="FormCont">  
 
-<!--    <form id="loginForm" method="POST" action="../searchListings_handler/">-->
-<!--        {% csrf_token %}-->
-<!--        <label><b>Location</b>-->
-<!--        </label></br>-->
-<!--        <input type="text" name="userLoc" id="userLoc" class = "FormInput" placeholder="Enter Location">  </br>-->
-<!--        <label><b>Distance</b>-->
-<!--        </label></br>-->
-<!--        -->
-<!--        <label class="Radio-btn" style = "padding-right:2%; display: none">50 Miles-->
-<!--        <input type="radio" id = "Radius50" name="radio" onchange="Radius()" value="0" style = " display: none">-->
-<!--        </label>   -->
+ <form id="loginForm" method="POST" action="../searchListings/"> 
+         {% csrf_token %} 
+         <label><b>Location</b> 
+         </label></br> 
+         <input type="search" name="userLoc" id="userLoc" class = "FormInput" placeholder="Enter Location">  </br> 
 
-<!--        <label class="Radio-btn" style = "padding-right:2%; display: none">25 Miles-->
-<!--        <input type="radio" id = "Radius25" name="radio" onchange="Radius()" value="0" style = " display: none">-->
-<!--        </label> -->
+          
+         <label class="Radio-btn" style = "padding-right:2%;display:none">50 Miles 
+         <input type="radio" id = "Radius50" name="radio" value="0" style = "display:none"> 
+         </label>    
 
-<!--        <label class="Radio-btn" style = "padding-right:2%; display: none">10 Miles-->
-<!--        <input type="radio" id = "Radius10" name="radio" onchange="Radius()" value="0" style = " display: none">-->
-<!--        </label>-->
-<!--        <input type="radio" id = "Radiusall" name="radio" onchange="Radius()" style="visibility: hidden" value="0" checked>-->
-<!--    </form>-->
-<!--        <button onClick="build_listings()"> Show Listings</button>-->
-<!--</div> -->
-<!--</br>-->
-<div id ="MapContainer">
-    <div id="mapid" style = " display: none;"></div> 
-</div>
+         <label class="Radio-btn" style = "padding-right:2%;display:none">25 Miles 
+         <input type="radio" id = "Radius25" name="radio" value="0" style = "display:none"> 
+         </label>  
+
+         <label class="Radio-btn" style = "padding-right:2%;display:none">10 Miles 
+         <input type="radio" id = "Radius10" name="radio" value="0" style = "display:none"> 
+         </label> 
+
+         <label class="Radio-btn" style = "padding-right:2%;display:none">All
+         <input type="radio" id = "Radiusall" name="radio" style = "display:none"checked> 
+         </label> 
+     </form> 
+         {% comment %} <button onClick="Radius()"> Show Listings</button>  {% endcomment %}
+ </div>  
+ </br>
+
 
 <div id="nearbyListings">
 
 </div>
-
+<div id ="MapContainer" style = "display:none">
+    <div id="mapid" style = "display:none"></div> 
+</div>
   </body>
-  <!--
-     <script src="{% static 'Js/Map.js' %}"></script>
-  -->
+
 
 
      <script> 
-     /*
-        var mymap = L.map('mapid');
 
-
-        const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        });
-
-        tiles.addTo(this.mymap);
-*/
-
-mapboxgl.accessToken = 'pk.eyJ1IjoiYXJrMzciLCJhIjoiY2t1bjVyeHFsMHBhZTJ1b3h3czV0MXl6cSJ9.fde6IAv5ibKTxPMIMAX_EQ';
+var pk = 'pk.eyJ1IjoiYXJrMzciLCJhIjoiY2t1bjVyeHFsMHBhZTJ1b3h3czV0MXl6cSJ9.fde6IAv5ibKTxPMIMAX_EQ'
+mapboxgl.accessToken = pk;
 const mymap = new mapboxgl.Map({
     container: 'mapid',
     style: 'mapbox://styles/mapbox/streets-v11',
-    center: [-79.4512, 43.6568],
     zoom: 13
 });
 
 
 
-
-
-var Uloc = "{{UserLoc}}";
-
+var element = document.getElementById('nearbyListings');
+//Get coordinates from map when right clicking
 /*
-async function makeRequest() {
-axios({
-  method: 'get',
-  url: 'https://api.mapbox.com/geocoding/v5/mapbox.places/ADDRESS.json?country=US&access_token=pk.eyJ1IjoiYXJrMzciLCJhIjoiY2t1bjVyeHFsMHBhZTJ1b3h3czV0MXl6cSJ9.fde6IAv5ibKTxPMIMAX_EQ',
-  responseType: 'stream'
-})
-
-await axios.get('https://api.mapbox.com/geocoding/v5/mapbox.places/'+Uloc+'.json?country=US&access_token=pk.eyJ1IjoiYXJrMzciLCJhIjoiY2t1bjVyeHFsMHBhZTJ1b3h3czV0MXl6cSJ9.fde6IAv5ibKTxPMIMAX_EQ')
-  .then(function (response) {
-    // handle success
-   
-  })
-  .catch(function (error) {
-    // handle error
-    console.log(error);
-  })
-
-
-
-}
-*/
-
-
-
-
-/*
-const makeRequest = async () => {
-    try {
-        const response = await axios.get('https://api.mapbox.com/geocoding/v5/mapbox.places/'+Uloc+'.json?country=US&access_token=pk.eyJ1IjoiYXJrMzciLCJhIjoiY2t1bjVyeHFsMHBhZTJ1b3h3czV0MXl6cSJ9.fde6IAv5ibKTxPMIMAX_EQ');
-        const searchedLoc = response.data.features[0].geometry.coordinates;
-        console.log(response.data.features[0].geometry.coordinates);
-        //var searchedLoc = [];
-        // searchedLoc.push(response.data.features[0].geometry.coordinates[0]);
-        //searchedLoc.push(response.data.features[0].geometry.coordinates[1]);
-        return searchedLoc;
-    } catch (err) {
-        // Handle Error Here
-        console.error(err);
-    }
-
-};
-
-*/
-// Add a request interceptor
-
-
-
-
-
-  // fetch data from a url endpoint
-  /*
-  const makeRequest = async () => { 
-      
-    try {
-    const response = await axios.get('https://api.mapbox.com/geocoding/v5/mapbox.places/'+Uloc+'.json?country=US&access_token=pk.eyJ1IjoiYXJrMzciLCJhIjoiY2t1bjVyeHFsMHBhZTJ1b3h3czV0MXl6cSJ9.fde6IAv5ibKTxPMIMAX_EQ');
-    if (response.status === 200) { // response - object, eg { status: 200, message: 'OK' }
-      console.log('success stuff');
-            let requestArr = await response.data.features[0].center[0];
-        //requestArr.push(response.data.features[0].center[0]);
-        //requestArr.push(response.data.features[0].center[1]);
-     return response.attributes;
-    }
-   } catch (err) {
-     console.error(err)
-     return false;
-   }
-};
-*/
-
-
-
-
-/*
-sendGetRequest();
-function assignVar(data){
-    searchedLoc = data;
-    return searchedLoc;
-    console.log(searchedLoc);
-}
-*/
-let testing = 3;
-    console.log(testing);
-let loc = [];
-var loc1 = L.LatLng(-78.8270882041, 167.7921310181);
-var loc2 = L.LatLng(-79.8270882041, 168.7921310181);
-/*
-mymap.on('click', function(ev) {
-    var latlng = mymap.mouseEventToLatLng(ev.originalEvent);
-    console.log("Latitude: " + latlng.lat.toFixed(10) + ', Longitude: ' + latlng.lng.toFixed(10));
-    marker = L.marker([latlng.lat, latlng.lng]).addTo(mymap);
-
-    mymap.addLayer(marker);
-
-});
-*/
 mymap.on('style.load', function() {
   mymap.on('click', function(e) {
     var coordinates = e.lngLat;
@@ -266,16 +159,13 @@ mymap.on('style.load', function() {
       .addTo(mymap);
   });
 });
-
-
-
-
+*/
 function getDistance(origin, destination) {
     // return distance in meters
-    var lon1 = toRadian(origin[1]),
-        lat1 = toRadian(origin[0]),
-        lon2 = toRadian(destination[1]),
-        lat2 = toRadian(destination[0]);
+    var lon1 = toRadian(origin[0]),
+        lat1 = toRadian(origin[1]),
+        lon2 = toRadian(destination[0]),
+        lat2 = toRadian(destination[1]);
 
     var deltaLat = lat2 - lat1;
     var deltaLon = lon2 - lon1;
@@ -289,28 +179,33 @@ function getDistance(origin, destination) {
 function toRadian(degree) {
     return degree * Math.PI / 180;
 }
-
-
-let temp=[];
-var loc3 = [42.6696129578, -83.0337731854];
-var loc4 = [42.6841200442, -83.0343570748];
-
-    //var distance = getDistance(loc3, loc4);
-
-
-//console.log(distance);
-
     var t = 0;
 
 function Radius() {
+    var Uloc = "{{UserLoc}}";
     let Listings = [];
+    let ListingsAskingPrice = [];
+    let ListingLink = [];
+    let temp = [];
 
     {% for List in AllListings %}
-    var a = "{{List.house_num}}, {{List.street_name}} {{List.state}}";
+    
+    var a = "{{List.house_num}} {{List.street_name}}, {{List.state}}.";
+    var b = "{{List.asking_price}}";
+    var c = "{{List.state}}";
+    var d = "{{List.zip_code}}";
+    var e = "{{List.city}}";
+    var f = "{{List.street_name}}";
+    var g = "{{List.house_num}}";
     Listings.push(a);
+    ListingsAskingPrice.push(b);
+    temp.push(c, d, e, f, g);
+    ListingLink.push(temp);
+    temp = [];
     {% endfor %}
-console.log(Listings)
+console.log("LISTING LINK:" ,ListingLink[0])
 
+let trueListings = [];
 let urls = [];
 for (var z = 0; z < Listings.length; z++) {
  urls[z] = 'https://api.mapbox.com/geocoding/v5/mapbox.places/'+Listings[z]+'.json?country=US&access_token=pk.eyJ1IjoiYXJrMzciLCJhIjoiY2t1bjVyeHFsMHBhZTJ1b3h3czV0MXl6cSJ9.fde6IAv5ibKTxPMIMAX_EQ'
@@ -321,20 +216,16 @@ axios.all([axios.get('https://api.mapbox.com/geocoding/v5/mapbox.places/'+Uloc+'
     console.log('submitted all axios calls');
   }))
 .catch(error => {})
-
 let ListingCoords = []
 for (var i = 0; i < Listings.length; i++) {
 axios.get('https://api.mapbox.com/geocoding/v5/mapbox.places/'+Listings[i]+'.json?country=US&access_token=pk.eyJ1IjoiYXJrMzciLCJhIjoiY2t1bjVyeHFsMHBhZTJ1b3h3czV0MXl6cSJ9.fde6IAv5ibKTxPMIMAX_EQ')
 .then(response => {
     ListingCoords.push(response.data.features[0].geometry.coordinates);
-    console.log("THJIS " , ListingCoords)
 })
 .then(response => {
-console.log("array of : ", ListingCoords)
-
 axios.get('https://api.mapbox.com/geocoding/v5/mapbox.places/'+Uloc+'.json?country=US&access_token=pk.eyJ1IjoiYXJrMzciLCJhIjoiY2t1bjVyeHFsMHBhZTJ1b3h3czV0MXl6cSJ9.fde6IAv5ibKTxPMIMAX_EQ')
     .then(response => {
-        console.log(response.data.features[0].center[0]);
+
         const requestArr = [];
         requestArr.push(response.data.features[0].center[0]);
         requestArr.push(response.data.features[0].center[1]);
@@ -344,67 +235,148 @@ axios.get('https://api.mapbox.com/geocoding/v5/mapbox.places/'+Uloc+'.json?count
     var radio50 = document.getElementById('Radius50');
     var radioall = document.getElementById('Radiusall');
     var ArrDistAll = [];
+    for (var p = 0; p < Listings.length; p++) {
+        var ListingObject = new Object();
+        var distance = getDistance(requestArr, ListingCoords[p]);
+    if (t == Listings.length-1){
+        ListingObject = {
+            Coords: ListingCoords[p],
+            Address: Listings[p],
+            Distance: distance,
+            AskingPrice: ListingsAskingPrice[p]
+        };
+        trueListings.push(ListingObject);
 
-    for (var p = 0; p < ListingCoords.length; p++) {
-        var distance = getDistance(ListingCoords[p], requestArr);
         ArrDistAll.push(distance)
-        console.log("FOR LOOP", ArrDistAll);
-    }
-    console.log("ListingCoords ", ListingCoords.length)
-    console.log("ARRDISTALL ", ArrDistAll);
 
+}  
+    }
     if ((radio10.checked == true) && (radio25.checked == false) && (radio50.checked == false) && (radioall.checked == false)) {
-        output.push(ArrDistAll.filter(function(distance) {
-            return distance < 10;
-            console.log(ArrDistAll);
-        }));
+        output.push(trueListings.filter(CheckDist => CheckDist.Distance <= 10));
     } else if ((radio10.checked == false) && (radio25.checked == true) && (radio50.checked == false) && (radioall.checked == false)) {
-       output.push(ArrDistAll.filter(function(distance) {
-            return distance < 25;
-        }));
+        output.push(trueListings.filter(CheckDist => CheckDist.Distance <= 25));
     } else if ((radio10.checked == false) && (radio25.checked == false) && (radio50.checked == true) && (radioall.checked == false)) {
-        output.push(ArrDistAll.filter(function(distance) {
-            return distance < 50;
-        }));
+        output.push(trueListings.filter(CheckDist => CheckDist.Distance <= 50));
     } else if ((radio10.checked == false) && (radio25.checked == false) && (radio50.checked == false) && (radioall.checked == true)) {
-       output.push(ArrDistAll.filter(function(distance) {
-            return distance > 0;
-        }));
+        output.push(trueListings.filter(CheckDist => CheckDist.Distance > 0));
     }
         else{
             console.log("error");
         }
+       if(t === (ArrDistAll.length-1)){
+            var GridContainer = document.createElement("div");
+            var GridItem5 = document.createElement("div");
+            GridItem5.className = "grid-item2";
+            var index5 = document.createTextNode("Address");
+            GridItem5.style.fontWeight = "bold";
+            GridItem5.style.fontStyle = "Italic";
+            GridItem5.appendChild(index5);
 
-        console.log("output ", output);
-        
-        console.log("T ARR VALUE ", ArrDistAll[t]);
-        document.getElementById('nearbyListings').innerHTML ='<div class="grid-container2" id = "Listings"><div class="grid-item2"><b><i>Address</b></i></div><div class="grid-item2"><b><i>Asking Price</b></i></div> <div class="grid-item2"><b><i>Details</b></i></div>{% for listing in AllListings %}<div class="grid-item2"><b><i>{{ listing.house_num }} {{ listing.street_name }} {{ listing.state }} </b></i></div><div class="grid-item2"><b><i>{{ listing.asking_price }} </b></i></div><div class="grid-item2"><b><i><form method="POST" action="update/{{ listing.state }}/{{ listing.zip_code }}/{{ listing.city }}/{{ listing.street_name }}/{{ listing.house_num }}">{% csrf_token %}<button type = "Submit" id ="Submit" value="Submit">Details</button></form></b></i></div>{% endfor %}';
+            var GridItem6 = document.createElement("div");
+            GridItem6.className = "grid-item2";
+            var index6 = document.createTextNode("Asking Price");
+            GridItem6.style.fontWeight = "bold";
+            GridItem6.style.fontStyle = "Italic";
+            GridItem6.appendChild(index6);
 
+            var GridItem7 = document.createElement("div");
+            GridItem7.className = "grid-item2";
+            var index7 = document.createTextNode("Distance");
+            GridItem7.style.fontWeight = "bold";
+            GridItem7.style.fontStyle = "Italic";
+            GridItem7.appendChild(index7);
+
+            var GridItem8 = document.createElement("div");
+            GridItem8.className = "grid-item2";
+            var index8 = document.createTextNode("Details");
+            GridItem8.style.fontWeight = "bold";
+            GridItem8.style.fontStyle = "Italic";
+            GridItem8.appendChild(index8);
+
+                GridContainer.appendChild(GridItem5);
+                GridContainer.appendChild(GridItem6);
+                GridContainer.appendChild(GridItem7);
+                GridContainer.appendChild(GridItem8);
+
+           for(var x = 0; x<=output[0].length-1;x++){
+               var DetailUrls = "../listing/"+ListingLink[x][0]+"/"+ListingLink[x][1]+"/"+ListingLink[x][2]+"/"+ListingLink[x][3]+"/"+ListingLink[x][4];
+                var GridItem1 = document.createElement("div");
+                var GridItem2 = document.createElement("div");
+                var GridItem3 = document.createElement("div");
+                var GridItem4 = document.createElement("div");
+
+                GridContainer.className = "grid-container2";
+
+                GridItem1.className = "grid-item2";
+                var index1 = document.createTextNode(output[0][x].Address);
+                GridItem1.appendChild(index1);
+
+                GridItem2.className = "grid-item2";
+                var index2 = document.createTextNode(output[0][x].AskingPrice +"$");
+                GridItem2.appendChild(index2);
+
+
+                GridItem3.className = "grid-item2";
+                      try{
+                        var index3 = document.createTextNode(output[0][x].Distance.toFixed(2) + " Miles");
+                         }
+                     catch (e){
+                         console.log("Error Undefiend Property")
+                        }
+
+                GridItem3.appendChild(index3);
+
+//<div class="grid-item2"><b><i><form method="POST" action="update/{{ listing.state }}/{{ listing.zip_code }}/{{ listing.city }}/{{ listing.street_name }}/{{ listing.house_num }}">{% csrf_token %}<button type = "Submit" id ="Submit" value="Submit">Details</button>
+
+                GridItem4.className = "grid-item2";
+                var button = document.createElement("a");
+                button.href = DetailUrls;  
+                var index4 = document.createTextNode("Details");
+                button.appendChild(index4);
+                GridItem4.appendChild(button);
+
+                GridContainer.appendChild(GridItem1);
+                GridContainer.appendChild(GridItem2);
+                GridContainer.appendChild(GridItem3);
+                GridContainer.appendChild(GridItem4);
+                element.appendChild(GridContainer);
+           }
+       }
+       else{
+           console.log("passed")
+           console.log("passed length: ", ArrDistAll.length + "T Value = " + t)
+       }
+    console.log("ULOC" , Uloc);
         t = t+1;
+        if (t == Listings.length-1){
+            GridContainer.removeChild(GridItem1);
+            GridContainer.removeChild(GridItem2);
+            GridContainer.removeChild(GridItem3);
+            GridContainer.removeChild(GridItem4);
+            element.removeChild("grid-container2");
+        }
+        mymap.flyTo({
+center: requestArr,
+essential: true // this animation is considered essential with respect to prefers-reduced-motion
+});
     })
     })
 
 
 .catch(console.log("fail"))
+
 }
+t= 0;
+
 }
 
-
-
-/*
-console.log("All: " , ArrDistAll);
-console.log("50 Mile Radius: " , ArrDist50);
-console.log("Below 25: " , ArrDist25);
-console.log("Below 10: " , ArrDist10);
-console.log("Filter: " , output)
-*/
 
 function build_listings() {
     document.getElementById('nearbyListings').innerHTML ='<div class="grid-container2" id = "Listings"><div class="grid-item2"><b><i>Address</b></i></div><div class="grid-item2"><b><i>Asking Price</b></i></div> <div class="grid-item2"><b><i>Details</b></i></div>{% for listing in AllListings %}<div class="grid-item2"><b><i>{{ listing.house_num }} {{ listing.street_name }} {{ listing.state }} </b></i></div><div class="grid-item2"><b><i>{{ listing.asking_price }} </b></i></div><div class="grid-item2"><b><i><form method="POST" action="/listing/{{ listing.state }}/{{ listing.zip_code }}/{{ listing.city }}/{{ listing.street_name }}/{{ listing.house_num }}">{% csrf_token %}<button type = "Submit" id ="Submit" value="Submit">Details</button></form></b></i></div>{% endfor %}'
 }
 
-
-
+//map function(go to location user entered)
+/*
 function Flyto() {
     navigator.geolocation.getCurrentPosition(function(position) {
         latit = position.coords.latitude;
@@ -416,6 +388,7 @@ function Flyto() {
         mymap.flyTo(new L.LatLng(latit, longit));
     });
 }
+*/
      </script>
 
 
