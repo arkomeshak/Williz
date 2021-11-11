@@ -45,5 +45,6 @@ urlpatterns = [
     path("listing/update/appraiser/<state>/<zip>/<city>/<street>/<house_num>", views.set_appraiser,
          name="set_appraiser"),
     path("listing/update/appraiser/handler/<state>/<zip>/<city>/<street>/<house_num>", views.set_appraiser_handler,
-         name="set_appraiser")
+         name="set_appraiser"),
+    path("listing/complete/<state>/<zip>/<city>/<street>/<house_num>", views.complete_listing, name="complete")
 ]
