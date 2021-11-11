@@ -294,6 +294,18 @@ Profile CSS
     margin-right: auto;
 }
 
+#ListingMapContainer {
+    width: 100%;
+    height: 80vh;
+    text-align: center;
+    padding-right: 4%
+}
+
+#mymapid {
+    height: 83.5vh;
+    width: 100%;
+}
+
 .grid-container2 {
     display: grid;
     grid-template-columns: 25% 25% 25% 25%;
@@ -312,6 +324,47 @@ Profile CSS
     text-align: center;
 }
 
+.grid-container3 {
+    display: grid;
+    grid-template-columns: 60% 40%;
+}
+
+.SideMap,
+.grid-item3 {
+    border-bottom: 1px solid black;
+}
+
+.SideMap {
+    grid-row-start: span 3;
+    border-right: 1px solid black;
+}
+
+.grid-item3 {
+    text-align: justify;
+    text-justify: auto;
+}
+
+h2.sub2head {
+    grid-column-start: span 4;
+    text-align: center;
+}
+
+.grid-container4 {
+    display: grid;
+    grid-template-columns: 49% 49%;
+    padding: 10px;
+    border: 5px solid black;
+}
+
+.grid-item4 {
+    color: white;
+    border-left: 1px solid rgba(0, 0, 0, 0.8);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.8);
+    padding: 1%;
+    font-size: 20px;
+    text-align: center;
+}
+
 
 /*************************************************************
 Listing CSS
@@ -321,17 +374,34 @@ Listing CSS
     text-transform: none;
 }
 
+#Listing_body.no-caps {
+    text-transform: none;
+}
+
+#Listing_body {
+    background-color: white;
+    background-image: linear-gradient( rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('https://www.wallpapers4u.org/wp-content/uploads/building_house_cottage_style_design_49252_1920x1080.jpg');
+    background-repeat: no-repeat, repeat;
+    font-family: Lato, sans-serif;
+    text-transform: uppercase;
+    background-size: cover;
+    background-attachment: fixed;
+    padding-bottom: 10%;
+    transition: 0.5s;
+}
+
+#MainListingBody {
+    transition: 0.5s;
+}
+
 #listingContainer {
     text-align: center;
-    width: 750px;
+    width: 100%;
     overflow: hidden;
-    margin: auto;
     position: relative;
-    padding: 0 0 1% 0;
     background-color: #3bb7909c;
     background-image: linear-gradient(315deg, #3bb7909c 0%, #0bab639c 74%);
-    border: 5px solid black;
-    border-radius: 15px;
+    border: 1px solid black;
     transition: 0.5s;
 }
 
@@ -380,6 +450,24 @@ input.link-btn {
     background-color: white;
     transition: .3s;
     z-index: 101;
+}
+
+h2.sub2head {
+    color: whitesmoke;
+    text-shadow: 1px 1px 1px #000;
+    font-size: 2em;
+    margin: 0;
+    background-color: rgba(44, 138, 108, 1);
+    /* same color as container bg but only 3/4 as bright and 1005 opaque*/
+    border-top: black;
+    border-bottom: black;
+    border-width: 1px 0 1px 0;
+    border-style: solid;
+    padding: 0 1% 0 1%;
+}
+
+#listingContainer h2.sub2head .top {
+    border-top: 0;
 }
 
 button.link-btn:hover,
