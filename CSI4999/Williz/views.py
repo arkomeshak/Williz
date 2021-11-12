@@ -646,6 +646,7 @@ def appraisal_image_handler(request, **kwargs):
 
     return HttpResponseRedirect(f"/listing/{kwargs['state']}/{kwargs['zip']}/{kwargs['city']}/{kwargs['street']}/{kwargs['house_num']}")
 
+
 def view_apps(request, **kwargs):
     # Check session, if invalid, or no user type redirect home
     valid_session, u_type = check_session(request)
@@ -699,8 +700,10 @@ def app_dl_handler(request, **kwargs):
         .filter(zip_code=int(kwargs["zip"]))
     assert len(listing_set) == 1
     listing = listing_set[0]
-    app_id = request.POST['appraisals']
+    
+    app_id = request.POST["appraisals"]
 
+    copy_pdf(f"Appraisals/{app_id}", f"Appraisals/{app_id}/zipMe", app_id)
     image_copy(f"Appraisals/{app_id}/images", f"Appraisals/{app_id}/zipMe/images", app_id)
 
 # Dan's Views
@@ -1499,6 +1502,23 @@ def pw_validation(pw):
         return False
     else:
         return True
+
+
+def copy_pdf(original_path, zip_path, app_id):
+    """
+        Author: Carson
+        Function which handles the preparation of an appraisal pdf for download
+        :return:
+    """
+
+    path_to_base = join(ROOT_FILES_DIR, original_path)
+    pdf = [f for f in listdir(path_to_base) if f.endswith("pdf")]
+    original_file = join(path_to_base, pdf[0])
+
+    key = Appraisal.objects.get(pk=app_id).enc_key
+    bin_file = decrypt(original_file, key)
+
+    file_writer(bin_file, zip_path, pdf[0].split("_")[1])
 
 
 # Dan's helper functions
