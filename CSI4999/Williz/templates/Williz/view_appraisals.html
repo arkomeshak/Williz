@@ -69,7 +69,7 @@ function closeNav() {
   <div class="dimmer" id = "dimmer"></div>
   <h1 id="mainHeader">View Appraisals</h1>
   <div id="FormCont">
-      <form id="ViewAppraisals" method="POST" action="/listing/update/appraiser/handler/{{state}}/{{zip}}/{{city}}/{{street}}/{{house_num}}">
+      <form id="ViewAppraisals" method="POST" target="_blank" action="/spaps/dl/kwags/{{street}}/{{house_num}}">
         {% csrf_token %}
         {% if has_appraisals is False %}
             <h2 class="subhead">No Appraisals have been submitted!</h2>

@@ -4,6 +4,7 @@ import os
 import random
 import os
 import re
+import shutil
 
 from django.http import request, response, HttpResponse, HttpResponseRedirect
 from django.db import transaction, IntegrityError
@@ -20,12 +21,14 @@ from CSI4999.settings import SECRET_KEY
 # Time and random imports
 from random import choices, seed
 import datetime
-from time import time
+from time import time, sleep
 from os import listdir
-from os.path import join, isdir
+from os.path import join, isdir, basename
 from io import *
 from cryptography.fernet import Fernet
 from zipfile import ZipFile
+import threading
+
 
 """
 ============================================= Constants & Globals ======================================================
@@ -692,19 +695,20 @@ def app_dl_handler(request, **kwargs):
     if not valid_session or u_type == -1:
         return HttpResponseRedirect("/?&status=invalid_session")
 
-    # This looks bad, but filters are lazy, so actually only runs 1 big query with a gnarly where statement
-    listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"])) \
-        .filter(street_name=kwargs["street"].replace("_", " ").strip()) \
-        .filter(city=kwargs["city"].replace("_", " ").strip()) \
-        .filter(state=kwargs["state"].replace("_", " ").strip()) \
-        .filter(zip_code=int(kwargs["zip"]))
-    assert len(listing_set) == 1
-    listing = listing_set[0]
-    
+    # This looks bad :(
     app_id = request.POST["appraisals"]
 
-    copy_pdf(f"Appraisals/{app_id}", f"Appraisals/{app_id}/zipMe", app_id)
-    image_copy(f"Appraisals/{app_id}/images", f"Appraisals/{app_id}/zipMe/images", app_id)
+    copy_pdf(f"Appraisals/{app_id}/", f"Appraisals/{app_id}/zipMe/", app_id)
+    image_copy(f"Appraisals/{app_id}/images/", f"Appraisals/{app_id}/zipMe/images/", app_id)
+    zip_name = f"{kwargs['house_num']}_{kwargs['street']}.zip"
+    zip_file = zip_dir(f"Appraisals/{app_id}/zipMe/", f"Appraisals/{app_id}/", zip_name)
+    clean_thread = threading.Thread(target=clean_up, args=(zip_file, f"Files/Appraisals/{app_id}/zipMe/"))
+    clean_thread.start()  # clock is TICKING BITCH
+
+    f = open(zip_file, 'rb')
+    response = HttpResponse(f, content_type="application/zip")
+    response['Content-Disposition'] = f"attachment; filename={zip_file}"
+    return response
 
 # Dan's Views
 """
@@ -1513,7 +1517,7 @@ def copy_pdf(original_path, zip_path, app_id):
 
     path_to_base = join(ROOT_FILES_DIR, original_path)
     pdf = [f for f in listdir(path_to_base) if f.endswith("pdf")]
-    original_file = join(path_to_base, pdf[0])
+    original_file = join(original_path, pdf[0])
 
     key = Appraisal.objects.get(pk=app_id).enc_key
     bin_file = decrypt(original_file, key)
@@ -1523,30 +1527,67 @@ def copy_pdf(original_path, zip_path, app_id):
 
 # Dan's helper functions
 def load_key():
+    """
+        Author: Dan
+    """
     key = Fernet.generate_key()
     return key
 
 
 def encrypt(binfile, key):
+    """
+        Author: Dan
+    """
     f = Fernet(key)
     encrypted_data = f.encrypt(binfile)
     return encrypted_data
 
 
 def decrypt(filename, key):
+    """
+        Author: Dan
+    """
     f = Fernet(key)
-    with open(filename, "rb") as file:
+    full_file = join(ROOT_FILES_DIR, filename)
+    with open(full_file, "rb") as file:
         encrypted_data = file.read()
     decrypted_data = f.decrypt(encrypted_data)
     return decrypted_data
 
 
 def image_copy(original_path, zipped_path, app_id):
-    image_files = [f for f in listdir(original_path) if f.split(".")[-1] in ("png", "jpg", "jpeg")]
+    """
+        Author: Dan
+    """
+    image_files = [f for f in listdir(join(ROOT_FILES_DIR, original_path)) if f.split(".")[-1] in ("png", "jpg", "jpeg")]
+    print('List dir', listdir(join(ROOT_FILES_DIR, original_path)))
+    print(image_files)
     key = Appraisal.objects.get(pk=app_id).enc_key
     for image in image_files:
+        print(join(original_path, image))
+        #  this is best practice
         bin_file = decrypt(join(original_path, image), key)
         file_writer(bin_file, zipped_path, image.split('_')[1])
+
+
+def zip_dir(dir_path, app_dir, zip_name):
+    """
+        Author: Dan
+    """
+    with ZipFile(join(ROOT_FILES_DIR, app_dir, zip_name), 'w') as zip_ob:
+        for folderName, subfolders, filenames in os.walk(join(ROOT_FILES_DIR, dir_path)):
+            for filename in filenames:
+                file_path = join(folderName, filename)
+                zip_ob.write(file_path, basename(file_path))
+    return join(ROOT_FILES_DIR, app_dir, zip_name)
+
+def clean_up(file_name, temp_dir):
+    """
+        Author: Dan (definitely not Zak and MIKE!! and carson)
+    """
+    sleep(30)
+    os.remove(file_name)
+    shutil.rmtree(temp_dir)
 
 
 # Mike's helper functions
