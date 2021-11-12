@@ -24,6 +24,7 @@ from os import listdir
 from os.path import join, isdir
 from io import *
 from cryptography.fernet import Fernet
+from zipfile import ZipFile
 
 
 """
@@ -426,9 +427,14 @@ def register_user_handler(request):
 
         elif utype == 3:
             ml_name = request.POST["Company"]
-            company = MortgageCo(co_name=ml_name)
-            company.save()  # create company in company table
-            co_id = MortgageCo.objects.last()
+            cos = MortgageCo.objects.filter(co_name=ml_name)
+            if len(cos) == 0:
+                company = MortgageCo(co_name=ml_name)
+                company.save()  # create company in company table
+                co_id = MortgageCo.objects.last()
+            else:
+                co_id = cos[0]
+
             lender = Lender(user_id=u_id,
                             mortgage_co=co_id)
             lender.save()  # save additional info to lender table
@@ -639,6 +645,60 @@ def appraisal_image_handler(request, **kwargs):
     appraisal.save()
 
     return HttpResponseRedirect(f"/listing/{kwargs['state']}/{kwargs['zip']}/{kwargs['city']}/{kwargs['street']}/{kwargs['house_num']}")
+
+def view_apps(request, **kwargs):
+    # Check session, if invalid, or no user type redirect home
+    valid_session, u_type = check_session(request)
+    if not valid_session or u_type == -1:
+        return HttpResponseRedirect("/?&status=invalid_session")
+
+    # This looks bad, but filters are lazy, so actually only runs 1 big query with a gnarly where statement
+    listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"])) \
+        .filter(street_name=kwargs["street"].replace("_", " ").strip()) \
+        .filter(city=kwargs["city"].replace("_", " ").strip()) \
+        .filter(state=kwargs["state"].replace("_", " ").strip()) \
+        .filter(zip_code=int(kwargs["zip"]))
+    assert len(listing_set) == 1
+    listing = listing_set[0]
+
+    app_set = Appraisal.objects.filter(listing=listing)
+
+    has_appraisals = True
+    if len(app_set) == 0:
+        has_appraisals = False
+
+    appraisals = None
+
+    appraisals = [{"id": app.pk, "fname": (User.objects.get(pk=app.appraiser.pk)).f_name.capitalize(),
+                   "lname": (User.objects.get(pk=app.appraiser.pk)).l_name.capitalize()} for app in app_set]
+
+    ctx = {
+        "street": listing.street_name.replace(" ", "_"),
+        "house_num": listing.house_num,
+        "city": listing.city.replace(" ", "_"),
+        "state": listing.state,
+        "zip": listing.zip_code,
+        "has_appraisals": has_appraisals,
+        "app_set": appraisals
+    }
+
+    return render(request, context=ctx, template_name="Williz/view_appraisals.html")
+
+
+def app_dl_handler(request, **kwargs):
+    # Check session, if invalid, or no user type redirect home
+    valid_session, u_type = check_session(request)
+    if not valid_session or u_type == -1:
+        return HttpResponseRedirect("/?&status=invalid_session")
+
+    # This looks bad, but filters are lazy, so actually only runs 1 big query with a gnarly where statement
+    listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"])) \
+        .filter(street_name=kwargs["street"].replace("_", " ").strip()) \
+        .filter(city=kwargs["city"].replace("_", " ").strip()) \
+        .filter(state=kwargs["state"].replace("_", " ").strip()) \
+        .filter(zip_code=int(kwargs["zip"]))
+    assert len(listing_set) == 1
+    listing = listing_set[0]
 
 
 # Dan's Views
