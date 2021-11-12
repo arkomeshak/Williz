@@ -1300,6 +1300,55 @@ def change_verification(request, email):
     response = HttpResponseRedirect(f"/accountRequests")
     return response
 
+def complete_listing(request, **kwargs):
+    """
+            Author: Zak
+            Function which changes an appraisal's status to completed
+            :return: re-renders current page
+    """
+    is_valid, user = check_session(request)
+    for arg_name in ("state", "house_num", "zip", "city", "street"):
+        print(arg_name)
+        assert arg_name in kwargs
+    try:
+        assert is_valid == True
+        listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"])) \
+            .filter(street_name=kwargs["street"].replace("_", " ").strip()) \
+            .filter(city=kwargs["city"].replace("_", " ").strip()) \
+            .filter(state=kwargs["state"].replace("_", " ").strip()) \
+            .filter(zip_code=int(kwargs["zip"]))
+        if len(listing_set) != 1:
+            raise ValueError(f"Found {len(listing_set)} listings, expected to find one.")
+        listing = listing_set[0]
+        if user == 2:
+            user_id = User.objects.get(email=request.session["email"])
+            appraiser = Appraiser.objects.get(user_id=user_id)
+            print(appraiser)
+        appraisal = Appraisal.objects.filter(listing=listing).get(appraiser=appraiser)
+        appraisal.is_complete = True
+        appraisal.save()
+        context = {
+            "city": listing.city,
+            "state": listing.state,
+            "street_num": listing.house_num,
+            "street": listing.street_name,
+            "zip": listing.zip_code,
+            "size": listing.house_size,
+            "prop_size": listing.property_size,
+            "beds": listing.num_beds,
+            "baths": listing.num_baths,
+            "listed_date": listing.list_date,
+            "asking": listing.asking_price,
+            "description": listing.description,
+            "street_url": listing.street_name.replace(" ", "_"),
+            "city_url": listing.city.replace(" ", "_")
+        }
+    except Exception as e:
+        print(f"Exception in listing view: {e}")
+        raise e
+    return HttpResponseRedirect(
+        f"/listing/{context['state']}/{context['zip']}/{context['city_url']}/{context['street_url']}/{context['street_num']}")
+
 
 def updateListing(request, **kwargs):
     """
