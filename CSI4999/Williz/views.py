@@ -3,6 +3,7 @@ import hashlib
 import os
 import random
 import os
+import re
 
 from django.http import request, response, HttpResponse, HttpResponseRedirect
 from django.db import transaction, IntegrityError
@@ -25,7 +26,6 @@ from os.path import join, isdir
 from io import *
 from cryptography.fernet import Fernet
 from zipfile import ZipFile
-
 
 """
 ============================================= Constants & Globals ======================================================
@@ -700,11 +700,11 @@ def app_dl_handler(request, **kwargs):
         .filter(zip_code=int(kwargs["zip"]))
     assert len(listing_set) == 1
     listing = listing_set[0]
-
+    
     app_id = request.POST["appraisals"]
 
     copy_pdf(f"Appraisals/{app_id}", f"Appraisals/{app_id}/zipMe", app_id)
-
+    image_copy(f"Appraisals/{app_id}/images", f"Appraisals/{app_id}/zipMe/images", app_id)
 
 # Dan's Views
 """
@@ -979,7 +979,6 @@ def listing(request, **kwargs):
         elif listing.appraiser is not None and ("appraiser" == CODE_TO_USER_TYPE[user.user_type] and Appraiser.objects.get(
                     user_id=user.pk) == listing.appraiser):
             apps = Appraisal.objects.filter(listing=listing).filter(appraiser=listing.appraiser)
-            print("asdfgasdfgasdgfasgasfasdfasgasgsafsadfasgasfsadfasdfgasgfasgasdgfsadfsagfsag ", len(apps))
             if len(apps) == 0:
                 isAppraiser = True
             elif not apps[0].is_complete:
@@ -1021,8 +1020,8 @@ def listing(request, **kwargs):
                 "realtor_email": realtor_usr.email,
             }
         )
-        # TOOD: Once we have listing images, look for them and add their paths to a list in context
-        context["listing_images"] = []
+        # Every user type gets to see listing images
+        context["listing_images"] = get_listing_images(listing.pk)
     except Exception as e:
         print(f"Exception in listing view: {e}")
         raise e
@@ -1542,6 +1541,14 @@ def decrypt(filename, key):
     return decrypted_data
 
 
+def image_copy(original_path, zipped_path, app_id):
+    image_files = [f for f in listdir(original_path) if f.split(".")[-1] in ("png", "jpg", "jpeg")]
+    key = Appraisal.objects.get(pk=app_id).enc_key
+    for image in image_files:
+        bin_file = decrypt(join(original_path, image), key)
+        file_writer(bin_file, zipped_path, image.split('_')[1])
+
+
 # Mike's helper functions
 @transaction.atomic
 def create_email_verification(email):
@@ -1906,6 +1913,23 @@ def file_writer(binary_file, filepath, filename, key=None):
     # Write to disk
     with open(join(full_path, filename), "wb") as f:
         f.write(data)
+
+
+def get_listing_images(listing_id):
+    """
+    Takes a listing id >= 0 and returns a list of image filepaths associated with the listing. Returns empty list
+    if nothing found.
+    Author: Mike
+    :param listing_id: integer
+    :return: list[str]
+    """
+    img_pattern = re.compile(".+\.(jpg|jpeg|png)")
+    listing_dir = join("./Files/Listings/", str(listing_id))
+    if isdir(listing_dir):
+        return [f"{listing_dir}/{f}" for f in listdir(listing_dir) if img_pattern.fullmatch(f) is not None]
+    print(f"didn't find any listings for filepath: {listing_dir}")
+    return []
+
 
 # Zak's helper functions
 # ...*tumble weed blows in wind*
