@@ -5,6 +5,26 @@
     <title>Williz: Listing {{street_name}}</title>
     <meta http-equiv="x-ua-compatible" content="ie=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+    crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+    integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+    crossorigin=""></script>
+    <link rel="stylesheet" href="https://unpkg.com/esri-leaflet-geocoder@2.3.3/dist/esri-leaflet-geocoder.css"
+    integrity="sha512-IM3Hs+feyi40yZhDH6kV8vQMg4Fh20s9OzInIIAc4nx7aMYMfo+IenRUekoYsHZqGkREUgx0VvlEsgm7nCDW9g=="
+    crossorigin="">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.5.1/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.5.1/mapbox-gl.js"></script>
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css" type="text/css">
+
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-core.js"></script>
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-service.js"></script>
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-ui.js"></script>
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-mapevents.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
     {% load static %}
     <link id="pageStyle" href="{% static 'Williz/main.css' %}" type="text/css" rel="stylesheet" />
       <div id="mySidenav" class="sidenav">
@@ -29,48 +49,94 @@
 
 </head>
 <script>
-function openNav(){document.getElementById("mySidenav").style.width="250px";document.getElementById("main_body").style.marginLeft="250px";document.getElementById("dimmer").style.opacity="0.6";document.getElementById("dimmer").style.zIndex="100"}
+function openNav(){
+document.getElementById("mySidenav").style.width="250px";
+document.getElementById("nav-btn").style.width="250px";
+document.getElementById("MainListingBody").style.marginLeft="250px";
+document.getElementById("dimmer").style.opacity="0.6";
+document.getElementById("dimmer").style.zIndex="100";
+}
 /* Set the width of the side navigation to 0 and the left margin of the page content to 0, and the background color of body to white */
-function closeNav(){document.getElementById("mySidenav").style.width="0";document.getElementById("main_body").style.marginLeft="0";document.getElementById("dimmer").style.opacity="0";document.getElementById("dimmer").style.zIndex="-1"}
-function fnameEdit(){var a=document.getElementsByClassName("fnameInput")[0];if(a.style.display=="none"){a.style.display="block"}else{a.style.display="none"}}
+
+function closeNav(){
+document.getElementById("mySidenav").style.width="0";
+document.getElementById("nav-btn").style.width="0";
+document.getElementById("MainListingBody").style.marginLeft="0";
+document.getElementById("dimmer").style.opacity="0";
+document.getElementById("dimmer").style.zIndex="-1";
+}
+
+function fnameEdit(){
+    var a=document.getElementsByClassName("fnameInput")[0];
+if(a.style.display=="none"){
+    a.style.display="block"
+}else{
+    a.style.display="none"
+    }}
 </script>
 
 <!--Lol Cargo Cult FTW-->
+
+
+<body id = "MainListingBody" style = "margin:0;">
+<div id ="Listing_body" class="no-caps" style = "margin:0;">
 {% load static %}
 <img id = "logo" src="{% static 'Williz/logoWhiteStroke.png' %}" style = "float:right" alt = "Logo">
 <div style = "clear:both"></div>
-
-<body id="main_body", class="no-caps">
-
     <div class="dimmer" id = "dimmer"><p></p></div>
     <h1 id="mainHeader">{{street_num}} {{street}}</h1>
+        </div>
     <div id="listingContainer">
         <div class="disable-upper">
-        <div id = "userInfoContainer" style = "text-align: left;">
+        <div id = "userInfoContainer" >
         <h2 class="subhead">Listing Information</h2>
         <div>
-            <ul>
-                <li><p>City: {{city}}</p></li>
-                <li><p>State: {{state}}</p></li>
-                <li><p>Street Addr: {{street_num}} {{street}}</p></li>
-                <li><p>Zip: {{zip}}</p></li>
-                <li><p>Footage: {{size}} sq-ft</p></li>
-                <li><p>Property Size: {{prop_size}} sq-ft</p></li>
-                <li><p>Beds: {{beds}}</p></li>
-                <li><p>Baths: {{baths}}</p></li>
-                <li><p>Listed on: {{listing_date}}</p></li>
-                <li><p>Asking price: ${{asking}}.00</p></li>
-                <li><p>Description: {{description}}</p></li>
-                <li><p>Realtor: {{realtor_fname}} {{realtor_lname}}</p></li>
-                <li><p>Realtor's email: {{realtor_email}}</p></li>
-            </ul>
-        </div>
+<div class="grid-container3">
+
+  <div class="SideMap">
+  <h2 class="sub2head">Property Map</h2>
+            <div id ="ListingMapContainer">
+            <div id="mymapid"></div> 
+</div>
+  </div>
+
+  <div class="grid-item3">
+            <h2 class="sub2head">Property Location</h2>
+                <p style = "font-size: 170%; padding-left: 2%;"><strong>City: </strong><em>{{city}}</em></p>
+                <p style = "font-size: 170%; padding-left: 2%;"><strong>State:  </strong><em>{{state}} </em></p>
+                <p style = "font-size: 170%; padding-left: 2%;"><strong>Street Address:  </strong><em>{{street_num}}, {{street}} </em></p>
+                <p style = "font-size: 170%; padding-left: 2%;"><strong>Zip:  </strong><em>{{zip}} </em></p>
+                <p style = "font-size: 170%; padding-left: 2%;" ><strong>Full Address:  </strong><em>{{street_num}} {{street}}, {{zip}} {{city}} {{state}} </em></p>
+  </div>
+
+  <div class="grid-item3">
+            <h2 class="sub2head">Property Details</h2>
+                <p style = "font-size: 170%; padding-left: 2%;"><strong>Footage:  </strong><em>{{size}} sq-ft </em></p>
+                <p style = "font-size: 170%; padding-left: 2%;"><strong>Property Size:  </strong><em>{{prop_size}} sq-ft </em></p>
+                <p style = "font-size: 170%; padding-left: 2%;"><strong>Bedrooms:  </strong><em>{{beds}} </em></p>
+                <p style = "font-size: 170%; padding-left: 2%;"><strong>Bathrooms:  </strong><em>{{baths}} </em></p>
+                <p style = "font-size: 170%; padding-left: 2%;"><strong>Description:  </strong><em>{{description}} </em></p>
+  </div>
+
+  <div class="grid-item3">
+            <h2 class="sub2head">Misc. Property Information</h2>
+                <p style = "font-size: 170%; padding-left: 2%;"><strong>Listed on:  </strong><em>{{listing_date}} </em></p>
+                <p style = "font-size: 170%; padding-left: 2%;"><strong>Asking price: </strong> $<em>{{asking}}.00 </em></p>
+                <p style = "font-size: 170%; padding-left: 2%;"><strong>Realtor:  </strong><em>{{realtor_fname}} {{realtor_lname}} </em></p>
+                <p style = "font-size: 170%; padding-left: 2%;"><strong>Realtor's email:  </strong><em> {{realtor_email}} </em></p>
+</div>
+  </div>
+</div>
+
+
+        
+       
         <h2 class="subhead">Listing Images</h2>
                 <div>
                     <ul>
                         {% for image in listing_images %}
                             <!-- TODO: Once we have images, set this for loop up-->
-                            <li><img src="#", alt="listing image"></li>
+                            <li><img src="{% static 'Williz' %}/{{image}}" alt="listing image" width="300" height="300"></li>
                         {% empty %}
                             <li class="no-list-icon notification"><p>Sorry, no listing images have been posted.</p></li>
                         {% endfor %}
@@ -112,5 +178,34 @@ function fnameEdit(){var a=document.getElementsByClassName("fnameInput")[0];if(a
             </div>
         </div>
     </div>
+<script>
+    var pk = 'pk.eyJ1IjoiYXJrMzciLCJhIjoiY2t1bjVyeHFsMHBhZTJ1b3h3czV0MXl6cSJ9.fde6IAv5ibKTxPMIMAX_EQ'
+    mapboxgl.accessToken = pk;
+    const mymap = new mapboxgl.Map({
+    container: 'mymapid',
+    style: 'mapbox://styles/mapbox/streets-v11',
+    zoom: 13
+});
+
+ var Listingloc = "{{street_num}} {{street}}, {{city}} {{state}}";
+console.log(Listingloc);
+axios.get('https://api.mapbox.com/geocoding/v5/mapbox.places/'+ Listingloc + '.json?country=US&access_token=pk.eyJ1IjoiYXJrMzciLCJhIjoiY2t1bjVyeHFsMHBhZTJ1b3h3czV0MXl6cSJ9.fde6IAv5ibKTxPMIMAX_EQ')
+.then(response => {
+        mymap.flyTo(new L.LatLng(response.data.features[0].geometry.coordinates[0], response.data.features[0].geometry.coordinates[1]));
+var target = response.data.features[0].geometry.coordinates;
+mymap.flyTo({
+center: [
+response.data.features[0].geometry.coordinates[0],
+response.data.features[0].geometry.coordinates[1]
+],
+essential: true // this animation is considered essential with respect to prefers-reduced-motion
+});
+new mapboxgl.Marker().setLngLat(target).addTo(mymap);
+
+        console.log(response.data.features[0].geometry.coordinates);
+    })
+.catch(error => {});
+
+</script>
 </body>
 </html>

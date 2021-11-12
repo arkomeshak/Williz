@@ -3,6 +3,7 @@ import hashlib
 import os
 import random
 import os
+import re
 
 from django.http import request, response, HttpResponse, HttpResponseRedirect
 from django.db import transaction, IntegrityError
@@ -974,7 +975,6 @@ def listing(request, **kwargs):
         elif listing.appraiser is not None and ("appraiser" == CODE_TO_USER_TYPE[user.user_type] and Appraiser.objects.get(
                     user_id=user.pk) == listing.appraiser):
             apps = Appraisal.objects.filter(listing=listing).filter(appraiser=listing.appraiser)
-            print("asdfgasdfgasdgfasgasfasdfasgasgsafsadfasgasfsadfasdfgasgfasgasdgfsadfsagfsag ", len(apps))
             if len(apps) == 0:
                 isAppraiser = True
             elif not apps[0].is_complete:
@@ -1016,8 +1016,8 @@ def listing(request, **kwargs):
                 "realtor_email": realtor_usr.email,
             }
         )
-        # TOOD: Once we have listing images, look for them and add their paths to a list in context
-        context["listing_images"] = []
+        # Every user type gets to see listing images
+        context["listing_images"] = get_listing_images(listing.pk)
     except Exception as e:
         print(f"Exception in listing view: {e}")
         raise e
@@ -1884,6 +1884,23 @@ def file_writer(binary_file, filepath, filename, key=None):
     # Write to disk
     with open(join(full_path, filename), "wb") as f:
         f.write(data)
+
+
+def get_listing_images(listing_id):
+    """
+    Takes a listing id >= 0 and returns a list of image filepaths associated with the listing. Returns empty list
+    if nothing found.
+    Author: Mike
+    :param listing_id: integer
+    :return: list[str]
+    """
+    img_pattern = re.compile(".+\.(jpg|jpeg|png)")
+    listing_dir = join("./Files/Listings/", str(listing_id))
+    if isdir(listing_dir):
+        return [f"{listing_dir}/{f}" for f in listdir(listing_dir) if img_pattern.fullmatch(f) is not None]
+    print(f"didn't find any listings for filepath: {listing_dir}")
+    return []
+
 
 # Zak's helper functions
 # ...*tumble weed blows in wind*
