@@ -26,7 +26,6 @@ from io import *
 from cryptography.fernet import Fernet
 from zipfile import ZipFile
 
-
 """
 ============================================= Constants & Globals ======================================================
 """
@@ -699,7 +698,9 @@ def app_dl_handler(request, **kwargs):
         .filter(zip_code=int(kwargs["zip"]))
     assert len(listing_set) == 1
     listing = listing_set[0]
+    app_id = request.POST['appraisals']
 
+    image_copy(f"Appraisals/{app_id}/images", f"Appraisals/{app_id}/zipMe/images", app_id)
 
 # Dan's Views
 """
@@ -1518,6 +1519,14 @@ def decrypt(filename, key):
         encrypted_data = file.read()
     decrypted_data = f.decrypt(encrypted_data)
     return decrypted_data
+
+
+def image_copy(original_path, zipped_path, app_id):
+    image_files = [f for f in listdir(original_path) if f.split(".")[-1] in ("png", "jpg", "jpeg")]
+    key = Appraisal.objects.get(pk=app_id).enc_key
+    for image in image_files:
+        bin_file = decrypt(join(original_path, image), key)
+        file_writer(bin_file, zipped_path, image.split('_')[1])
 
 
 # Mike's helper functions
