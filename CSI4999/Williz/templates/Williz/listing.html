@@ -156,7 +156,10 @@ if(a.style.display=="none"){
                             </a>
                         {% elif isLender is True %}
                             <a href="/listing/update/appraiser/{{state}}/{{zip}}/{{city_url}}/{{street_url}}/{{street_num}}">
-                            <button id="view-Appraisals" class="link-btn" name ="Submit">View Appraisals</button>
+                            <button style="padding: 1em; margin-left: 1em" id="view-Appraisals" class="link-btn" name ="Submit">Set Appraisers</button>
+                            </a>
+                            <a href="/listing/apps/{{state}}/{{zip}}/{{city_url}}/{{street_url}}/{{street_num}}">
+                            <button style="padding: 1em; margin-left: 1em" id="view_apps" class="link-btn" name ="Submit">View Appraisals</button>
                             </a>
                         {% elif isAppraiser is True %}
                             <a href="/listing/upload/pdf/{{state}}/{{zip}}/{{city_url}}/{{street_url}}/{{street_num}}">
@@ -166,7 +169,7 @@ if(a.style.display=="none"){
                             <button style="padding: 1em; margin-left: 1em" id="upload-app-images" class="link-btn" name ="Submit">Upload Appraisal Images</button>
                             </a>
                             <br><br>
-                            <a href="/searchListings">
+                            <a href="/listing/complete/{{state}}/{{zip}}/{{city_url}}/{{street_url}}/{{street_num}}">
                             <button style="padding: 1em" id="submit-app" class="link-btn" name ="Submit">Submit Appraisal</button>
                             </a>
                         {% endif %}

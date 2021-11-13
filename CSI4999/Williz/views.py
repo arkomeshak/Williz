@@ -4,6 +4,7 @@ import os
 import random
 import os
 import re
+import shutil
 
 from django.http import request, response, HttpResponse, HttpResponseRedirect
 from django.db import transaction, IntegrityError
@@ -20,11 +21,13 @@ from CSI4999.settings import SECRET_KEY
 # Time and random imports
 from random import choices, seed
 import datetime
-from time import time
+from time import time, sleep
 from os import listdir
-from os.path import join, isdir
+from os.path import join, isdir, basename
 from io import *
 from cryptography.fernet import Fernet
+from zipfile import ZipFile
+import threading
 
 
 """
@@ -427,9 +430,14 @@ def register_user_handler(request):
 
         elif utype == 3:
             ml_name = request.POST["Company"]
-            company = MortgageCo(co_name=ml_name)
-            company.save()  # create company in company table
-            co_id = MortgageCo.objects.last()
+            cos = MortgageCo.objects.filter(co_name=ml_name)
+            if len(cos) == 0:
+                company = MortgageCo(co_name=ml_name)
+                company.save()  # create company in company table
+                co_id = MortgageCo.objects.last()
+            else:
+                co_id = cos[0]
+
             lender = Lender(user_id=u_id,
                             mortgage_co=co_id)
             lender.save()  # save additional info to lender table
@@ -641,6 +649,66 @@ def appraisal_image_handler(request, **kwargs):
 
     return HttpResponseRedirect(f"/listing/{kwargs['state']}/{kwargs['zip']}/{kwargs['city']}/{kwargs['street']}/{kwargs['house_num']}")
 
+
+def view_apps(request, **kwargs):
+    # Check session, if invalid, or no user type redirect home
+    valid_session, u_type = check_session(request)
+    if not valid_session or u_type == -1:
+        return HttpResponseRedirect("/?&status=invalid_session")
+
+    # This looks bad, but filters are lazy, so actually only runs 1 big query with a gnarly where statement
+    listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"])) \
+        .filter(street_name=kwargs["street"].replace("_", " ").strip()) \
+        .filter(city=kwargs["city"].replace("_", " ").strip()) \
+        .filter(state=kwargs["state"].replace("_", " ").strip()) \
+        .filter(zip_code=int(kwargs["zip"]))
+    assert len(listing_set) == 1
+    listing = listing_set[0]
+
+    app_set = Appraisal.objects.filter(listing=listing)
+
+    has_appraisals = True
+    if len(app_set) == 0:
+        has_appraisals = False
+
+    appraisals = None
+
+    appraisals = [{"id": app.pk, "fname": (User.objects.get(pk=app.appraiser.pk)).f_name.capitalize(),
+                   "lname": (User.objects.get(pk=app.appraiser.pk)).l_name.capitalize()} for app in app_set]
+
+    ctx = {
+        "street": listing.street_name.replace(" ", "_"),
+        "house_num": listing.house_num,
+        "city": listing.city.replace(" ", "_"),
+        "state": listing.state,
+        "zip": listing.zip_code,
+        "has_appraisals": has_appraisals,
+        "app_set": appraisals
+    }
+
+    return render(request, context=ctx, template_name="Williz/view_appraisals.html")
+
+
+def app_dl_handler(request, **kwargs):
+    # Check session, if invalid, or no user type redirect home
+    valid_session, u_type = check_session(request)
+    if not valid_session or u_type == -1:
+        return HttpResponseRedirect("/?&status=invalid_session")
+
+    # This looks bad :(
+    app_id = request.POST["appraisals"]
+
+    copy_pdf(f"Appraisals/{app_id}/", f"Appraisals/{app_id}/zipMe/", app_id)
+    image_copy(f"Appraisals/{app_id}/images/", f"Appraisals/{app_id}/zipMe/images/", app_id)
+    zip_name = f"{kwargs['house_num']}_{kwargs['street']}.zip"
+    zip_file = zip_dir(f"Appraisals/{app_id}/zipMe/", f"Appraisals/{app_id}/", zip_name)
+    clean_thread = threading.Thread(target=clean_up, args=(zip_file, f"Files/Appraisals/{app_id}/zipMe/"))
+    clean_thread.start()  # clock is TICKING BITCH
+
+    f = open(zip_file, 'rb')
+    response = HttpResponse(f, content_type="application/zip")
+    response['Content-Disposition'] = f"attachment; filename={zip_file}"
+    return response
 
 # Dan's Views
 """
@@ -1240,6 +1308,55 @@ def change_verification(request, email):
     response = HttpResponseRedirect(f"/accountRequests")
     return response
 
+def complete_listing(request, **kwargs):
+    """
+            Author: Zak
+            Function which changes an appraisal's status to completed
+            :return: re-renders current page
+    """
+    is_valid, user = check_session(request)
+    for arg_name in ("state", "house_num", "zip", "city", "street"):
+        print(arg_name)
+        assert arg_name in kwargs
+    try:
+        assert is_valid == True
+        listing_set = Listing.objects.filter(house_num=int(kwargs["house_num"])) \
+            .filter(street_name=kwargs["street"].replace("_", " ").strip()) \
+            .filter(city=kwargs["city"].replace("_", " ").strip()) \
+            .filter(state=kwargs["state"].replace("_", " ").strip()) \
+            .filter(zip_code=int(kwargs["zip"]))
+        if len(listing_set) != 1:
+            raise ValueError(f"Found {len(listing_set)} listings, expected to find one.")
+        listing = listing_set[0]
+        if user == 2:
+            user_id = User.objects.get(email=request.session["email"])
+            appraiser = Appraiser.objects.get(user_id=user_id)
+            print(appraiser)
+        appraisal = Appraisal.objects.filter(listing=listing).get(appraiser=appraiser)
+        appraisal.is_complete = True
+        appraisal.save()
+        context = {
+            "city": listing.city,
+            "state": listing.state,
+            "street_num": listing.house_num,
+            "street": listing.street_name,
+            "zip": listing.zip_code,
+            "size": listing.house_size,
+            "prop_size": listing.property_size,
+            "beds": listing.num_beds,
+            "baths": listing.num_baths,
+            "listed_date": listing.list_date,
+            "asking": listing.asking_price,
+            "description": listing.description,
+            "street_url": listing.street_name.replace(" ", "_"),
+            "city_url": listing.city.replace(" ", "_")
+        }
+    except Exception as e:
+        print(f"Exception in listing view: {e}")
+        raise e
+    return HttpResponseRedirect(
+        f"/listing/{context['state']}/{context['zip']}/{context['city_url']}/{context['street_url']}/{context['street_num']}")
+
 
 def updateListing(request, **kwargs):
     """
@@ -1391,24 +1508,86 @@ def pw_validation(pw):
         return True
 
 
+def copy_pdf(original_path, zip_path, app_id):
+    """
+        Author: Carson
+        Function which handles the preparation of an appraisal pdf for download
+        :return:
+    """
+
+    path_to_base = join(ROOT_FILES_DIR, original_path)
+    pdf = [f for f in listdir(path_to_base) if f.endswith("pdf")]
+    original_file = join(original_path, pdf[0])
+
+    key = Appraisal.objects.get(pk=app_id).enc_key
+    bin_file = decrypt(original_file, key)
+
+    file_writer(bin_file, zip_path, pdf[0].split("_")[1])
+
+
 # Dan's helper functions
 def load_key():
+    """
+        Author: Dan
+    """
     key = Fernet.generate_key()
     return key
 
 
 def encrypt(binfile, key):
+    """
+        Author: Dan
+    """
     f = Fernet(key)
     encrypted_data = f.encrypt(binfile)
     return encrypted_data
 
 
 def decrypt(filename, key):
+    """
+        Author: Dan
+    """
     f = Fernet(key)
-    with open(filename, "rb") as file:
+    full_file = join(ROOT_FILES_DIR, filename)
+    with open(full_file, "rb") as file:
         encrypted_data = file.read()
     decrypted_data = f.decrypt(encrypted_data)
     return decrypted_data
+
+
+def image_copy(original_path, zipped_path, app_id):
+    """
+        Author: Dan
+    """
+    image_files = [f for f in listdir(join(ROOT_FILES_DIR, original_path)) if f.split(".")[-1] in ("png", "jpg", "jpeg")]
+    print('List dir', listdir(join(ROOT_FILES_DIR, original_path)))
+    print(image_files)
+    key = Appraisal.objects.get(pk=app_id).enc_key
+    for image in image_files:
+        print(join(original_path, image))
+        #  this is best practice
+        bin_file = decrypt(join(original_path, image), key)
+        file_writer(bin_file, zipped_path, image.split('_')[1])
+
+
+def zip_dir(dir_path, app_dir, zip_name):
+    """
+        Author: Dan
+    """
+    with ZipFile(join(ROOT_FILES_DIR, app_dir, zip_name), 'w') as zip_ob:
+        for folderName, subfolders, filenames in os.walk(join(ROOT_FILES_DIR, dir_path)):
+            for filename in filenames:
+                file_path = join(folderName, filename)
+                zip_ob.write(file_path, basename(file_path))
+    return join(ROOT_FILES_DIR, app_dir, zip_name)
+
+def clean_up(file_name, temp_dir):
+    """
+        Author: Dan (definitely not Zak and MIKE!! and carson)
+    """
+    sleep(30)
+    os.remove(file_name)
+    shutil.rmtree(temp_dir)
 
 
 # Mike's helper functions
