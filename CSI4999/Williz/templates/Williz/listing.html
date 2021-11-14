@@ -73,6 +73,12 @@ if(a.style.display=="none"){
 }else{
     a.style.display="none"
     }}
+
+
+
+
+
+
 </script>
 
 <!--Lol Cargo Cult FTW-->
@@ -86,7 +92,7 @@ if(a.style.display=="none"){
     <div class="dimmer" id = "dimmer"><p></p></div>
     <h1 id="mainHeader">{{street_num}} {{street}}</h1>
         </div>
-    <div id="listingContainer">
+    <div id="listingContainer1">
         <div class="disable-upper">
         <div id = "userInfoContainer" >
         <h2 class="subhead">Listing Information</h2>
@@ -133,14 +139,13 @@ if(a.style.display=="none"){
        
         <h2 class="subhead">Listing Images</h2>
                 <div>
-                    <ul>
+
                         {% for image in listing_images %}
                             <!-- TODO: Once we have images, set this for loop up-->
-                            <li><img src="{% static 'Williz' %}/{{image}}" alt="listing image" width="300" height="300"></li>
+                            <img src="{% static 'Williz' %}/{{image}}" alt="listing image" class = "ListImgs" id = "listingImgs">
                         {% empty %}
-                            <li class="no-list-icon notification"><p>Sorry, no listing images have been posted.</p></li>
+                            <p class="no-list-icon notification">Sorry, no listing images have been posted.</p>
                         {% endfor %}
-                    </ul>
         <h2 style="margin-bottom: .5em" class="subhead">Options</h2>
                     <div class="center-align">
                         {% if isCreator is True %}
