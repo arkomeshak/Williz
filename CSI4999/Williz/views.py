@@ -166,7 +166,8 @@ def profile(request, email):
             'state': realtor.lic_state,
             'license_num': realtor.lic_num,
             'bank': 'N/A',
-            "states": [{"stat": k, "abbr": v} for k, v in STATE_NAMES.items()]
+            "states": [{"stat": k, "abbr": v} for k, v in STATE_NAMES.items()],
+            "is_realtor": True
         }
     elif user.user_type == 2:
         appraiser = Appraiser.objects.get(user_id=user.user_id)
@@ -178,7 +179,8 @@ def profile(request, email):
             'state': appraiser.lic_state,
             'license_num': appraiser.lic_num,
             'bank': 'N/A',
-            "states": [{"stat": k, "abbr": v} for k, v in STATE_NAMES.items()]
+            "states": [{"stat": k, "abbr": v} for k, v in STATE_NAMES.items()],
+            "is_realtor": False
         }
     elif user.user_type == 3:
         lender = Lender.objects.get(user_id=user.user_id)
@@ -190,7 +192,8 @@ def profile(request, email):
             'state': 'N/A',
             'license_num': 'N/A',
             'bank': lender.mortgage_co.co_name,
-            "states": [{"stat": k, "abbr": v} for k, v in STATE_NAMES.items()]
+            "states": [{"stat": k, "abbr": v} for k, v in STATE_NAMES.items()],
+            "is_realtor": False
         }
     return render(request, 'Williz/profile.html', context)
 
