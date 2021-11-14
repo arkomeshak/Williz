@@ -1293,7 +1293,7 @@ def edit_user_info(request):
             lender.mortgage_co = request.POST['CompanyInput']
         user.save()
         lender.save()
-    return HttpResponseRedirect("/searchListings")
+    return HttpResponseRedirect(f"/profile/email/{user.email}")
 
 
 def change_verification(request, email):
