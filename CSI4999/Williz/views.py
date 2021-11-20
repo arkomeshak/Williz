@@ -23,7 +23,7 @@ from random import choices, seed
 import datetime
 from time import time, sleep
 from os import listdir
-from os.path import join, isdir, basename
+from os.path import join, isdir, basename, isfile
 from io import *
 from cryptography.fernet import Fernet
 from zipfile import ZipFile
@@ -705,12 +705,16 @@ def app_dl_handler(request, **kwargs):
     image_copy(f"Appraisals/{app_id}/images/", f"Appraisals/{app_id}/zipMe/images/", app_id)
     zip_name = f"{kwargs['house_num']}_{kwargs['street']}.zip"
     zip_file = zip_dir(f"Appraisals/{app_id}/zipMe/", f"Appraisals/{app_id}/", zip_name)
-    clean_thread = threading.Thread(target=clean_up, args=(zip_file, f"Files/Appraisals/{app_id}/zipMe/"))
-    clean_thread.start()  # clock is TICKING BITCH
-
+    # Prepare the response to send the zip
     f = open(zip_file, 'rb')
     response = HttpResponse(f, content_type="application/zip")
     response['Content-Disposition'] = f"attachment; filename={zip_file}"
+    # Make a lock on the response until it's sent
+    res_lock = threading.Lock()
+    t_args = (zip_file, f"Files/Appraisals/{app_id}/zipMe/", response, res_lock)
+    with res_lock:
+        clean_thread = threading.Thread(target=clean_up, args=t_args)
+        clean_thread.start()  # clock is TICKING BITCH
     return response
 
 # Dan's Views
@@ -1584,13 +1588,22 @@ def zip_dir(dir_path, app_dir, zip_name):
                 zip_ob.write(file_path, basename(file_path))
     return join(ROOT_FILES_DIR, app_dir, zip_name)
 
-def clean_up(file_name, temp_dir):
+
+def clean_up(file_name, temp_dir, response, response_lock):
     """
         Author: Dan (definitely not Zak and MIKE!! and carson)
     """
-    sleep(30)
-    os.remove(file_name)
-    shutil.rmtree(temp_dir)
+    with response_lock:  # Wait on lock till view has returned the response
+        while isdir(temp_dir) or isfile(file_name):
+            try:
+                if not response.closed:  # don't delete until WSGI is done responding
+                    continue
+                os.remove(file_name)
+                shutil.rmtree(temp_dir)
+            except OSError as e:
+                print(f"OSError while cleaning up {file_name} {e}")
+            except IOError as e:
+                print(f"OSError while cleaning up {temp_dir} {e}")
 
 
 # Mike's helper functions
