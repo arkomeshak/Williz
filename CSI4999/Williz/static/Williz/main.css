@@ -405,6 +405,17 @@ Listing CSS
     transition: 0.5s;
 }
 
+#ProfContainer {
+    text-align: center;
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+    background-color: #3bb7909c;
+    background-image: linear-gradient(315deg, #3bb7909c 0%, #0bab639c 74%);
+    border: 1px solid black;
+    transition: 0.5s;
+}
+
 ul li.no-list-icon {
     list-style-type: none;
     padding: 0;
@@ -564,7 +575,7 @@ Images
 */
 
 #listingImgs {
-    height: 20%;
+    height: 200px;
     width: 20%;
     object-fit: cover;
     transition: .5s;
@@ -578,4 +589,66 @@ Images
     /* or some other value */
     transform: scale(1.25);
     transition: .5s;
+}
+
+.ProfInput {
+    width: 50%;
+    height: 30px;
+    border-radius: 7px;
+    padding-left: 8px;
+    z-index: 101;
+    transition: .5s;
+}
+
+.ProfInput:focus {
+    border-radius: 10px;
+    background-color: #29e49c9c;
+    transition: .5s;
+}
+
+.ProfSelect {
+    width: 50%;
+    height: 30px;
+    border-radius: 7px;
+    padding-left: 8px;
+    z-index: 101;
+    transition: .5s;
+}
+
+.ProfSelect:focus {
+    border-radius: 10px;
+    background-color: #29e49c9c;
+    transition: .5s;
+}
+
+.grid-container5 {
+    display: grid;
+    grid-template-columns: 49% 49%;
+    padding: 10px;
+    border: 5px solid black;
+}
+
+.grid-item5 {
+    color: white;
+    border-left: 1px solid rgba(0, 0, 0, 0.8);
+    font-size: 20px;
+    text-align: center;
+}
+
+.ProfLabels {
+    font-size: 2vh;
+}
+
+.SidePicture {
+    grid-row-start: span 8;
+    border-left: 1px solid black;
+    border-right: 1px solid black;
+}
+
+.ProfPic {
+    height: 55vh;
+}
+
+.ProfPicCont {
+    text-align: center;
 }

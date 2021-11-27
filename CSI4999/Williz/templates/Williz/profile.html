@@ -36,8 +36,8 @@
 function openNav() {
 
     document.getElementById("mySidenav").style.width = "250px";
-    document.getElementById("main_body").style.marginLeft = "250px";
-
+    document.getElementById("MainListingBody").style.marginLeft = "250px";
+document.getElementById("nav-btn").style.width="250px";
  document.getElementById("dimmer").style.opacity = "0.6"
  document.getElementById("dimmer").style.zIndex = "100";
 }
@@ -45,7 +45,8 @@ function openNav() {
 /* Set the width of the side navigation to 0 and the left margin of the page content to 0, and the background color of body to white */
 function closeNav() {
      document.getElementById("mySidenav").style.width = "0";
-      document.getElementById("main_body").style.marginLeft = "0";
+      document.getElementById("MainListingBody").style.marginLeft = "0";
+      document.getElementById("nav-btn").style.width="0";
         document.getElementById("dimmer").style.opacity = "0"
         document.getElementById("dimmer").style.zIndex = "-1";
 
@@ -80,19 +81,21 @@ function deleteUserAccount(user_id){
     }
 }
 </script>
+
+
+
+<body id = "MainListingBody" style = "margin:0;">
+<div id ="Listing_body" class="no-caps" style = "margin:0;     background-image: linear-gradient( rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('https://visme.co/blog/wp-content/uploads/2020/06/how-to-use-stock-photos-of-people-go-for-the-team.jpg');">
 {% load static %}
           <img id = "logo" src="{% static 'Williz/logoWhiteStroke.png' %}" style = "float:right" alt = "Logo">
-
-
 <div style = "clear:both"></div>
 
-
-  <body id="main_body">
     <div class="dimmer" id = "dimmer"></div>
 
 
     <h1 id="mainHeader">Profile</h1>
-    <div id = "profileContainer">
+    </div>
+    <div id = "ProfContainer">
 {#    <div id = "imgContainer">#}
 {#    <img id = "userImg" name = "img" src = "https://i.pinimg.com/564x/e7/10/54/e710544ab2db28a6217d4a04bfeea9c0.jpg">#}
 {#    </div>#}
@@ -100,26 +103,37 @@ function deleteUserAccount(user_id){
     <div id = "userInfoContainer" style = "text-align: left;">
     <form action="../edit_user_info" method="POST">
         {% csrf_token %}
-    <label style = "white-space: pre;"><b>First Name:   </b></label> 
-    <label id ="fname" name = "fname"><i>{{f_name}}</i></label></br>
-    <input class = "FormInput" name = "fnameInput" id = "fnameInput" placeholder={{f_name}}>
-    </br>
+        <div class="grid-container5">
+    <div class="grid-item5" style = "border-bottom: 1px solid black">
+       <h2 class="sub2head">Edit Profile</h2> 
+     </div>
+    <div class="grid-item5" style = "border-bottom: 1px solid black">
+         <h2 class="sub2head">  Picture </h2>
+     </div>
+  <div class="grid-item5"> 
+    <label id ="fname" name = "fname" class = "ProfLabels"><b style = "white-space: pre-wrap; font-size: 3vh">First Name:   </b><i>{{f_name}}</i></label></br>
+       <input class = "ProfInput" name = "fnameInput" id = "fnameInput" placeholder={{f_name}}>
+  </div>
+  <div class="SidePicture">   
+       <div class = "ProfPicCont">
+            <img src = "https://www.pikpng.com/pngl/b/552-5529288_tie-user-default-suit-business-contact-comments-icon.png" class = "ProfPic">
+           </br><label class = "ProfLabels"><b><a href="">Edit</a></b></label>
+       </div> 
+  </div>
+  <div class="grid-item5">
+      <label id ="lname" name = "lname" class = "ProfLabels"><b>Last Name:   </b><i>{{l_name}}</i></label></br>
+    <input class = "ProfInput" name = "lnameInput" id = "lnameInput" placeholder={{l_name}}>
+  </div>
 
+  <div class="grid-item5">   
+    <label id ="email" name = "email" class = "ProfLabels"><b>Email:   </b><i>{{email}}</i></label></br>
+    <input class = "ProfInput" name = "emailInput" class = "emailInput" placeholder={{email}}>
+  </div>
 
-
-    <label style = "white-space: pre;"><b>Last Name:   </b></label>
-    <label id ="lname" name = "lname"><i>{{l_name}}</i></label></br>
-    <input class = "FormInput" name = "lnameInput" id = "lnameInput" placeholder={{l_name}}>
-    </br>
-
-    <label style = "white-space: pre;"><b>Email:   </b></label>
-    <label id ="email" name = "email"><i>{{email}}</i></label></br>
-    <input class = "FormInput" name = "emailInput" class = "emailInput" placeholder={{email}}>
-    </br>
-
-    <label style = "white-space: pre;"><b>State:   </b></label>
-    <label id ="State" name = "State"><i>{{state}}</i></label></br>
-<select name="state" id = "state" class = "FormInput" placeholder={{state}}>
+  <div class="grid-item5">
+    <label id ="State" name = "State" class = "ProfLabels"><b>State:   </b><i>{{state}}</i></label></br>
+    <div align="center">
+<select name="state" id = "state" class = "ProfSelect" placeholder={{state}}>
 <option value="" selected>Please Select</option>
         {% for stat in states %}
             {% if state == stat.abbr %}
@@ -129,19 +143,38 @@ function deleteUserAccount(user_id){
             {% endif %}
         {% endfor %}
 </select>
+</div>
+  </div>
 
+  <div class="grid-item5">
+    <label id ="State" name = "State" class = "ProfLabels"><b>State:   </b><i>{{state}}</i></label></br>
+    <div align="center">
+<select name="state" id = "state" class = "ProfInput" placeholder={{state}}>
+<option value="" selected>Please Select</option>
+        {% for stat in states %}
+            {% if state == stat.abbr %}
+            <option value="{{stat.abbr}}" selected>{{stat.stat}}</option>
+            {% else %}
+            <option value="{{stat.abbr}}">{{stat.stat}}</option>
+            {% endif %}
+        {% endfor %}
+</select>
+</div>
 
-    <label style = "white-space: pre;"><b>License Number:   </b></label>
-    <label id ="licenseNumber" name = "licenseNumber"><i>{{license_num}}</i></label></br>
-    <input class = "FormInput" name = "LicenseInput" id = "LicenseInput" placeholder={{license_num}}>
-    </br>
+  </div>
 
-    <label style = "white-space: pre;"><b>Mortgage Company:   </b></label>
-        <label id ="MortgageCompany" name = "MortgageCompany"><i>{{bank}}</i></label></br>
-    <input class = "FormInput" name = "CompanyInput" id = "CompanyInput" placeholder={{bank}}>
-    </br>
-    </br>
-    <button type = "Submit" id ="Submit" name ="Save" value="Submit">Save</button>
+    <div class="grid-item5"> 
+    <label id ="licenseNumber" name = "licenseNumber" class = "ProfLabels"><b>License Number:   </b><i>{{license_num}}</i></label></br>
+    <input class = "ProfInput" name = "LicenseInput" id = "LicenseInput" placeholder={{license_num}}>
+    </div>
+
+          <div class="grid-item5">
+        <label id ="MortgageCompany" name = "MortgageCompany" class = "ProfLabels"><b>Mortgage Company:   </b><i>{{bank}}</i></label></br>
+    <input class = "ProfInput" name = "CompanyInput" id = "CompanyInput" placeholder={{bank}}>
+     </div>
+
+               <div class="grid-item5">
+             <button type = "Submit" id ="Submit" name ="Save" value="Submit">Save</button>
         <input style="visibility: hidden" class="FormInput" name="user_id" value={{user_id}}/>
     </form>
         <form method="POST" action="../../createListing/email/{{email}}">
@@ -154,6 +187,28 @@ function deleteUserAccount(user_id){
         </form>
             {% endif %}
         <button type="Submit" id="Submit" value="Delete" onclick="deleteUserAccount('{{user_id}}')">Delete Account</button>
+     </div>
+
+</div>
+
+
+    </br>
+
+    </br>
+
+
+    </br>
+
+
+
+
+   
+    </br>
+
+    
+    </br>
+    </br>
+
 
 
     </div>
