@@ -133,22 +133,6 @@ function deleteUserAccount(user_id){
   <div class="grid-item5">
     <label id ="State" name = "State" class = "ProfLabels"><b>State:   </b><i>{{state}}</i></label></br>
     <div align="center">
-<select name="state" id = "state" class = "ProfSelect" placeholder={{state}}>
-<option value="" selected>Please Select</option>
-        {% for stat in states %}
-            {% if state == stat.abbr %}
-            <option value="{{stat.abbr}}" selected>{{stat.stat}}</option>
-            {% else %}
-            <option value="{{stat.abbr}}">{{stat.stat}}</option>
-            {% endif %}
-        {% endfor %}
-</select>
-</div>
-  </div>
-
-  <div class="grid-item5">
-    <label id ="State" name = "State" class = "ProfLabels"><b>State:   </b><i>{{state}}</i></label></br>
-    <div align="center">
 <select name="state" id = "state" class = "ProfInput" placeholder={{state}}>
 <option value="" selected>Please Select</option>
         {% for stat in states %}
@@ -171,22 +155,22 @@ function deleteUserAccount(user_id){
           <div class="grid-item5">
         <label id ="MortgageCompany" name = "MortgageCompany" class = "ProfLabels"><b>Mortgage Company:   </b><i>{{bank}}</i></label></br>
     <input class = "ProfInput" name = "CompanyInput" id = "CompanyInput" placeholder={{bank}}>
-     </div>
+     </div> </br>
 
                <div class="grid-item5">
-             <button type = "Submit" id ="Submit" name ="Save" value="Submit">Save</button>
+             <button type = "Submit" id ="Submit" name ="Save" value="Submit" class = "btn-Prof">Save</button>
         <input style="visibility: hidden" class="FormInput" name="user_id" value={{user_id}}/>
     </form>
         <form method="POST" action="../../createListing/email/{{email}}">
             {% csrf_token %}
            {%if is_realtor %}
-            <button type = "Submit" id ="Submit" value="Submit">Create Listing</button>
+            <button type = "Submit" id ="Submit" value="Submit" class = "btn-Prof">Create Listing</button>
 
         </form></br></br>
             {% else %}
         </form>
             {% endif %}
-        <button type="Submit" id="Submit" value="Delete" onclick="deleteUserAccount('{{user_id}}')">Delete Account</button>
+        <button type="Submit" id="Submit" value="Delete" onclick="deleteUserAccount('{{user_id}}')" class = "btn-Prof">Delete Account</button>
      </div>
 
 </div>
