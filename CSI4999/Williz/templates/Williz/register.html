@@ -121,6 +121,7 @@ function RAshowHide() {
 
 
     <form id="RegisterForm" method="POST" action="../register_user_handler/">
+      <div align="center">
         {% csrf_token %}
 <div id = "RadioContainor">
 <h3>Please indicate what Role you are registering for.</h3>
@@ -167,7 +168,7 @@ function RAshowHide() {
         <label id="LabelLicense" ><b>License Number</b>    
         </label>    
         <input type="text" name="License" id="License" class = "FormInput" placeholder="License Number" required>    
-        <br><br> 
+        <br>
 
         <label id="LabelState" ><b>State</b>    
         </label>    
@@ -187,6 +188,7 @@ function RAshowHide() {
 
          <button type = "Submit" id ="Submit" name ="Submit" value="Submit">Submit</button>      
         <br><br>    
+        </div>
     </form>     
 </div>
 
