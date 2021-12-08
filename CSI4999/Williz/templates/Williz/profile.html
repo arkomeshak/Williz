@@ -5,7 +5,7 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title></title>
+    <title>Williz User Profile</title>
     {% load static %}
     <link id="pageStyle" href="{% static 'Williz/main.css' %}" type="text/css" rel="stylesheet" />
       <div id="mySidenav" class="sidenav">
@@ -84,23 +84,23 @@ function deleteUserAccount(user_id){
 
 
 
-<body id = "MainListingBody" style = "margin:0;">
-<div id ="Listing_body" class="no-caps" style = "margin:0;     background-image: linear-gradient( rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('https://visme.co/blog/wp-content/uploads/2020/06/how-to-use-stock-photos-of-people-go-for-the-team.jpg');">
+<body id="MainListingBody" style = "margin:0;">
+<div id="Listing_body" class="no-caps" style = "margin:0;     background-image: linear-gradient( rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('https://visme.co/blog/wp-content/uploads/2020/06/how-to-use-stock-photos-of-people-go-for-the-team.jpg');">
 {% load static %}
-          <img id = "logo" src="{% static 'Williz/logoWhiteStroke.png' %}" style = "float:right" alt = "Logo">
+          <img id="logo" src="{% static 'Williz/logoWhiteStroke.png' %}" style = "float:right" alt = "Logo">
 <div style = "clear:both"></div>
 
-    <div class="dimmer" id = "dimmer"></div>
+    <div class="dimmer" id="dimmer"></div>
 
 
     <h1 id="mainHeader">Profile</h1>
     </div>
-    <div id = "ProfContainer">
-{#    <div id = "imgContainer">#}
-{#    <img id = "userImg" name = "img" src = "https://i.pinimg.com/564x/e7/10/54/e710544ab2db28a6217d4a04bfeea9c0.jpg">#}
+    <div id="ProfContainer">
+{#    <div id="imgContainer">#}
+{#    <img id="userImg" name = "img" src = "https://i.pinimg.com/564x/e7/10/54/e710544ab2db28a6217d4a04bfeea9c0.jpg">#}
 {#    </div>#}
 
-    <div id = "userInfoContainer" style = "text-align: left;">
+    <div id="userInfoContainer" style = "text-align: left;">
     <form action="../edit_user_info" method="POST">
         {% csrf_token %}
         <div class="grid-container5">
@@ -111,29 +111,29 @@ function deleteUserAccount(user_id){
          <h2 class="sub2head">  Picture </h2>
      </div>
   <div class="grid-item5"> 
-    <label id ="fname" name = "fname" class = "ProfLabels"><b style = "white-space: pre-wrap; font-size: 3vh">First Name:   </b><i>{{f_name}}</i></label></br>
-       <input class = "ProfInput" name = "fnameInput" id = "fnameInput" placeholder={{f_name}}>
+    <label id="fname" name = "fname" class = "ProfLabels"><b style = "white-space: pre-wrap; font-size: 3vh">First Name:   </b><i>{{f_name}}</i></label><br>
+       <input class = "ProfInput" name = "fnameInput" id="fnameInput" placeholder={{f_name}}>
   </div>
   <div class="SidePicture">   
        <div class = "ProfPicCont">
             <img src = "https://www.pikpng.com/pngl/b/552-5529288_tie-user-default-suit-business-contact-comments-icon.png" class = "ProfPic">
-           </br><label class = "ProfLabels"><b><a href="">Edit</a></b></label>
+           <br><label class = "ProfLabels"><b><a href="">Edit</a></b></label>
        </div> 
   </div>
   <div class="grid-item5">
-      <label id ="lname" name = "lname" class = "ProfLabels"><b>Last Name:   </b><i>{{l_name}}</i></label></br>
-    <input class = "ProfInput" name = "lnameInput" id = "lnameInput" placeholder={{l_name}}>
+      <label id="lname" name = "lname" class = "ProfLabels"><b>Last Name:   </b><i>{{l_name}}</i></label><br>
+    <input class = "ProfInput" name = "lnameInput" id="lnameInput" placeholder={{l_name}}>
   </div>
 
   <div class="grid-item5">   
-    <label id ="email" name = "email" class = "ProfLabels"><b>Email:   </b><i>{{email}}</i></label></br>
+    <label id="email" name = "email" class = "ProfLabels"><b>Email:   </b><i>{{email}}</i></label><br>
     <input class = "ProfInput" name = "emailInput" class = "emailInput" placeholder={{email}}>
   </div>
 
   <div class="grid-item5">
-    <label id ="State" name = "State" class = "ProfLabels"><b>State:   </b><i>{{state}}</i></label></br>
+    <label id="State" name = "State" class = "ProfLabels"><b>State:   </b><i>{{state}}</i></label><br>
     <div align="center">
-<select name="state" id = "state" class = "ProfInput" placeholder={{state}}>
+<select name="state" id="state" class = "ProfSelect" placeholder={{state}}>
 <option value="" selected>Please Select</option>
         {% for stat in states %}
             {% if state == stat.abbr %}
@@ -144,21 +144,20 @@ function deleteUserAccount(user_id){
         {% endfor %}
 </select>
 </div>
-
   </div>
 
     <div class="grid-item5"> 
-    <label id ="licenseNumber" name = "licenseNumber" class = "ProfLabels"><b>License Number:   </b><i>{{license_num}}</i></label></br>
+    <label id ="licenseNumber" name = "licenseNumber" class = "ProfLabels"><b>License Number:   </b><i>{{license_num}}</i></label><br>
     <input class = "ProfInput" name = "LicenseInput" id = "LicenseInput" placeholder={{license_num}}>
     </div>
 
           <div class="grid-item5">
-        <label id ="MortgageCompany" name = "MortgageCompany" class = "ProfLabels"><b>Mortgage Company:   </b><i>{{bank}}</i></label></br>
+        <label id ="MortgageCompany" name = "MortgageCompany" class = "ProfLabels"><b>Mortgage Company:   </b><i>{{bank}}</i></label><br>
     <input class = "ProfInput" name = "CompanyInput" id = "CompanyInput" placeholder={{bank}}>
-     </div> </br>
-
-               <div class="grid-item5">
-             <button type = "Submit" id ="Submit" name ="Save" value="Submit" class = "btn-Prof">Save</button>
+     </div>
+    <br>
+    <div class="grid-item5">
+             <button type = "Submit" id ="Submit" name ="Save" value="Submit">Save</button>
         <input style="visibility: hidden" class="FormInput" name="user_id" value={{user_id}}/>
     </form>
         <form method="POST" action="../../createListing/email/{{email}}">
@@ -166,7 +165,7 @@ function deleteUserAccount(user_id){
            {%if is_realtor %}
             <button type = "Submit" id ="Submit" value="Submit" class = "btn-Prof">Create Listing</button>
 
-        </form></br></br>
+        </form><br><br>
             {% else %}
         </form>
             {% endif %}
@@ -174,28 +173,13 @@ function deleteUserAccount(user_id){
      </div>
 
 </div>
-
-
-    </br>
-
-    </br>
-
-
-    </br>
-
-
-
-
-   
-    </br>
-
-    
-    </br>
-    </br>
-
-
-
-    </div>
+<!--<br>-->
+<!--<br>-->
+<!--<br>-->
+<!--<br>-->
+<!--<br>-->
+<!--<br>-->
+</div>
 </div>
 </div> 
 

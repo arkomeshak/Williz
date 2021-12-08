@@ -41,7 +41,6 @@ BASE_URL = settings.BASE_URL  # Get the base URL from settings.py for use in ema
 USER_TYPES = ("admin", "realtor", "appraiser", "lender")
 CODE_TO_USER_TYPE = {user_code: user_type for user_code, user_type in enumerate(USER_TYPES)}
 USER_TYPE_TO_CODE = {USER_TYPES[i]: i for i in range(len(USER_TYPES))}
-STATES = ()  # TODO: make a const list of 2-letter state codes
 SESSION_EXPIRATION = 300  # Sessions last 300 seconds
 # Brute force lockout values
 FAILED_LOGINS_THRESHOLD = 5
@@ -624,11 +623,24 @@ def appraisal_image_handler(request, **kwargs):
     assert len(listing_set) == 1
     listing = listing_set[0]
     print(listing.appraiser)
-    app_set = Appraisal.objects.filter(listing=listing).filter(appraiser=listing.appraiser)
-    print(app_set)
-    assert len(app_set) > 0
-    appraisal = app_set[0]
-
+    # app_set = Appraisal.objects.filter(listing=listing).filter(appraiser=listing.appraiser)
+    # print(app_set)
+    # assert len(app_set) > 0
+    # appraisal = app_set[0]
+    # If appraisal exists, get its id. Otherwise create the app
+    appraisal = get_appraisal_or_none(listing.pk, listing.appraiser.pk)
+    if appraisal is None:
+        print("App did not exist. Creating to allow app image upload")
+        key = load_key()
+        appraisal = Appraisal(
+            listing=listing,
+            appraiser=listing.appraiser,
+            mortgage_co=listing.lender,
+            image_count=0,
+            enc_key=key,
+            is_complete=False
+        )
+        appraisal.save()
     if request.method != 'POST':
         print("Method", request.method)
         return HttpResponseRedirect("../?&status=invalid_upload_method")
@@ -1221,17 +1233,23 @@ def pdf_upload_handler(request, **kwargs):
         email = request.session["email"]
         app_user = User.objects.get(email=email)
         appraiser = Appraiser.objects.get(pk=app_user.pk)
-        key = load_key()
-        app = Appraisal(
-            listing=listing,
-            appraiser=appraiser,
-            mortgage_co=listing.lender,
-            image_count=0,
-            enc_key=key,
-            is_complete=False
-        )
-        app.save()
-        app_id = app.pk
+        app = get_appraisal_or_none(listing.pk, appraiser.pk)
+        # If appraisal exists, get its id. Otherwise create the app
+        if app is not None:
+            app_id = app.pk
+            key = app.enc_key
+        else:
+            key = load_key()
+            app = Appraisal(
+                listing=listing,
+                appraiser=appraiser,
+                mortgage_co=listing.lender,
+                image_count=0,
+                enc_key=key,
+                is_complete=False
+            )
+            app.save()
+            app_id = app.pk
         file_writer(pdf.read(), f"Appraisals/{app_id}/", f"Appraisal{app_id}_{app_type}.pdf", key=key)
     except Exception as e:
        print(e)
@@ -1987,6 +2005,22 @@ def get_listing_images(listing_id):
     print(f"didn't find any listings for filepath: {listing_dir}")
     return []
 
+
+def get_appraisal_or_none(listing_pk, appraiser_pk):
+    """
+    Attempts to retrieve the unique appraisal for the listing id and appraiser passed.
+    Returns None if no such appraisal exists.
+    Author: Mike
+    :return: Appraisal | None
+    """
+    try:
+        apps = Appraisal.objects.filter(listing=listing_pk).filter(appraiser=appraiser_pk)
+        if len(apps) != 1:
+            return None
+        return apps[0]
+    except Appraisal.DoesNotExist as e:
+        print(f"Could not find an appraisal for listing {listing_pk} and appraiser {appraiser_pk}")
+        return None
 
 # Zak's helper functions
 # ...*tumble weed blows in wind*
