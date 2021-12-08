@@ -163,13 +163,13 @@ function deleteUserAccount(user_id){
         <form method="POST" action="../../createListing/email/{{email}}">
             {% csrf_token %}
            {%if is_realtor %}
-            <button type = "Submit" id ="Submit" value="Submit">Create Listing</button>
+            <button type = "Submit" id ="Submit" value="Submit" class = "btn-Prof">Create Listing</button>
 
         </form><br><br>
             {% else %}
         </form>
             {% endif %}
-        <button type="Submit" id="Submit" value="Delete" onclick="deleteUserAccount('{{user_id}}')">Delete Account</button>
+        <button type="Submit" id="Submit" value="Delete" onclick="deleteUserAccount('{{user_id}}')" class = "btn-Prof">Delete Account</button>
      </div>
 
 </div>

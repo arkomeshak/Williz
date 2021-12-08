@@ -182,17 +182,36 @@ label {
     transition: .5s;
 }
 
+@media (max-width: 767px) {
+    h1 {
+        font-size: 24px;
+    }
+}
+
 #Submit {
     width: 300px;
     height: 30px;
+    max-width: 100%;
     border: none;
     border-radius: 17px;
     padding-left: 7px;
-    font-size: 1.3em;
+    font-size: 130%;
     color: Black;
     background-color: white;
     transition: .3s;
     z-index: 101;
+}
+
+@media (max-width: 850px) {
+    #Submit {
+        font-size: 100%;
+    }
+}
+
+@media (max-width: 400px) {
+    #Submit {
+        font-size: 80%;
+    }
 }
 
 #Submit:hover {
@@ -647,6 +666,7 @@ Images
 
 .ProfPic {
     height: 55vh;
+    max-width: 100%;
 }
 
 .ProfPicCont {
